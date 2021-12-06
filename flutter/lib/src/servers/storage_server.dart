@@ -5,4 +5,7 @@ abstract class StorageServer {
   /// The icon to use for this server.
   /// Must be a base64 encoded png (square, preferably 16x16 or 32x32)
   String? get icon;
+
+  /// Unique id for this session
+  String get id;
 }

@@ -1,5 +1,5 @@
-import 'package:storage_inspector/src/storage_server.dart';
-import 'package:storage_inspector/src/storage_type.dart';
+import 'package:storage_inspector/src/servers/storage_server.dart';
+import 'package:storage_inspector/src/servers/storage_type.dart';
 import 'package:tuple/tuple.dart';
 
 /// Storage server that handles key-value storage. Key value storage binds a
@@ -22,4 +22,12 @@ abstract class KeyValueServer implements StorageServer {
 
   /// Clears all key-value pairs
   Future<void> clear();
+
+  /// List of suggested key values to show in the UI. Useful as hints for the UI
+  /// These values are NOT used to enforce [set] restrictions
+  Set<ValueWithType> get keySuggestions;
+
+  /// Restrict the keys to this list of keys. Useful as hints for the UI
+  /// These values are NOT used to enforce [set] restrictions
+  Set<ValueWithType> get keyOptions;
 }

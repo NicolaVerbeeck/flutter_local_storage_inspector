@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:storage_inspector/src/storage_server.dart';
+import 'package:storage_inspector/src/servers/storage_server.dart';
 
 /// Storage server that serves local files
 abstract class FileServer implements StorageServer {

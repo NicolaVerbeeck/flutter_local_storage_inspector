@@ -3,7 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
-import 'package:storage_inspector/src/file_server.dart';
+import 'package:storage_inspector/src/servers/file_server.dart';
+import 'package:uuid/uuid.dart';
 
 /// File server that serves files using dart:io framework. By default all files
 /// are returned without filtering.
@@ -17,6 +18,9 @@ class IOFileServer implements FileServer {
 
   @override
   final String name;
+
+  @override
+  final String id = const Uuid().v4();
 
   IOFileServer(this._root, this.name);
 

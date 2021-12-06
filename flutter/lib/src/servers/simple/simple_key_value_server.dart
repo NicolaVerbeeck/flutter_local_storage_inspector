@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:storage_inspector/src/key_value_server.dart';
+import 'package:storage_inspector/src/servers/key_value_server.dart';
 import 'package:tuple/tuple.dart';
-import 'package:storage_inspector/src/storage_type.dart';
+import 'package:storage_inspector/src/servers/storage_type.dart';
 
 /// Helper class for simple key-value servers that only support string keys
 /// and string values
@@ -53,7 +53,7 @@ abstract class SimpleStringKeyValueServer implements KeyValueServer {
   Future<void> clear() => clearValues();
 
   @override
-  Future<void> remove(String key) => removeValue(key);
+  Future<void> remove(ValueWithType key) => removeValue(key.value.toString());
 
   @override
   Future<void> set(ValueWithType key, ValueWithType newValue) {

@@ -1,10 +1,11 @@
 library storage_inspector;
 
-export 'src/storage_server.dart';
-export 'src/storage_type.dart';
-export 'src/key_value_server.dart';
-export 'src/file_server.dart';
-export 'src/simple/simple_key_value_server.dart';
-export 'src/secure_storage/secure_storage_key_value_server.dart';
-export 'src/preferences/preferences_key_value_server.dart';
-export 'src/io/io_file_server.dart';
+export 'src/servers/storage_server.dart';
+export 'src/servers/storage_type.dart';
+export 'src/servers/key_value_server.dart';
+export 'src/servers/file_server.dart';
+export 'src/servers/simple/simple_key_value_server.dart';
+export 'src/servers/secure_storage/secure_storage_key_value_server.dart';
+export 'src/servers/preferences/preferences_key_value_server.dart';
+export 'src/servers/io/io_file_server.dart';
+export 'src/util/logging.dart';

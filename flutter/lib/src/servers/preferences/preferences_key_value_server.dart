@@ -1,7 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:storage_inspector/src/key_value_server.dart';
+import 'package:storage_inspector/src/servers/key_value_server.dart';
 import 'package:tuple/tuple.dart';
-import 'package:storage_inspector/src/storage_type.dart';
+import 'package:storage_inspector/src/servers/storage_type.dart';
+import 'package:uuid/uuid.dart';
 
 /// Key value server that serves values to/from the given shared preferences
 /// instance
@@ -13,6 +14,15 @@ class PreferencesKeyValueServer implements KeyValueServer {
 
   @override
   final String? icon = null;
+
+  @override
+  final String id = const Uuid().v4();
+
+  @override
+  final Set<ValueWithType> keySuggestions;
+
+  @override
+  final Set<ValueWithType> keyOptions;
 
   @override
   final Set<StorageType> supportedValueTypes = const {
@@ -28,8 +38,10 @@ class PreferencesKeyValueServer implements KeyValueServer {
 
   PreferencesKeyValueServer(
     this._preferences,
-    this.name,
-  );
+    this.name, {
+    this.keySuggestions = const {},
+    this.keyOptions = const {},
+  });
 
   @override
   Future<List<Tuple2<ValueWithType, ValueWithType>>> get allValues async {
@@ -63,7 +75,8 @@ class PreferencesKeyValueServer implements KeyValueServer {
   Future<void> clear() => _preferences.clear();
 
   @override
-  Future<void> remove(String key) => _preferences.remove(key);
+  Future<void> remove(ValueWithType key) =>
+      _preferences.remove(key.value.toString());
 
   @override
   Future<void> set(ValueWithType key, ValueWithType newValue) async {
