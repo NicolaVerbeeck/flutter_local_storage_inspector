@@ -18,7 +18,7 @@ abstract class KeyValueServer implements StorageServer {
   Future<void> set(ValueWithType key, ValueWithType newValue);
 
   /// Removes the value for the given key
-  Future<void> remove(String key);
+  Future<void> remove(ValueWithType key);
 
   /// Clears all key-value pairs
   Future<void> clear();

@@ -2,7 +2,7 @@ import 'package:storage_inspector/storage_inspector.dart';
 
 Map<String, dynamic> mapValueWithType(ValueWithType data) {
   return {
-    'type': _typeString(data.type),
+    'type': typeString(data.type),
     'value': data.value,
   };
 }
@@ -15,7 +15,7 @@ ValueWithType decodeValueWithType(dynamic data) {
   );
 }
 
-String _typeString(StorageType type) {
+String typeString(StorageType type) {
   switch (type) {
     case StorageType.string:
       return 'string';
