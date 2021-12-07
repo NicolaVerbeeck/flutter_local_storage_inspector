@@ -1,40 +1,41 @@
 import 'dart:io';
 
-import 'package:dart_service_announcement/dart_service_announcement.dart';
 import 'package:storage_inspector/src/protocol/io/storage_protocol_connection.dart';
+import 'package:storage_inspector/src/protocol/storage_protocol.dart';
+import 'package:storage_inspector/src/util/observable_server_list.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:uuid/uuid.dart';
 
-class StorageProtocolServer extends ToolingServer {
-  HttpServer? _server;
+class StorageProtocolServer {
   final int _requestedPort;
-  final String tag = const Uuid().v4().substring(0, 6);
+
+  HttpServer? _server;
   final _lock = Lock();
   final _connections = <StorageProtocolConnection>[];
-  final _keyValueServers = <KeyValueServer>[];
 
-  @override
+  late final StorageProtocol _protocol;
+  final _keyValueServers = ObservableServerList<KeyValueServer>();
+
   int get port => _server?.port ?? -1;
 
-  @override
-  final int protocolVersion;
-
-  List<KeyValueServer> get keyValueServers => _keyValueServers;
-
-  late final StorageProtocolServerConnectionListener connectionListener;
+  List<KeyValueServer> get keyValueServers => _keyValueServers.servers;
 
   StorageProtocolServer({
     required int port,
-    required this.protocolVersion,
-  }) : _requestedPort = port;
+    String? icon,
+    required String bundleId,
+  }) : _requestedPort = port {
+    _protocol = StorageProtocol(
+        icon: icon, bundleId: bundleId, extensions: {}, server: this);
+
+    //TODO listen and send new server info
+  }
 
   /// Starts the server
   Future<void> start() async {
     _server =
         await HttpServer.bind(InternetAddress.loopbackIPv4, _requestedPort)
           ..transform(WebSocketTransformer()).listen(_onNewConnection);
-    storageInspectorLogger('Storage Inspector server running on $port [$tag]');
   }
 
   /// Stops the server
@@ -51,7 +52,7 @@ class StorageProtocolServer extends ToolingServer {
     });
   }
 
-  void sendToAll(List<int> message) {
+  void _sendToAll(List<int> message) {
     _lock.synchronized(() async {
       for (final socket in _connections) {
         socket.send(message);
@@ -61,7 +62,7 @@ class StorageProtocolServer extends ToolingServer {
 
   void _onNewConnection(WebSocket socket) {
     final connection =
-        StorageProtocolConnection(socket, connectionListener, this);
+        StorageProtocolConnection(socket, _onNewConnectionReady, this);
     _lock.synchronized(() async {
       _connections.add(connection);
       socket.listen(
@@ -79,5 +80,33 @@ class StorageProtocolServer extends ToolingServer {
     _lock.synchronized(() async {
       _connections.remove(socket);
     });
+  }
+
+  Future<void> onMessage(
+      String data, StorageProtocolConnection connection) async {
+    try {
+      await _protocol.onMessage(data, connection);
+    } catch (e, trace) {
+      storageInspectorLogger('Failed to handle message: $e\n $trace');
+      try {
+        connection.close();
+      } catch (_) {}
+    }
+  }
+
+  void _onNewConnectionReady(StorageProtocolConnection value) {
+    try {
+      value.send(_protocol.serverIdentificationMessage);
+
+      for (final server in _keyValueServers.servers) {
+        value.send(_protocol.keyValueServerIdentification(server));
+      }
+    } catch (e, trace) {
+      storageInspectorLogger('Failed to send message: $e\n $trace');
+      try {
+        value.close();
+      } catch (_) {}
+      return;
+    }
   }
 }

@@ -1,4 +1,3 @@
-import 'package:storage_inspector/src/protocol/io/storage_protocol_connection.dart';
 import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart';
 import 'package:storage_inspector/src/protocol/specific/generic.dart';
 import 'package:storage_inspector/storage_inspector.dart';
@@ -8,13 +7,10 @@ class KeyValueProtocol {
 
   final StorageProtocolServer _server;
 
-  KeyValueProtocol(this._server) {
-    //TODO _server.keyValueServers.listen()
-  }
+  KeyValueProtocol(this._server);
 
   Future<Map<String, dynamic>> identify(
     KeyValueServer server,
-    StorageProtocolConnection onConnection,
   ) async {
     return {
       'type': 'identify',

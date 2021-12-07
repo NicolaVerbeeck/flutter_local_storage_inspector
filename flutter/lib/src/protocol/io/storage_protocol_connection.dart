@@ -1,18 +1,12 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart';
-
-/// Listener for new storage server client connections
-// ignore: one_member_abstracts
-abstract class StorageProtocolServerConnectionListener {
-  /// Called when a new connection is made
-  void onNewConnection(StorageProtocolConnection connection);
-}
 
 class StorageProtocolConnection {
   final WebSocket _socket;
   final StorageProtocolServer _server;
-  final StorageProtocolServerConnectionListener _connectionListener;
+  final ValueChanged<StorageProtocolConnection> _connectionListener;
 
   StorageProtocolConnection(
     this._socket,
@@ -20,9 +14,9 @@ class StorageProtocolConnection {
     this._server,
   );
 
-  void start() => _connectionListener.onNewConnection(this);
+  void start() => _connectionListener(this);
 
-  void onMessage(String data) {}
+  void onMessage(String data) => _server.onMessage(data, this);
 
   void send(List<int> message) => _socket.addUtf8Text(message);
 
