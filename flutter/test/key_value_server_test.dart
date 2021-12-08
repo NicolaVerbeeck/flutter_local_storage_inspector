@@ -70,7 +70,8 @@ void main() {
           ),
         ),
       );
-      expect(await socketQueue.next, matches('{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[\\]}\\]}}'));
+      expect(
+          await socketQueue.next, matches('{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[\\]}\\]}}'));
     });
 
     test('Test get all initial data', () async {
@@ -93,6 +94,160 @@ void main() {
           await socketQueue.next,
           matches(
               '{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[{"key":{"type":"string","value":"hello"},"value":{"type":"string","value":"world"}}\\]}\\]}}'));
+    });
+
+    test('Test get single server', () async {
+      await socketQueue.skip(2);
+      keyValueServer.backingMap['hello'] = 'world';
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'get',
+                'data': {
+                  'id': '123',
+                }
+              },
+            },
+          ),
+        ),
+      );
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"id":"123","values":\\[{"key":{"type":"string","value":"hello"},"value":{"type":"string","value":"world"}}\\]}}'));
+    });
+
+    test('Test set', () async {
+      await socketQueue.skip(2);
+      expect(keyValueServer.backingMap.isEmpty, true);
+
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'set',
+                'data': {
+                  'id': '123',
+                  'key': {'type': 'string', 'value': 'hello'},
+                  'value': {'type': 'string', 'value': 'world'},
+                }
+              },
+            },
+          ),
+        ),
+      );
+
+      await socketQueue.next;
+      expect(keyValueServer.backingMap['hello'], 'world');
+    });
+
+    test('Test set wrong server', () async {
+      await socketQueue.skip(2);
+      expect(keyValueServer.backingMap.isEmpty, true);
+
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'set',
+                'data': {
+                  'id': '1234',
+                  'key': {'type': 'string', 'value': 'hello'},
+                  'value': {'type': 'string', 'value': 'world'},
+                }
+              },
+            },
+          ),
+        ),
+      );
+
+      expect(await socketQueue.next,
+          matches('{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
+    });
+
+    test('Test remove', () async {
+      await socketQueue.skip(2);
+      keyValueServer.backingMap['hello'] = 'world';
+      expect(keyValueServer.backingMap.isNotEmpty, true);
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'remove',
+                'data': {
+                  'id': '123',
+                  'key': {'type': 'string', 'value': 'hello'},
+                }
+              },
+            },
+          ),
+        ),
+      );
+      await socketQueue.next;
+      expect(keyValueServer.backingMap.isEmpty, true);
+    });
+
+    test('Test remove non-existing', () async {
+      await socketQueue.skip(2);
+      keyValueServer.backingMap['hello'] = 'world';
+      expect(keyValueServer.backingMap.isNotEmpty, true);
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'remove',
+                'data': {
+                  'id': '123',
+                  'key': {'type': 'string', 'value': 'hello2'},
+                }
+              },
+            },
+          ),
+        ),
+      );
+      await socketQueue.next;
+      expect(keyValueServer.backingMap.isNotEmpty, true);
+    });
+
+    test('Test remove non-existing', () async {
+      await socketQueue.skip(2);
+      keyValueServer.backingMap['hello'] = 'world';
+      keyValueServer.backingMap['how'] = 'ya doing';
+      expect(keyValueServer.backingMap.isNotEmpty, true);
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'clear',
+                'data': {
+                  'id': '123',
+                }
+              },
+            },
+          ),
+        ),
+      );
+      await socketQueue.next;
+      expect(keyValueServer.backingMap.isEmpty, true);
     });
   });
 }

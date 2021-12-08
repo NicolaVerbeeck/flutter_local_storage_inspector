@@ -50,7 +50,7 @@ class KeyValueProtocol {
       case commandRemove:
         return _handleRemove(jsonData['data']['id'] as String, jsonData['data']['key']);
       default:
-        return Future.error(ArgumentError('Unknown key-value command: ${jsonData['type']}'));
+        return Future.error(ArgumentError('Unknown key-value protocol command: ${jsonData['type']}'));
     }
   }
 
@@ -88,12 +88,18 @@ class KeyValueProtocol {
   }
 
   Future<Map<String, dynamic>> _handleGet(String id) async {
-    final keyValueServer = _server.keyValueServers.firstWhere((element) => element.id == id);
+    final keyValueServer = _server.keyValueServers.firstWhere(
+      (element) => element.id == id,
+      orElse: () => throw ArgumentError('No server with id $id found'),
+    );
     return await _getAllFromServer(keyValueServer);
   }
 
   Future<Map<String, dynamic>> _handleClear(String id) async {
-    final keyValueServer = _server.keyValueServers.firstWhere((element) => element.id == id);
+    final keyValueServer = _server.keyValueServers.firstWhere(
+      (element) => element.id == id,
+      orElse: () => throw ArgumentError('No server with id $id found'),
+    );
     await keyValueServer.clear();
     return {
       'id': id,
@@ -111,7 +117,10 @@ class KeyValueProtocol {
     final keyData = decodeValueWithType(key);
     final valueData = decodeValueWithType(value);
 
-    final keyValueServer = _server.keyValueServers.firstWhere((element) => element.id == id);
+    final keyValueServer = _server.keyValueServers.firstWhere(
+      (element) => element.id == id,
+      orElse: () => throw ArgumentError('No server with id $id found'),
+    );
 
     await keyValueServer.set(keyData, valueData);
     return {
@@ -128,7 +137,10 @@ class KeyValueProtocol {
   ) async {
     final keyData = decodeValueWithType(key);
 
-    final keyValueServer = _server.keyValueServers.firstWhere((element) => element.id == id);
+    final keyValueServer = _server.keyValueServers.firstWhere(
+      (element) => element.id == id,
+      orElse: () => throw ArgumentError('No server with id $id found'),
+    );
 
     await keyValueServer.remove(keyData);
     return {
