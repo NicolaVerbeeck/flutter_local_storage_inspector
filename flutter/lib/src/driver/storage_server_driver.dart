@@ -1,9 +1,10 @@
 import 'package:dart_service_announcement/dart_service_announcement.dart';
-import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart';
+import 'package:storage_inspector/src/driver/storage_server.dart';
+import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart'
+    if (dart.library.html) 'package:storage_inspector/src/protocol/web/web_storage_protocol_server.dart';
 import 'package:storage_inspector/src/protocol/storage_protocol.dart';
+import 'package:storage_inspector/src/servers/key_value_server.dart';
 import 'package:uuid/uuid.dart';
-
-import '../../storage_inspector.dart';
 
 const _announcementPort = 6396;
 
@@ -24,12 +25,11 @@ class StorageServerDriver extends ToolingServer {
     String? icon,
     required String bundleId,
   }) : _server = StorageProtocolServer(
-          port: port,
+          server: createRawProtocolServer(port),
           icon: icon,
           bundleId: bundleId,
         ) {
-    _announcementManager =
-        ServerAnnouncementManager(bundleId, _announcementPort, this);
+    _announcementManager = ServerAnnouncementManager(bundleId, _announcementPort, this);
     if (icon != null) {
       _announcementManager.addExtension(IconExtension(icon));
     }

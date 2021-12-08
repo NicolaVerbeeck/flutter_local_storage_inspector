@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart';
+import 'package:storage_inspector/src/driver/storage_server.dart';
 import 'package:storage_inspector/src/protocol/specific/generic.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 

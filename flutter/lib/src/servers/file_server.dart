@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:storage_inspector/src/servers/storage_server.dart';
 
 /// Storage server that serves local files
-abstract class FileServer implements StorageServer {
+abstract class FileServer implements StorageServerInfo {
   /// Recursively browse the file system at the given [root].
   /// Returned paths are relative to the provided [root]
   Future<List<String>> browse(String root);

@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:storage_inspector/src/protocol/storage_server_driver.dart';
+import 'package:storage_inspector/src/driver/storage_server_driver.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 
 void main() {

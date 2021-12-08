@@ -6,7 +6,7 @@ import 'package:tuple/tuple.dart';
 
 /// Storage server that handles key-value storage. Key value storage binds a
 /// single key to a single value
-abstract class KeyValueServer implements StorageServer {
+abstract class KeyValueServer implements StorageServerInfo {
   /// All the different value types supported by the server
   Set<StorageType> get supportedValueTypes;
 

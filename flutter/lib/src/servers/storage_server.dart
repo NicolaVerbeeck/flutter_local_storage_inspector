@@ -1,4 +1,4 @@
-abstract class StorageServer {
+abstract class StorageServerInfo {
   /// The name of this server, eg: the name of the preference file
   String get name;
 
