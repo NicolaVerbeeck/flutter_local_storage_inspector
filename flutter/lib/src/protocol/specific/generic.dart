@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 
 Map<String, dynamic> mapValueWithType(ValueWithType data) {
@@ -10,7 +11,7 @@ Map<String, dynamic> mapValueWithType(ValueWithType data) {
 ValueWithType decodeValueWithType(dynamic data) {
   assert(data is Map<String, dynamic>);
   return ValueWithType(
-    _stringToType(data['type'] as String),
+    stringToType(data['type'] as String),
     data['value'],
   );
 }
@@ -34,7 +35,8 @@ String typeString(StorageType type) {
   }
 }
 
-StorageType _stringToType(String typeString) {
+@visibleForTesting
+StorageType stringToType(String typeString) {
   switch (typeString) {
     case 'string':
       return StorageType.string;

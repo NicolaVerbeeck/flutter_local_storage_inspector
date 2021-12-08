@@ -31,7 +31,7 @@ class StorageProtocolServer {
   final _connections = <StorageProtocolConnection>[];
   final _lock = Lock();
   late final StorageProtocol _protocol;
-  final _keyValueServers = ObservableServerList<KeyValueServer>();
+  final _keyValueServers = ObservableList<KeyValueServer>();
 
   int get port => _server.port;
 
@@ -110,6 +110,6 @@ class StorageProtocolServer {
   }
 
   void addKeyValueServer(KeyValueServer server) {
-    _keyValueServers.addServer(server);
+    _keyValueServers.add(server);
   }
 }

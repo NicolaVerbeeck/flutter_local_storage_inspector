@@ -1,34 +1,34 @@
-class ObservableServerList<T> {
+class ObservableList<T> {
   final _servers = <T>[];
-  final _listeners = <ObservableServerListObserver<T>>[];
+  final _listeners = <ObservableListObserver<T>>[];
 
   List<T> get servers => _servers;
 
-  void addServer(T server) {
+  void add(T server) {
     _servers.add(server);
     for (final listener in _listeners) {
-      listener.onServerAdded(server);
+      listener.onAdded(server);
     }
   }
 
-  void removeServer(T server) {
+  void remove(T server) {
     _servers.remove(server);
     for (final listener in _listeners) {
-      listener.onServerRemoved(server);
+      listener.onRemoved(server);
     }
   }
 
-  void addListener(ObservableServerListObserver<T> listener) {
+  void addListener(ObservableListObserver<T> listener) {
     _listeners.add(listener);
   }
 
-  void removeListener(ObservableServerListObserver<T> listener) {
+  void removeListener(ObservableListObserver<T> listener) {
     _listeners.remove(listener);
   }
 }
 
-abstract class ObservableServerListObserver<T> {
-  void onServerAdded(T added);
+abstract class ObservableListObserver<T> {
+  void onAdded(T added);
 
-  void onServerRemoved(T removed);
+  void onRemoved(T removed);
 }

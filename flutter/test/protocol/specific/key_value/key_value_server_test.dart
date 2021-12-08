@@ -15,9 +15,7 @@ void main() {
   late StreamQueue socketQueue;
 
   setUp(() async {
-    storageInspectorLogger = (s) => print(s);
-    driver = StorageServerDriver(
-        bundleId: 'com.chimerapps.test', port: 0, icon: null);
+    driver = StorageServerDriver(bundleId: 'com.chimerapps.test', port: 0, icon: 'iconData');
     keyValueServer = _SimpleMemoryKeyValueServer({});
     driver.addKeyValueServer(keyValueServer);
 
@@ -35,10 +33,8 @@ void main() {
   group('Key value protocol and driver tests', () {
     test('Test identify', () async {
       final driverIdMessage = await socketQueue.next as String;
-      expect(driverIdMessage,
-          '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test"}}');
-      final serverIdMessage =
-          json.decode(await socketQueue.next as String) as Map<String, dynamic>;
+      expect(driverIdMessage, '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test","icon":"iconData"}}');
+      final serverIdMessage = json.decode(await socketQueue.next as String) as Map<String, dynamic>;
 
       expect(serverIdMessage['messageId'], isNotNull);
       expect(serverIdMessage['serverType'], 'key_value');
@@ -53,7 +49,9 @@ void main() {
           idDataString,
           '{"id":"123","name":"Test Server","icon":null,"keySuggestions":[{"type":"string"'
           ',"value":"key1"}],"keyOptions":[{"type":"string","value":"key1"},{"type":"string",'
-          '"value":"key2"}],"supportedKeyTypes":["string"],"supportedValueTypes":["string"],"keyTypeHints":[],"keyIcons":[]}');
+          '"value":"key2"}],"supportedKeyTypes":["string"],"supportedValueTypes":["string"],'
+          '"keyTypeHints":[{"key":{"type":"string","value":"2"},"type":"string"}],"keyIcons"'
+          ':[{"key":{"type":"string","value":"key1"},"icon":"base64"}]}');
 
       socket.close();
     });
@@ -74,9 +72,7 @@ void main() {
         ),
       );
       expect(
-          await socketQueue.next,
-          matches(
-              '{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[\\]}\\]}}'));
+          await socketQueue.next, matches('{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[\\]}\\]}}'));
     });
 
     test('Test get all initial data', () async {
@@ -99,6 +95,26 @@ void main() {
           await socketQueue.next,
           matches(
               '{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[{"key":{"type":"string","value":"hello"},"value":{"type":"string","value":"world"}}\\]}\\]}}'));
+    });
+
+    test('Test get all error', () async {
+      await socketQueue.skip(2);
+      keyValueServer.backingMap['hello'] = 'world';
+      keyValueServer.throwGetAll = true;
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'getAll',
+              },
+            },
+          ),
+        ),
+      );
+      expect(await socketQueue.next, matches('{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[\\]}}'));
     });
 
     test('Test get single server', () async {
@@ -153,7 +169,7 @@ void main() {
       expect(keyValueServer.backingMap['hello'], 'world');
     });
 
-    test('Test set wrong server', () async {
+    test('Test actions wrong server', () async {
       await socketQueue.skip(2);
       expect(keyValueServer.backingMap.isEmpty, true);
 
@@ -175,11 +191,67 @@ void main() {
           ),
         ),
       );
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'clear',
+                'data': {
+                  'id': '1234',
+                  'key': {'type': 'string', 'value': 'hello'},
+                  'value': {'type': 'string', 'value': 'world'},
+                }
+              },
+            },
+          ),
+        ),
+      );
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'remove',
+                'data': {
+                  'id': '1234',
+                  'key': {'type': 'string', 'value': 'hello'},
+                  'value': {'type': 'string', 'value': 'world'},
+                }
+              },
+            },
+          ),
+        ),
+      );
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'get',
+                'data': {
+                  'id': '1234',
+                  'key': {'type': 'string', 'value': 'hello'},
+                  'value': {'type': 'string', 'value': 'world'},
+                }
+              },
+            },
+          ),
+        ),
+      );
 
-      expect(
-          await socketQueue.next,
-          matches(
-              '{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
+      expect(await socketQueue.next,
+          matches('{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
+      expect(await socketQueue.next,
+          matches('{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
+      expect(await socketQueue.next,
+          matches('{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
     });
 
     test('Test remove', () async {
@@ -256,18 +328,45 @@ void main() {
       await socketQueue.next;
       expect(keyValueServer.backingMap.isEmpty, true);
     });
+
+    test('Test unknown command', () async {
+      await socketQueue.skip(2);
+      keyValueServer.backingMap['hello'] = 'world';
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'getSome',
+              },
+            },
+          ),
+        ),
+      );
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): Unknown key-value protocol command: getSome.*}'));
+    });
   });
 }
 
 class _SimpleMemoryKeyValueServer extends SimpleStringKeyValueServer {
   final Map<String, String> backingMap;
+  var throwGetAll = false;
 
   _SimpleMemoryKeyValueServer(this.backingMap)
       : super(
           'Test Server',
           keyOptions: {'key1', 'key2'},
           keySuggestions: {'key1'},
+          keyIcons: {'key1': 'base64'},
         );
+
+  @override
+  Map<ValueWithType, StorageType> get typeForKey => {const ValueWithType(StorageType.string, '2'): StorageType.string};
 
   @override
   Future<void> clearValues() {
@@ -291,6 +390,5 @@ class _SimpleMemoryKeyValueServer extends SimpleStringKeyValueServer {
   }
 
   @override
-  Future<Iterable<MapEntry<String, String>>> get values =>
-      Future.value(backingMap.entries);
+  Future<Iterable<MapEntry<String, String>>> get values => throwGetAll ? Future.error(ArgumentError('Error getting all')) : Future.value(backingMap.entries);
 }
