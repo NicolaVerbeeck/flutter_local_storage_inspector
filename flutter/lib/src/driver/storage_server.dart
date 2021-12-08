@@ -5,7 +5,8 @@ import 'package:storage_inspector/storage_inspector.dart';
 import 'package:synchronized/synchronized.dart';
 
 abstract class StorageProtocolConnection {
-  void init(ValueChanged<StorageProtocolConnection> onConnectionReady, StorageProtocolServer server);
+  void init(ValueChanged<StorageProtocolConnection> onConnectionReady,
+      StorageProtocolServer server);
 
   void start();
 
@@ -90,7 +91,8 @@ class StorageProtocolServer {
     }
   }
 
-  Future<void> onMessage(String data, StorageProtocolConnection connection) async {
+  Future<void> onMessage(
+      String data, StorageProtocolConnection connection) async {
     try {
       await _protocol.onMessage(data, connection);
     } catch (e, trace) {

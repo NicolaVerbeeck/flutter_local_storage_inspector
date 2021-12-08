@@ -29,7 +29,8 @@ class StorageServerDriver extends ToolingServer {
           icon: icon,
           bundleId: bundleId,
         ) {
-    _announcementManager = ServerAnnouncementManager(bundleId, _announcementPort, this);
+    _announcementManager =
+        ServerAnnouncementManager(bundleId, _announcementPort, this);
     if (icon != null) {
       _announcementManager.addExtension(IconExtension(icon));
     }

@@ -33,7 +33,8 @@ class IOStorageProtocolConnection implements StorageProtocolConnection {
   void close() => _socket.close();
 
   @override
-  void init(ValueChanged<StorageProtocolConnection> onConnectionReady, StorageProtocolServer server) {
+  void init(ValueChanged<StorageProtocolConnection> onConnectionReady,
+      StorageProtocolServer server) {
     _connectionListener = onConnectionReady;
     _server = server;
   }

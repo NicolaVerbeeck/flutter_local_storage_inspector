@@ -13,5 +13,6 @@ class _NoOpRawProtocolServer implements RawStorageProtocolServer {
   Future<void> shutdown() => Future.value();
 
   @override
-  Future<void> start(ValueChanged<StorageProtocolConnection> onNewConnection) => Future.value();
+  Future<void> start(ValueChanged<StorageProtocolConnection> onNewConnection) =>
+      Future.value();
 }

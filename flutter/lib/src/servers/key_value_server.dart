@@ -35,4 +35,8 @@ abstract class KeyValueServer implements StorageServerInfo {
 
   /// Hint for which keys, which value types is required
   Map<ValueWithType, StorageType> get typeForKey;
+
+  /// Provide an optional icon for the given key.
+  /// Should be a square icon provided as base64, either PNG: 16x16 or 32x32 or SVG.
+  Map<ValueWithType, String?> get keyIcons;
 }

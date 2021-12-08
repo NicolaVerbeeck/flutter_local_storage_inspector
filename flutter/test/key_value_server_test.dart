@@ -16,7 +16,8 @@ void main() {
 
   setUp(() async {
     storageInspectorLogger = (s) => print(s);
-    driver = StorageServerDriver(bundleId: 'com.chimerapps.test', port: 0, icon: null);
+    driver = StorageServerDriver(
+        bundleId: 'com.chimerapps.test', port: 0, icon: null);
     keyValueServer = _SimpleMemoryKeyValueServer({});
     driver.addKeyValueServer(keyValueServer);
 
@@ -34,8 +35,10 @@ void main() {
   group('Key value protocol and driver tests', () {
     test('Test identify', () async {
       final driverIdMessage = await socketQueue.next as String;
-      expect(driverIdMessage, '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test"}}');
-      final serverIdMessage = json.decode(await socketQueue.next as String) as Map<String, dynamic>;
+      expect(driverIdMessage,
+          '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test"}}');
+      final serverIdMessage =
+          json.decode(await socketQueue.next as String) as Map<String, dynamic>;
 
       expect(serverIdMessage['messageId'], isNotNull);
       expect(serverIdMessage['serverType'], 'key_value');
@@ -50,7 +53,7 @@ void main() {
           idDataString,
           '{"id":"123","name":"Test Server","icon":null,"keySuggestions":[{"type":"string"'
           ',"value":"key1"}],"keyOptions":[{"type":"string","value":"key1"},{"type":"string",'
-          '"value":"key2"}],"supportedKeyTypes":["string"],"supportedValueTypes":["string"],"keyTypeHints":[]}');
+          '"value":"key2"}],"supportedKeyTypes":["string"],"supportedValueTypes":["string"],"keyTypeHints":[],"keyIcons":[]}');
 
       socket.close();
     });
@@ -71,7 +74,9 @@ void main() {
         ),
       );
       expect(
-          await socketQueue.next, matches('{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[\\]}\\]}}'));
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[\\]}\\]}}'));
     });
 
     test('Test get all initial data', () async {
@@ -171,8 +176,10 @@ void main() {
         ),
       );
 
-      expect(await socketQueue.next,
-          matches('{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
     });
 
     test('Test remove', () async {
@@ -284,5 +291,6 @@ class _SimpleMemoryKeyValueServer extends SimpleStringKeyValueServer {
   }
 
   @override
-  Future<Iterable<MapEntry<String, String>>> get values => Future.value(backingMap.entries);
+  Future<Iterable<MapEntry<String, String>>> get values =>
+      Future.value(backingMap.entries);
 }

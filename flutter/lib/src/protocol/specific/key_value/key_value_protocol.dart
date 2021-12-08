@@ -33,6 +33,12 @@ class KeyValueProtocol {
                   'type': typeString(entry.value),
                 })
             .toList(growable: false),
+        'keyIcons': server.keyIcons.entries
+            .map((entry) => {
+                  'key': mapValueWithType(entry.key),
+                  'icon': entry.value,
+                })
+            .toList(growable: false),
       },
     });
   }

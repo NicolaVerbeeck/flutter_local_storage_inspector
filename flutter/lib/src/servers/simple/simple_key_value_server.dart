@@ -6,6 +6,7 @@ import 'package:tuple/tuple.dart';
 /// Helper class for simple key-value servers that only support string keys
 /// and string values
 abstract class SimpleStringKeyValueServer implements KeyValueServer {
+
   @override
   final String name;
 
@@ -27,15 +28,23 @@ abstract class SimpleStringKeyValueServer implements KeyValueServer {
   @override
   final typeForKey = const {};
 
+  @override
+  final Map<ValueWithType, String> keyIcons;
+
   SimpleStringKeyValueServer(
     this.name, {
     Set<String> keySuggestions = const {},
     Set<String> keyOptions = const {},
+    Map<String, String> keyIcons = const {},
   })  : keySuggestions = keySuggestions
             .map((e) => ValueWithType(StorageType.string, e))
             .toSet(),
         keyOptions =
-            keyOptions.map((e) => ValueWithType(StorageType.string, e)).toSet();
+            keyOptions.map((e) => ValueWithType(StorageType.string, e)).toSet(),
+        keyIcons = keyIcons.map(
+          (key, value) =>
+              MapEntry(ValueWithType(StorageType.string, key), value),
+        );
 
   /// (Re-)Loads all values
   @protected

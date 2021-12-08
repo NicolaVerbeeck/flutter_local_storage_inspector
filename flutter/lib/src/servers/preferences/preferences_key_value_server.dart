@@ -39,16 +39,26 @@ class PreferencesKeyValueServer implements KeyValueServer {
   @override
   final Set<StorageType> supportedKeyTypes = const {StorageType.string};
 
+  @override
+  final Map<ValueWithType, String> keyIcons;
+
   PreferencesKeyValueServer(
     this._preferences,
     this.name, {
     this.keySuggestions = const {},
     this.keyOptions = const {},
 
+    /// Icon hints to show for specific keys. See [iconForKey] for more information
+    Map<String, String> keyIcons = const {},
+
     /// Hints indicating for which specific key, which type is expected
     Map<String, StorageType> typeForKey = const {},
-  }) : typeForKey = typeForKey.map((key, value) =>
-            MapEntry(ValueWithType(StorageType.string, key), value));
+  })  : typeForKey = typeForKey.map(
+          (key, value) => MapEntry(ValueWithType(StorageType.string, key), value),
+        ),
+        keyIcons = keyIcons.map(
+          (key, value) => MapEntry(ValueWithType(StorageType.string, key), value),
+        );
 
   @override
   Future<List<Tuple2<ValueWithType, ValueWithType>>> get allValues async {
@@ -82,8 +92,7 @@ class PreferencesKeyValueServer implements KeyValueServer {
   Future<void> clear() => _preferences.clear();
 
   @override
-  Future<void> remove(ValueWithType key) =>
-      _preferences.remove(key.value.toString());
+  Future<void> remove(ValueWithType key) => _preferences.remove(key.value.toString());
 
   @override
   Future<void> set(ValueWithType key, ValueWithType newValue) async {
@@ -106,11 +115,9 @@ class PreferencesKeyValueServer implements KeyValueServer {
         await _preferences.setStringList(preferenceKey, newValue.value);
         break;
       case StorageType.datetime:
-        throw ArgumentError(
-            'Shared preferences does not support datetime values');
+        throw ArgumentError('Shared preferences does not support datetime values');
       case StorageType.binary:
-        throw ArgumentError(
-            'Shared preferences does not support binary values');
+        throw ArgumentError('Shared preferences does not support binary values');
     }
   }
 }

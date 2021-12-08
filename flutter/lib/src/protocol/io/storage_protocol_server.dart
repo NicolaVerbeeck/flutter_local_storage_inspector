@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:storage_inspector/src/driver/storage_server.dart';
 import 'package:storage_inspector/src/protocol/io/storage_protocol_connection.dart';
 
-RawStorageProtocolServer createRawProtocolServer(int port) => IOStorageProtocolServer(port: port);
+RawStorageProtocolServer createRawProtocolServer(int port) =>
+    IOStorageProtocolServer(port: port);
 
 class IOStorageProtocolServer implements RawStorageProtocolServer {
   final int _requestedPort;
@@ -21,10 +22,12 @@ class IOStorageProtocolServer implements RawStorageProtocolServer {
 
   /// Starts the server
   @override
-  Future<void> start(ValueChanged<StorageProtocolConnection> onNewConnection) async {
+  Future<void> start(
+      ValueChanged<StorageProtocolConnection> onNewConnection) async {
     _onNewConnection = onNewConnection;
-    _server = await HttpServer.bind(InternetAddress.loopbackIPv4, _requestedPort)
-      ..transform(WebSocketTransformer()).listen(_onNewSocketConnection);
+    _server =
+        await HttpServer.bind(InternetAddress.loopbackIPv4, _requestedPort)
+          ..transform(WebSocketTransformer()).listen(_onNewSocketConnection);
   }
 
   /// Stops the server
