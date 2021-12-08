@@ -1,0 +1,27 @@
+def versions = [
+        kotlin            : '1.5.31',
+        websocket         : '1.5.2',
+        minIntelliJ       : '2018.2',
+        discoveryLib      : '4.0.0',
+        discoveryPluginLib: '4.0.0',
+]
+
+ext.versions = versions
+
+def gradlePlugins = [
+]
+
+def pluginCompile = [
+        kotlin      : "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${versions.kotlin}",
+        discoveryLib: "com.chimerapps:discovery-plugin-ui:${versions.discoveryPluginLib}",
+        websocket   : "org.java-websocket:Java-WebSocket:${versions.websocket}",
+]
+
+def libTestCompile = [
+]
+
+ext.deps = [
+        'gradlePlugins' : gradlePlugins,
+        'libTestCompile': libTestCompile,
+        'pluginCompile' : pluginCompile,
+]

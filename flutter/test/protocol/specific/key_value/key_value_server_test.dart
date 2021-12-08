@@ -10,13 +10,13 @@ import 'package:storage_inspector/storage_inspector.dart';
 
 void main() {
   late StorageServerDriver driver;
-  late _SimpleMemoryKeyValueServer keyValueServer;
+  late SimpleMemoryKeyValueServer keyValueServer;
   late WebSocket socket;
   late StreamQueue socketQueue;
 
   setUp(() async {
     driver = StorageServerDriver(bundleId: 'com.chimerapps.test', port: 0, icon: 'iconData');
-    keyValueServer = _SimpleMemoryKeyValueServer({});
+    keyValueServer = SimpleMemoryKeyValueServer({});
     driver.addKeyValueServer(keyValueServer);
 
     await driver.start();
@@ -353,11 +353,11 @@ void main() {
   });
 }
 
-class _SimpleMemoryKeyValueServer extends SimpleStringKeyValueServer {
+class SimpleMemoryKeyValueServer extends SimpleStringKeyValueServer {
   final Map<String, String> backingMap;
   var throwGetAll = false;
 
-  _SimpleMemoryKeyValueServer(this.backingMap)
+  SimpleMemoryKeyValueServer(this.backingMap)
       : super(
           'Test Server',
           keyOptions: {'key1', 'key2'},

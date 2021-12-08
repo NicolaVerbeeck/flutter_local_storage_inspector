@@ -1,0 +1,97 @@
+plugins {
+    id 'org.jetbrains.intellij' version '1.3.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+}
+
+apply from: 'dependencies.gradle'
+
+group 'com.chimerapps.tools'
+version '0.0.1'
+
+repositories {
+    mavenCentral()
+    google()
+    maven { url "https://jitpack.io" }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
+tasks.compileJava {
+    options.release.set(11)
+}
+
+configurations {
+    patch
+    [implementation]*.exclude module: 'gson'
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation files("lib/gson-2.8.9.patched.jar")
+
+    patch('com.google.code.gson:gson:2.8.9')
+    patch('com.googlecode.jarjar:jarjar:1.3')
+
+    deps.pluginCompile.each { name, dep ->
+        implementation(dep) {
+            exclude group: 'org.slf4j', module: 'slf4j-api'
+        }
+    }
+}
+
+// See https://github.com/JetBrains/gradle-intellij-plugin/
+intellij {
+    version = versions.minIntelliJ
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "11"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "11"
+}
+
+patchPluginXml {
+    changeNotes = """
+      Add change notes here.<br>
+      <em>most HTML tags may be used</em>"""
+}
+
+task downloadPatchLibs(type: Copy) {
+    into('lib')
+    from(configurations.patch)
+    exclude('jarjar*')
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
+
+task applyPatch(dependsOn: 'downloadPatchLibs') {
+    doLast {
+        project.ant {
+            taskdef name: "jarjar", classname: "com.tonicsystems.jarjar.JarJarTask", classpath: configurations.patch.asPath
+            jarjar(jarfile: 'lib/gson-2.8.9.patched.jar', filesetmanifest: "merge") {
+                zipfileset(src: 'lib/gson-2.8.9.jar')
+                rule pattern: "com.google.gson.**", result: "com.google.gsonpackaged.@1"
+            }
+        }
+    }
+}
+
+task cleanupDownloadPatchLibs(type: Delete, dependsOn: 'applyPatch') {
+    delete 'lib/gson-2.8.9.jar'
+}
+
+task maybePatch {
+    if (new File('lib/gson-2.8.9.patched.jar').exists()) return
+    dependsOn applyPatch
+    dependsOn cleanupDownloadPatchLibs
+}
+compileKotlin.dependsOn(maybePatch)
+
+task cleanPatch(type: Delete) {
+    delete 'lib'
+}
+clean.dependsOn(cleanPatch)
