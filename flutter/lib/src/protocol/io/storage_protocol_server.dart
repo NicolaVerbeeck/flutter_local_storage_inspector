@@ -25,17 +25,15 @@ class StorageProtocolServer {
     String? icon,
     required String bundleId,
   }) : _requestedPort = port {
-    _protocol = StorageProtocol(
-        icon: icon, bundleId: bundleId, extensions: {}, server: this);
+    _protocol = StorageProtocol(icon: icon, bundleId: bundleId, extensions: {}, server: this);
 
     //TODO listen and send new server info
   }
 
   /// Starts the server
   Future<void> start() async {
-    _server =
-        await HttpServer.bind(InternetAddress.loopbackIPv4, _requestedPort)
-          ..transform(WebSocketTransformer()).listen(_onNewConnection);
+    _server = await HttpServer.bind(InternetAddress.loopbackIPv4, _requestedPort)
+      ..transform(WebSocketTransformer()).listen(_onNewConnection);
   }
 
   /// Stops the server
@@ -52,17 +50,16 @@ class StorageProtocolServer {
     });
   }
 
-  void _sendToAll(List<int> message) {
-    _lock.synchronized(() async {
-      for (final socket in _connections) {
-        socket.send(message);
-      }
-    });
-  }
+  // void _sendToAll(List<int> message) {
+  //   _lock.synchronized(() async {
+  //     for (final socket in _connections) {
+  //       socket.send(message);
+  //     }
+  //   });
+  // }
 
   void _onNewConnection(WebSocket socket) {
-    final connection =
-        StorageProtocolConnection(socket, _onNewConnectionReady, this);
+    final connection = StorageProtocolConnection(socket, _onNewConnectionReady, this);
     _lock.synchronized(() async {
       _connections.add(connection);
       socket.listen(
@@ -82,8 +79,7 @@ class StorageProtocolServer {
     });
   }
 
-  Future<void> onMessage(
-      String data, StorageProtocolConnection connection) async {
+  Future<void> onMessage(String data, StorageProtocolConnection connection) async {
     try {
       await _protocol.onMessage(data, connection);
     } catch (e, trace) {
@@ -94,12 +90,12 @@ class StorageProtocolServer {
     }
   }
 
-  void _onNewConnectionReady(StorageProtocolConnection value) {
+  Future<void> _onNewConnectionReady(StorageProtocolConnection value) async {
     try {
       value.send(_protocol.serverIdentificationMessage);
 
       for (final server in _keyValueServers.servers) {
-        value.send(_protocol.keyValueServerIdentification(server));
+        value.send(await _protocol.keyValueServerIdentification(server));
       }
     } catch (e, trace) {
       storageInspectorLogger('Failed to send message: $e\n $trace');
@@ -108,5 +104,9 @@ class StorageProtocolServer {
       } catch (_) {}
       return;
     }
+  }
+
+  void addKeyValueServer(KeyValueServer server) {
+    _keyValueServers.addServer(server);
   }
 }

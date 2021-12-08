@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storage_inspector/src/servers/key_value_server.dart';
-import 'package:tuple/tuple.dart';
 import 'package:storage_inspector/src/servers/storage_type.dart';
+import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
 /// Key value server that serves values to/from the given shared preferences
@@ -25,6 +25,9 @@ class PreferencesKeyValueServer implements KeyValueServer {
   final Set<ValueWithType> keyOptions;
 
   @override
+  final Map<ValueWithType, StorageType> typeForKey;
+
+  @override
   final Set<StorageType> supportedValueTypes = const {
     StorageType.string,
     StorageType.integer,
@@ -41,7 +44,11 @@ class PreferencesKeyValueServer implements KeyValueServer {
     this.name, {
     this.keySuggestions = const {},
     this.keyOptions = const {},
-  });
+
+    /// Hints indicating for which specific key, which type is expected
+    Map<String, StorageType> typeForKey = const {},
+  }) : typeForKey = typeForKey.map((key, value) =>
+            MapEntry(ValueWithType(StorageType.string, key), value));
 
   @override
   Future<List<Tuple2<ValueWithType, ValueWithType>>> get allValues async {

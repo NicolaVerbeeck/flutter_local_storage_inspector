@@ -3,6 +3,8 @@ import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart';
 import 'package:storage_inspector/src/protocol/storage_protocol.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../storage_inspector.dart';
+
 const _announcementPort = 6396;
 
 class StorageServerDriver extends ToolingServer {
@@ -45,5 +47,9 @@ class StorageServerDriver extends ToolingServer {
   Future<void> stop() async {
     await _server.shutdown();
     await _announcementManager.stop();
+  }
+
+  void addKeyValueServer(KeyValueServer server) {
+    _server.addKeyValueServer(server);
   }
 }

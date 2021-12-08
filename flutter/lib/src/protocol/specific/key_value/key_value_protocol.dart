@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart';
 import 'package:storage_inspector/src/protocol/specific/generic.dart';
 import 'package:storage_inspector/storage_inspector.dart';
@@ -11,21 +12,29 @@ class KeyValueProtocol {
 
   Future<Map<String, dynamic>> identify(
     KeyValueServer server,
-  ) async {
-    return {
+  ) {
+    return SynchronousFuture({
       'type': 'identify',
       'data': {
         'id': server.id,
         'name': server.name,
         'icon': server.icon,
-        'keySuggestions': server.keySuggestions,
-        'keyOptions': server.keyOptions,
+        'keySuggestions':
+            server.keySuggestions.map(mapValueWithType).toList(growable: false),
+        'keyOptions':
+            server.keyOptions.map(mapValueWithType).toList(growable: false),
         'supportedKeyTypes':
             server.supportedKeyTypes.map(typeString).toList(growable: false),
         'supportedValueTypes':
             server.supportedValueTypes.map(typeString).toList(growable: false),
+        'keyTypeHints': server.typeForKey.entries
+            .map((entry) => {
+                  'key': mapValueWithType(entry.key),
+                  'type': typeString(entry.value),
+                })
+            .toList(growable: false),
       },
-    };
+    });
   }
 
   Future<Map<String, dynamic>> onMessage(Map<String, dynamic> jsonData) {

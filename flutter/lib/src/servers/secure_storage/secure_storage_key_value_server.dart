@@ -8,20 +8,18 @@ class SecureStorageKeyValueServer extends SimpleStringKeyValueServer {
   final FlutterSecureStorage _storage;
 
   @override
-  final Set<ValueWithType> keySuggestions;
-
-  @override
-  final Set<ValueWithType> keyOptions;
-
-  @override
   final String id = const Uuid().v4();
 
   SecureStorageKeyValueServer(
     this._storage,
     String name, {
-    this.keySuggestions = const {},
-    this.keyOptions = const {},
-  }) : super(name);
+    Set<String> keySuggestions = const {},
+    Set<String> keyOptions = const {},
+  }) : super(
+          name,
+          keyOptions: keyOptions,
+          keySuggestions: keySuggestions,
+        );
 
   @override
   Future<void> clearValues() => _storage.deleteAll();

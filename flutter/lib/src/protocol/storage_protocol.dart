@@ -38,7 +38,9 @@ class StorageProtocol {
       );
 
   Future<void> onMessage(
-      String messageData, StorageProtocolConnection onConnection) async {
+    String messageData,
+    StorageProtocolConnection onConnection,
+  ) async {
     final envelope = jsonDecode(messageData) as Map<String, dynamic>;
     final requestId = envelope['requestId'] as String?;
     final serverType = envelope['serverType'] as String;
@@ -65,9 +67,9 @@ class StorageProtocol {
     }
   }
 
-  List<int> keyValueServerIdentification(KeyValueServer server) =>
+  Future<List<int>> keyValueServerIdentification(KeyValueServer server) async =>
       encodeWithBody(serverTypeKeyValue,
-          data: _keyValueProtocol.identify(server));
+          data: await _keyValueProtocol.identify(server));
 
   List<int> encodeWithBody(String serverType,
       {dynamic data, String? requestId, String? error}) {

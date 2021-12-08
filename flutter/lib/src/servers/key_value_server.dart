@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:storage_inspector/src/servers/storage_server.dart';
 import 'package:storage_inspector/src/servers/storage_type.dart';
 import 'package:tuple/tuple.dart';
@@ -30,4 +32,7 @@ abstract class KeyValueServer implements StorageServer {
   /// Restrict the keys to this list of keys. Useful as hints for the UI
   /// These values are NOT used to enforce [set] restrictions
   Set<ValueWithType> get keyOptions;
+
+  /// Hint for which keys, which value types is required
+  Map<ValueWithType, StorageType> get typeForKey;
 }
