@@ -4,7 +4,11 @@ import 'package:storage_inspector/src/protocol/specific/generic.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 
 class KeyValueProtocol {
-  static const getAll = 'getAll';
+  static const commandGetAll = 'getAll';
+  static const commandGet = 'get';
+  static const commandClear = 'clear';
+  static const commandSet = 'set';
+  static const commandRemove = 'remove';
 
   final StorageProtocolServer _server;
 
@@ -19,14 +23,10 @@ class KeyValueProtocol {
         'id': server.id,
         'name': server.name,
         'icon': server.icon,
-        'keySuggestions':
-            server.keySuggestions.map(mapValueWithType).toList(growable: false),
-        'keyOptions':
-            server.keyOptions.map(mapValueWithType).toList(growable: false),
-        'supportedKeyTypes':
-            server.supportedKeyTypes.map(typeString).toList(growable: false),
-        'supportedValueTypes':
-            server.supportedValueTypes.map(typeString).toList(growable: false),
+        'keySuggestions': server.keySuggestions.map(mapValueWithType).toList(growable: false),
+        'keyOptions': server.keyOptions.map(mapValueWithType).toList(growable: false),
+        'supportedKeyTypes': server.supportedKeyTypes.map(typeString).toList(growable: false),
+        'supportedValueTypes': server.supportedValueTypes.map(typeString).toList(growable: false),
         'keyTypeHints': server.typeForKey.entries
             .map((entry) => {
                   'key': mapValueWithType(entry.key),
@@ -39,21 +39,18 @@ class KeyValueProtocol {
 
   Future<Map<String, dynamic>> onMessage(Map<String, dynamic> jsonData) {
     switch (jsonData['type']) {
-      case getAll:
+      case commandGetAll:
         return _handleGetAll();
-      case 'get':
+      case commandGet:
         return _handleGet(jsonData['data']['id'] as String);
-      case 'clear':
+      case commandClear:
         return _handleClear(jsonData['data']['id'] as String);
-      case 'set':
-        return _handleSet(jsonData['data']['id'] as String,
-            jsonData['data']['key'], jsonData['data']['value']);
-      case 'remove':
-        return _handleRemove(
-            jsonData['data']['id'] as String, jsonData['data']['key']);
+      case commandSet:
+        return _handleSet(jsonData['data']['id'] as String, jsonData['data']['key'], jsonData['data']['value']);
+      case commandRemove:
+        return _handleRemove(jsonData['data']['id'] as String, jsonData['data']['key']);
       default:
-        return Future.error(
-            ArgumentError('Unknown key-value command: ${jsonData['type']}'));
+        return Future.error(ArgumentError('Unknown key-value command: ${jsonData['type']}'));
     }
   }
 
@@ -69,6 +66,7 @@ class KeyValueProtocol {
         storageInspectorLogger('Failed to get all from ${element.name}: $e');
       }
     }
+    returnData['all'] = serverData;
 
     return returnData;
   }
@@ -90,14 +88,12 @@ class KeyValueProtocol {
   }
 
   Future<Map<String, dynamic>> _handleGet(String id) async {
-    final keyValueServer =
-        _server.keyValueServers.firstWhere((element) => element.id == id);
+    final keyValueServer = _server.keyValueServers.firstWhere((element) => element.id == id);
     return await _getAllFromServer(keyValueServer);
   }
 
   Future<Map<String, dynamic>> _handleClear(String id) async {
-    final keyValueServer =
-        _server.keyValueServers.firstWhere((element) => element.id == id);
+    final keyValueServer = _server.keyValueServers.firstWhere((element) => element.id == id);
     await keyValueServer.clear();
     return {
       'id': id,
@@ -115,8 +111,7 @@ class KeyValueProtocol {
     final keyData = decodeValueWithType(key);
     final valueData = decodeValueWithType(value);
 
-    final keyValueServer =
-        _server.keyValueServers.firstWhere((element) => element.id == id);
+    final keyValueServer = _server.keyValueServers.firstWhere((element) => element.id == id);
 
     await keyValueServer.set(keyData, valueData);
     return {
@@ -133,8 +128,7 @@ class KeyValueProtocol {
   ) async {
     final keyData = decodeValueWithType(key);
 
-    final keyValueServer =
-        _server.keyValueServers.firstWhere((element) => element.id == id);
+    final keyValueServer = _server.keyValueServers.firstWhere((element) => element.id == id);
 
     await keyValueServer.remove(keyData);
     return {

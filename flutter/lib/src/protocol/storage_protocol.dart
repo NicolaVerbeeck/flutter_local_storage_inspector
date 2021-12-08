@@ -48,12 +48,12 @@ class StorageProtocol {
     switch (serverType) {
       case serverTypeKeyValue:
         try {
-          encodeWithBody(
+          onConnection.send(encodeWithBody(
             serverType,
             data: await _keyValueProtocol
                 .onMessage(envelope['data'] as Map<String, dynamic>),
             requestId: requestId,
-          );
+          ));
         } catch (e, trace) {
           storageInspectorLogger(
               'Failed to handle key value message: $e\n $trace');

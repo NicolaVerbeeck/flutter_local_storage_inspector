@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,8 +9,10 @@ import 'package:storage_inspector/src/protocol/storage_server_driver.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 
 void main() {
-  late final StorageServerDriver driver;
-  late final _SimpleMemoryKeyValueServer keyValueServer;
+  late StorageServerDriver driver;
+  late _SimpleMemoryKeyValueServer keyValueServer;
+  late WebSocket socket;
+  late StreamQueue socketQueue;
 
   setUp(() async {
     storageInspectorLogger = (s) => print(s);
@@ -17,20 +21,21 @@ void main() {
     driver.addKeyValueServer(keyValueServer);
 
     await driver.start();
+
+    socket = await WebSocket.connect('ws://localhost:${driver.port}');
+    socketQueue = StreamQueue(socket);
   });
 
   tearDown(() async {
+    socket.close();
     await driver.stop();
   });
 
   group('Key value protocol and driver tests', () {
     test('Test identify', () async {
-      final socket = await WebSocket.connect('ws://localhost:${driver.port}');
-      final queue = StreamQueue(socket);
-
-      final driverIdMessage = await queue.next as String;
+      final driverIdMessage = await socketQueue.next as String;
       expect(driverIdMessage, '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test"}}');
-      final serverIdMessage = json.decode(await queue.next as String) as Map<String, dynamic>;
+      final serverIdMessage = json.decode(await socketQueue.next as String) as Map<String, dynamic>;
 
       expect(serverIdMessage['messageId'], isNotNull);
       expect(serverIdMessage['serverType'], 'key_value');
@@ -48,6 +53,46 @@ void main() {
           '"value":"key2"}],"supportedKeyTypes":["string"],"supportedValueTypes":["string"],"keyTypeHints":[]}');
 
       socket.close();
+    });
+
+    test('Test get all empty', () async {
+      await socketQueue.skip(2);
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'getAll',
+              },
+            },
+          ),
+        ),
+      );
+      expect(await socketQueue.next, matches('{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[\\]}\\]}}'));
+    });
+
+    test('Test get all initial data', () async {
+      await socketQueue.skip(2);
+      keyValueServer.backingMap['hello'] = 'world';
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'getAll',
+              },
+            },
+          ),
+        ),
+      );
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[{"key":{"type":"string","value":"hello"},"value":{"type":"string","value":"world"}}\\]}\\]}}'));
     });
   });
 }
