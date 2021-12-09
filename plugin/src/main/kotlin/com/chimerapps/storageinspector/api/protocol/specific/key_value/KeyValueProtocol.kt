@@ -1,17 +1,35 @@
 package com.chimerapps.storageinspector.api.protocol.specific.key_value
 
+import com.chimerapps.storageinspector.api.RemoteError
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocol
+import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
+import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueRequest
+import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueRequestData
+import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueRequestType
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerIdentification
+import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerStatus
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerValues
+import com.chimerapps.storageinspector.util.classLogger
 import com.google.gsonpackaged.Gson
 import com.google.gsonpackaged.JsonObject
 import kotlinx.coroutines.CompletableDeferred
 import java.util.UUID
 
+interface KeyValueServerInterface {
+    fun addListener(listener: KeyValueProtocolListener)
+
+    fun removeListener(listener: KeyValueProtocolListener)
+
+    suspend fun get(serverId: String): KeyValueServerValues
+    suspend fun set(serverId: String, key: ValueWithType, value: ValueWithType): Boolean
+    suspend fun remove(serverId: String, key: ValueWithType): Boolean
+    suspend fun clear(serverId: String): Boolean
+}
+
 /**
  * @author Nicola Verbeeck
  */
-class KeyValueProtocol(private val protocol: StorageInspectorProtocol) {
+class KeyValueProtocol(private val protocol: StorageInspectorProtocol) : KeyValueServerInterface {
 
     private companion object {
         const val TYPE_IDENTIFY = "identify"
@@ -23,25 +41,27 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) {
 
     private val waitingFutures = mutableMapOf<String, Pair<CompletableDeferred<*>, (JsonObject, CompletableDeferred<*>) -> Unit>>()
 
-    fun addListener(listener: KeyValueProtocolListener) {
+    override fun addListener(listener: KeyValueProtocolListener) {
         synchronized(listeners) {
             listeners.add(listener)
             serverId?.let { listener.onServerIdentification(it) }
         }
     }
 
-    fun removeListener(listener: KeyValueProtocolListener) {
+    override fun removeListener(listener: KeyValueProtocolListener) {
         synchronized(listeners) {
             listeners.remove(listener)
         }
     }
 
-    fun handleMessage(requestId: String?, data: JsonObject) {
+    fun handleMessage(requestId: String?, data: JsonObject?, error: String?) {
         try {
-            if (requestId == null) {
+            if (requestId == null && data != null) {
                 handleUnannouncedKeyValue(data)
-            } else {
+            } else if (requestId != null && data != null) {
                 handleResponse(requestId, data)
+            } else if (requestId != null && error != null) {
+                handleError(requestId, error)
             }
         } catch (e: Throwable) {
             e.printStackTrace()
@@ -49,11 +69,16 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) {
     }
 
     private fun handleResponse(requestId: String, data: JsonObject) {
-        val futurePair = waitingFutures.remove(requestId) ?: return
+        val futurePair = waitingFutures.remove(requestId) ?: return classLogger.warn("Got unsolicited response with unknown request id: $requestId. Data: $data")
         futurePair.second(data, futurePair.first)
     }
 
-    suspend fun get(serverId: String): KeyValueServerValues {
+    private fun handleError(requestId: String, error: String) {
+        val futurePair = waitingFutures.remove(requestId) ?: return classLogger.warn("Got unsolicited response with unknown request id: $requestId. Error: $error")
+        futurePair.first.completeExceptionally(RemoteError(error))
+    }
+
+    override suspend fun get(serverId: String): KeyValueServerValues {
         val requestId = UUID.randomUUID().toString()
 
         val future = CompletableDeferred<KeyValueServerValues>()
@@ -64,7 +89,66 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) {
         protocol.sendRequest(
             serverType = StorageInspectorProtocol.SERVER_TYPE_KEY_VALUE,
             requestId = requestId,
-            data = gson.toJsonTree(mapOf("type" to "get", "data" to mapOf("id" to serverId))).asJsonObject
+            data = gson.toJsonTree(
+                KeyValueRequest(KeyValueRequestType.GET, KeyValueRequestData(serverId))
+            ).asJsonObject
+        )
+
+        return future.await()
+    }
+
+    override suspend fun set(serverId: String, key: ValueWithType, value: ValueWithType): Boolean {
+        val requestId = UUID.randomUUID().toString()
+
+        val future = CompletableDeferred<Boolean>()
+        waitingFutures[requestId] = Pair(future) { data, _ ->
+            future.complete(gson.fromJson(data, KeyValueServerStatus::class.java).data.success)
+        }
+
+        protocol.sendRequest(
+            serverType = StorageInspectorProtocol.SERVER_TYPE_KEY_VALUE,
+            requestId = requestId,
+            data = gson.toJsonTree(
+                KeyValueRequest(KeyValueRequestType.SET, KeyValueRequestData(serverId, key = key, value = value))
+            ).asJsonObject
+        )
+
+        return future.await()
+    }
+
+    override suspend fun remove(serverId: String, key: ValueWithType): Boolean {
+        val requestId = UUID.randomUUID().toString()
+
+        val future = CompletableDeferred<Boolean>()
+        waitingFutures[requestId] = Pair(future) { data, _ ->
+            future.complete(gson.fromJson(data, KeyValueServerStatus::class.java).data.success)
+        }
+
+        protocol.sendRequest(
+            serverType = StorageInspectorProtocol.SERVER_TYPE_KEY_VALUE,
+            requestId = requestId,
+            data = gson.toJsonTree(
+                KeyValueRequest(KeyValueRequestType.REMOVE, KeyValueRequestData(serverId, key = key))
+            ).asJsonObject
+        )
+
+        return future.await()
+    }
+
+    override suspend fun clear(serverId: String): Boolean {
+        val requestId = UUID.randomUUID().toString()
+
+        val future = CompletableDeferred<Boolean>()
+        waitingFutures[requestId] = Pair(future) { data, _ ->
+            future.complete(gson.fromJson(data, KeyValueServerStatus::class.java).data.success)
+        }
+
+        protocol.sendRequest(
+            serverType = StorageInspectorProtocol.SERVER_TYPE_KEY_VALUE,
+            requestId = requestId,
+            data = gson.toJsonTree(
+                KeyValueRequest(KeyValueRequestType.CLEAR, KeyValueRequestData(serverId))
+            ).asJsonObject
         )
 
         return future.await()

@@ -3,6 +3,7 @@ package com.chimerapps.storageinspector.api.protocol
 import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueProtocol
+import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueServerInterface
 import com.google.gsonpackaged.Gson
 import com.google.gsonpackaged.JsonObject
 import com.google.gsonpackaged.JsonParser
@@ -22,7 +23,10 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
     private val listeners = mutableListOf<StorageInspectorProtocolListener>()
     private var serverId: ServerId? = null
 
-    val keyValueProtocol = KeyValueProtocol(this)
+    private val keyValueProtocol = KeyValueProtocol(this)
+
+    val keyValueServerInterface: KeyValueServerInterface
+        get() = keyValueProtocol
 
     fun addListener(listener: StorageInspectorProtocolListener) {
         synchronized(listeners) {
@@ -45,9 +49,9 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
         try {
             when (serverType) {
                 SERVER_TYPE_ID -> handleId(root.get("data").asJsonObject)
-                SERVER_TYPE_KEY_VALUE -> keyValueProtocol.handleMessage(requestId, root.get("data").asJsonObject)
+                SERVER_TYPE_KEY_VALUE -> keyValueProtocol.handleMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
             }
-        }catch(e: Throwable){
+        } catch (e: Throwable) {
             e.printStackTrace()
         }
     }

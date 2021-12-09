@@ -1,5 +1,7 @@
 package com.chimerapps.storageinspector.api
 
+import com.chimerapps.storageinspector.api.protocol.model.StorageType
+import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
@@ -26,7 +28,13 @@ class StorageProtocolConnectionTest {
         socket.connectBlocking()
 
         runBlocking {
-            println(socket.protocol.keyValueProtocol.get("123"))
+            println(socket.protocol.keyValueServerInterface.get("123"))
+            println(socket.protocol.keyValueServerInterface.set("123", ValueWithType(StorageType.string, "some"), ValueWithType(StorageType.string, "body")))
+            println(socket.protocol.keyValueServerInterface.get("123"))
+            println(socket.protocol.keyValueServerInterface.remove("123", ValueWithType(StorageType.string, "hello")))
+            println(socket.protocol.keyValueServerInterface.get("123"))
+            println(socket.protocol.keyValueServerInterface.clear("123"))
+            println(socket.protocol.keyValueServerInterface.get("123"))
         }
 
         Thread.sleep(3000);
