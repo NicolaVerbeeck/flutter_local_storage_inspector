@@ -4,7 +4,7 @@ import 'protocol/specific/key_value/key_value_server_test.dart';
 
 void main() async {
   final driver = StorageServerDriver(bundleId: 'com.chimerapps.test', port: 9999, icon: 'iconData');
-  final keyValueServer = SimpleMemoryKeyValueServer({});
+  final keyValueServer = SimpleMemoryKeyValueServer({"hello": "world"});
   driver.addKeyValueServer(keyValueServer);
 
   await driver.start();

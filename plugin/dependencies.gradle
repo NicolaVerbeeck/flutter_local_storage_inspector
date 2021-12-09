@@ -15,6 +15,7 @@ def pluginCompile = [
         kotlin      : "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${versions.kotlin}",
         discoveryLib: "com.chimerapps:discovery-plugin-ui:${versions.discoveryPluginLib}",
         websocket   : "org.java-websocket:Java-WebSocket:${versions.websocket}",
+        coroutines  : "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2"
 ]
 
 def libTestCompile = [

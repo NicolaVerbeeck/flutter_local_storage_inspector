@@ -30,7 +30,6 @@ configurations {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation files("lib/gson-2.8.9.patched.jar")
 
     patch('com.google.code.gson:gson:2.8.9')
