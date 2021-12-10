@@ -12,11 +12,13 @@ import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocolListener
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
 import com.chimerapps.storageinspector.inspector.StorageServer
+import com.chimerapps.storageinspector.inspector.StorageServerType
 import com.chimerapps.storageinspector.ui.ide.actions.ConnectAction
 import com.chimerapps.storageinspector.ui.ide.actions.DisconnectAction
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorServersView
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorStatusBar
+import com.chimerapps.storageinspector.ui.ide.view.key_value.KeyValueServerView
 import com.chimerapps.storageinspector.ui.util.ProjectSessionIconProvider
 import com.chimerapps.storageinspector.ui.util.ensureMain
 import com.chimerapps.storageinspector.ui.util.preferences.AppPreferences
@@ -52,6 +54,8 @@ class InspectorSessionWindow(
     private val statusBar = StorageInspectorStatusBar()
     private var connection: StorageInspectorProtocolConnection? = null
     private val serversView = StorageInspectorServersView(ProjectSessionIconProvider.instance(project), ::onServerSelectionChanged)
+    private var currentDetailView: Any? = null
+    private val splitter: JBSplitter
 
     var connectionMode: ConnectionMode = ConnectionMode.MODE_DISCONNECTED
         private set(value) {
@@ -65,7 +69,7 @@ class InspectorSessionWindow(
         add(rootContent, BorderLayout.CENTER)
         add(statusBar, BorderLayout.SOUTH)
 
-        val splitter = JBSplitter(APP_PREFERENCE_SPLITTER_STATE, 0.2f)
+        splitter = JBSplitter(APP_PREFERENCE_SPLITTER_STATE, 0.2f)
         splitter.firstComponent = serversView
         splitter.secondComponent = JPanel()
 
@@ -182,6 +186,17 @@ class InspectorSessionWindow(
     }
 
     private fun onServerSelectionChanged(storageServer: StorageServer) {
+        val connection = connection?.storageInterface ?: return
+        when (storageServer.type) {
+            StorageServerType.KEY_VALUE -> {
+                val detail = currentDetailView as? KeyValueServerView ?: KeyValueServerView()
+                detail.setServer(connection.keyValueInterface, storageServer)
+
+                currentDetailView = detail
+                splitter.secondComponent = detail
+            }
+        }
+
         classLogger.debug("onServerSelectionChanged: $storageServer")
     }
 }

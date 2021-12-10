@@ -9,6 +9,9 @@ enum class Tr(val key: String) {
     ActionExportCompleteTitle("storageinspector.action.export.complete.title"), //Export completed
     ActionNewSession("storageinspector.action.new.session"), //New session
     ActionNewSessionDescription("storageinspector.action.new.session.description"), //Start a new session
+    GenericRefresh("storageinspector.generic.refresh"), //Refresh
+    KeyValueKey("storageinspector.key.value.key"), //Key
+    KeyValueValue("storageinspector.key.value.value"), //Value
     PreferencesBrowseAdbDescription("storageinspector.preferences.browse.adb.description"), //Path to adb
     PreferencesBrowseAdbTitle("storageinspector.preferences.browse.adb.title"), //Storage inspector - adb
     PreferencesBrowseIdeviceDescription("storageinspector.preferences.browse.idevice.description"), //Path to imobiledevice folders
@@ -38,6 +41,9 @@ enum class Tr(val key: String) {
     StatusConnected("storageinspector.status.connected"), //Connected
     StatusConnectedTo("storageinspector.status.connected.to"), //to
     StatusDisconnected("storageinspector.status.disconnected"), //Disconnected
+    TypeBinary("storageinspector.type.binary"), //binary
+    TypeBooleanFalse("storageinspector.type.boolean.false"), //false
+    TypeBooleanTrue("storageinspector.type.boolean.true"), //true
     ViewSession("storageinspector.view.session"), //Session
     ViewStartingAdb("storageinspector.view.starting.adb"); //Starting adb
 

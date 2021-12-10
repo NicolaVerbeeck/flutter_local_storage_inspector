@@ -81,7 +81,6 @@ class ListUpdateHelper<T>(
     }
 }
 
-@Suppress("unused")
 class TableModelDiffUtilDispatchModel<T>(private val model: ListTableModel<T>) : DiffUtilDispatchModel<T> {
     override fun onInserted(position: Int, count: Int) {
         model.fireTableRowsInserted(position, position + count)
