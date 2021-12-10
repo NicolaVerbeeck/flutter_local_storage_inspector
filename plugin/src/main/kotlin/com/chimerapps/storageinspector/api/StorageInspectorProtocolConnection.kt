@@ -1,6 +1,8 @@
 package com.chimerapps.storageinspector.api
 
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocol
+import com.chimerapps.storageinspector.inspector.StorageInspectorInterface
+import com.chimerapps.storageinspector.inspector.StorageInspectorInterfaceImpl
 import com.chimerapps.storageinspector.util.classLogger
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
@@ -14,6 +16,8 @@ class StorageInspectorProtocolConnection(
 ) : WebSocketClient(uri) {
 
     val protocol = StorageInspectorProtocol(this)
+    val storageInterface: StorageInspectorInterface = StorageInspectorInterfaceImpl(protocol)
+
     private val listeners = mutableListOf<StorageInspectorConnectionListener>()
 
     override fun onOpen(handshakedata: ServerHandshake?) {

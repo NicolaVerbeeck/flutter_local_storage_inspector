@@ -11,17 +11,22 @@ import com.chimerapps.storageinspector.api.StorageInspectorConnectionListener
 import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocolListener
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
+import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.ui.ide.actions.ConnectAction
 import com.chimerapps.storageinspector.ui.ide.actions.DisconnectAction
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings
-import com.chimerapps.storageinspector.ui.util.ensureMain
+import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorServersView
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorStatusBar
 import com.chimerapps.storageinspector.ui.util.ProjectSessionIconProvider
+import com.chimerapps.storageinspector.ui.util.ensureMain
+import com.chimerapps.storageinspector.ui.util.preferences.AppPreferences
+import com.chimerapps.storageinspector.util.classLogger
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
+import com.intellij.ui.JBSplitter
 import com.intellij.ui.content.Content
 import com.intellij.util.IconUtil
 import java.awt.BorderLayout
@@ -36,7 +41,7 @@ class InspectorSessionWindow(
 
     companion object {
         const val DEFAULT_IDEVICE_PATH = "/usr/local/bin"
-//        private const val APP_PREFERENCE_SPLITTER_STATE = "${AppPreferences.PREFIX}detailSplitter"
+        private const val APP_PREFERENCE_SPLITTER_STATE = "${AppPreferences.PREFIX}detailSplitter"
     }
 
     lateinit var content: Content
@@ -46,6 +51,7 @@ class InspectorSessionWindow(
     private var lastConnection: PreparedDeviceConnection? = null
     private val statusBar = StorageInspectorStatusBar()
     private var connection: StorageInspectorProtocolConnection? = null
+    private val serversView = StorageInspectorServersView(ProjectSessionIconProvider.instance(project), ::onServerSelectionChanged)
 
     var connectionMode: ConnectionMode = ConnectionMode.MODE_DISCONNECTED
         private set(value) {
@@ -59,11 +65,11 @@ class InspectorSessionWindow(
         add(rootContent, BorderLayout.CENTER)
         add(statusBar, BorderLayout.SOUTH)
 
-//        val splitter = JBSplitter(APP_PREFERENCE_SPLITTER_STATE, 0.2f)
-//        splitter.firstComponent = tablesView
-//        splitter.secondComponent = tableView
-//
-//        rootContent.add(splitter, BorderLayout.CENTER)
+        val splitter = JBSplitter(APP_PREFERENCE_SPLITTER_STATE, 0.2f)
+        splitter.firstComponent = serversView
+        splitter.secondComponent = JPanel()
+
+        rootContent.add(splitter, BorderLayout.CENTER)
     }
 
     private fun setupConnectToolbar(): ActionToolbar {
@@ -162,6 +168,9 @@ class InspectorSessionWindow(
                         }
                     }
                 })
+                it.protocol.addListener(serversView)
+                serversView.inspectorInterface = it.storageInterface
+                it.storageInterface.keyValueInterface.addListener(serversView)
             }
         this.connection?.connect()
         lastConnection = connection
@@ -170,6 +179,10 @@ class InspectorSessionWindow(
 
     fun onWindowClosed() {
         disconnect()
+    }
+
+    private fun onServerSelectionChanged(storageServer: StorageServer) {
+        classLogger.debug("onServerSelectionChanged: $storageServer")
     }
 }
 
