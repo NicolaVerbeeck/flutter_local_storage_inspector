@@ -4,6 +4,7 @@ import com.chimerapps.storageinspector.api.protocol.model.StorageType
 import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
+import java.net.URI
 
 /**
  * @author Nicola Verbeeck
@@ -12,19 +13,21 @@ class StorageProtocolConnectionTest {
 
     @Test
     fun testCreateConnection() {
-        val socket = StorageInspectorProtocolConnection(listener = object : StorageInspectorConnectionListener {
-            override fun onConnected() {
-                println("Connected")
-            }
+        val socket = StorageInspectorProtocolConnection(URI("ws://localhost:9999")).also {
+            it.addListener(object : StorageInspectorConnectionListener {
+                override fun onConnected() {
+                    println("Connected")
+                }
 
-            override fun onClosed() {
-                println("Closed")
-            }
+                override fun onClosed() {
+                    println("Closed")
+                }
 
-            override fun onError() {
-                println("Error")
-            }
-        }, ip = "localhost", port = 9999)
+                override fun onError() {
+                    println("Error")
+                }
+            })
+        }
         socket.connectBlocking()
 
         runBlocking {

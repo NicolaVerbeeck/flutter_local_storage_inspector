@@ -1,22 +1,24 @@
 <idea-plugin>
     <id>com.chimerapps.tools.storage-inspector-plugin</id>
-    <name>Plugin display name here</name>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <name>Local Storage Inspector</name>
+    <vendor email="support@chimerapps.com" url="https://github.com/NicolaVerbeeck">Nicola Verbeeck</vendor>
 
-    <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
-    ]]></description>
+    <description>This plugin enables the local storage inspector library UI inside the IDE.</description>
 
-    <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
-         on how to target different products -->
+    <idea-version since-build="203" />
+
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
+        <toolWindow id="Storage Inspector" anchor="bottom"
+                    factoryClass="com.chimerapps.storageinspector.ui.ide.InspectorToolWindowFactory"
+                    icon="/window_icon_small.svg" />
+
+        <applicationConfigurable instance="com.chimerapps.storageinspector.ui.ide.settings.ApplicationConfigurationProvider"
+                                 id="StorageInspectorRoot" displayName="Storage Inspector" />
+
+        <applicationService
+            serviceImplementation="com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings" />
     </extensions>
 
-    <actions>
-        <!-- Add your actions here -->
-    </actions>
 </idea-plugin>

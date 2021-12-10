@@ -10,35 +10,45 @@ import java.net.URI
  * @author Nicola Verbeeck
  */
 class StorageInspectorProtocolConnection(
-    private val listener: StorageInspectorConnectionListener,
-    ip: String,
-    port: Int,
-) : WebSocketClient(URI("ws://$ip:$port")) {
+    uri: URI,
+) : WebSocketClient(uri) {
 
     val protocol = StorageInspectorProtocol(this)
+    private val listeners = mutableListOf<StorageInspectorConnectionListener>()
 
     override fun onOpen(handshakedata: ServerHandshake?) {
-        listener.onConnected()
+        synchronized(listeners) {
+            listeners.forEach { it.onConnected() }
+        }
     }
 
     override fun onMessage(message: String) = protocol.onMessage(message)
 
     override fun onClose(code: Int, reason: String?, remote: Boolean) {
-        listener.onClosed()
+        synchronized(listeners) {
+            listeners.forEach { it.onClosed() }
+        }
     }
 
     override fun onError(ex: Exception?) {
-        ex?.printStackTrace()
-        listener.onError()
+        synchronized(listeners) {
+            listeners.forEach { it.onError() }
+        }
         classLogger.info("Connection error:", ex)
+    }
+
+    fun addListener(listener: StorageInspectorConnectionListener) {
+        synchronized(listeners) {
+            listeners.add(listener)
+        }
     }
 
 }
 
 interface StorageInspectorConnectionListener {
-    fun onConnected()
+    fun onConnected() {}
 
-    fun onClosed()
+    fun onClosed() {}
 
-    fun onError()
+    fun onError() {}
 }
