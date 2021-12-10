@@ -24,7 +24,7 @@ class SettingsFormWrapper(private val driftInspectorSettings: StorageInspectorSe
     private val settingsForm = StorageInspectorSettingsForm()
 
     val component: JComponent
-        get() = settingsForm.`$$$getRootComponent$$$`()
+        get() = settingsForm.rootComponent()
 
     val isModified: Boolean
         get() = ((settingsForm.iDeviceField.textOrNull != (driftInspectorSettings.state.iDeviceBinariesPath))

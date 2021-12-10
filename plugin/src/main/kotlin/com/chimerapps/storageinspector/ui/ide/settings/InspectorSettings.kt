@@ -1,7 +1,7 @@
 package com.chimerapps.storageinspector.ui.ide.settings
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
@@ -10,7 +10,7 @@ class StorageInspectorSettings : PersistentStateComponent<StorageInspectorSettin
 
     companion object {
         val instance: StorageInspectorSettings
-            get() = ServiceManager.getService(StorageInspectorSettings::class.java)
+            get() = ApplicationManager.getApplication().getService(StorageInspectorSettings::class.java)
     }
 
     private var settings: StorageInspectorSettingsData = StorageInspectorSettingsData()

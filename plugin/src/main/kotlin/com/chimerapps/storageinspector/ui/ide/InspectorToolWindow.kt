@@ -4,7 +4,7 @@ import com.chimerapps.discovery.device.adb.ADBBootstrap
 import com.chimerapps.discovery.device.adb.ADBInterface
 import com.chimerapps.storageinspector.ui.ide.actions.NewSessionAction
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings
-import com.chimerapps.storageinspector.ui.ide.util.dispatchMain
+import com.chimerapps.storageinspector.ui.util.dispatchMain
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.chimerapps.storageinspector.util.adb.ADBUtils
 import com.intellij.execution.ui.RunnerLayoutUi
@@ -31,7 +31,7 @@ import javax.swing.JPanel
 /**
  * @author Nicola Verbeeck
  */
-class InspectorToolWindow(private val project: Project, private val disposable: Disposable) :
+class InspectorToolWindow(private val project: Project, disposable: Disposable) :
     SimpleToolWindowPanel(/* vertical */ false, /* borderless */ true) {
 
     companion object {

@@ -3,8 +3,8 @@ package com.chimerapps.storageinspector.ui.ide.view
 import com.chimerapps.storageinspector.api.StorageInspectorConnectionListener
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocolListener
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
-import com.chimerapps.storageinspector.ui.ide.util.IncludedIcons
-import com.chimerapps.storageinspector.ui.ide.util.ensureMain
+import com.chimerapps.storageinspector.ui.util.IncludedIcons
+import com.chimerapps.storageinspector.ui.util.ensureMain
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.intellij.ui.components.JBLabel
 import java.awt.BorderLayout

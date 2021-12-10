@@ -1,7 +1,7 @@
 package com.chimerapps.storageinspector.ui.ide
 
 import com.chimerapps.discovery.utils.LoggerFactory
-import com.chimerapps.storageinspector.ui.ide.util.IdeaLoggerFactory
+import com.chimerapps.storageinspector.ui.util.IdeaLoggerFactory
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow

@@ -114,7 +114,7 @@ tasks.create("buildTranslationsEnum") {
             for (int i = 1; i < parts.length; ++i) {
                 str += parts[i].capitalize()
             }
-            file << "    $str(\"$string\")${(++c == sorted.size()) ? ";" : ","} //${translationProperties.getProperty(string).replaceAll("\n","\\\\n")}\n"
+            file << "    $str(\"$string\")${(++c == sorted.size()) ? ";" : ","} //${translationProperties.getProperty(string).replaceAll("\n", "\\\\n")}\n"
         }
         file << "\n    fun tr(vararg arguments: Any) : String {\n"
         file << "        val raw = Localization.getString(key)\n"

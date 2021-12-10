@@ -14,8 +14,7 @@ import com.chimerapps.storageinspector.api.protocol.model.ServerId
 import com.chimerapps.storageinspector.ui.ide.actions.ConnectAction
 import com.chimerapps.storageinspector.ui.ide.actions.DisconnectAction
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings
-import com.chimerapps.storageinspector.ui.ide.util.ensureMain
-import com.chimerapps.storageinspector.ui.ide.util.preferences.AppPreferences
+import com.chimerapps.storageinspector.ui.util.ensureMain
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorStatusBar
 import com.chimerapps.storageinspector.ui.util.ProjectSessionIconProvider
 import com.intellij.openapi.actionSystem.ActionManager
@@ -37,7 +36,7 @@ class InspectorSessionWindow(
 
     companion object {
         const val DEFAULT_IDEVICE_PATH = "/usr/local/bin"
-        private const val APP_PREFERENCE_SPLITTER_STATE = "${AppPreferences.PREFIX}detailSplitter"
+//        private const val APP_PREFERENCE_SPLITTER_STATE = "${AppPreferences.PREFIX}detailSplitter"
     }
 
     lateinit var content: Content
