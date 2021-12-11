@@ -24,7 +24,8 @@ import javax.swing.JTable
  */
 class KeyValueServerView : JPanel(BorderLayout()) {
 
-    private val table = KeyValueTableView(::removeKeys)
+    private val table = KeyValueTableView(::removeKeys, ::editValue)
+
     private val refreshAction: RefreshAction
     private val toolbar: ActionToolbar
     private var server: StorageServer? = null
@@ -60,7 +61,6 @@ class KeyValueServerView : JPanel(BorderLayout()) {
 
     fun setServer(serverInterface: KeyValueInspectorInterface, server: StorageServer) {
         this.serverInterface = serverInterface
-        if (server == this.server) return
 
         dispatchHelper.onListUpdated(emptyList())
         this.server = server
@@ -87,6 +87,16 @@ class KeyValueServerView : JPanel(BorderLayout()) {
                 serverInterface.remove(server, key)
             }
             dispatchHelper.onListUpdated(serverInterface.getData(server).values)
+        }
+    }
+
+    private fun editValue(key: ValueWithType, newValue: ValueWithType) {
+        val serverInterface = serverInterface ?: return
+        val server = server ?: return
+        scope.launch {
+            if (serverInterface.set(server, key, newValue)) {
+                dispatchHelper.onListUpdated(serverInterface.getData(server).values)
+            }
         }
     }
 

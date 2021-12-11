@@ -24,6 +24,7 @@ import javax.swing.table.TableCellEditor
  */
 class KeyValueTableView(
     private val removeKeys: (List<ValueWithType>) -> Unit,
+    private val editValue: (key: ValueWithType, newValue: ValueWithType) -> Unit,
 ) : TableView<KeyValueServerValue>() {
 
     private val internalModel: ListTableModel<KeyValueServerValue>
@@ -49,7 +50,7 @@ class KeyValueTableView(
         internalModel = ListTableModel(
             arrayOf(
                 TableViewColumnInfo(Tr.KeyValueKey.tr(), KeyValueServerValue::key, editable = false),
-                TableViewColumnInfo(Tr.KeyValueValue.tr(), KeyValueServerValue::value, editable = true),
+                TableViewColumnInfo(Tr.KeyValueValue.tr(), KeyValueServerValue::value, editable = true, onEdited = ::onValueEdited),
             ),
             listOf(),
             0
@@ -57,6 +58,19 @@ class KeyValueTableView(
         model = internalModel
 
         dispatchModel = TableModelDiffUtilDispatchModel(internalModel)
+    }
+
+    private fun onValueEdited(keyValueServerValue: KeyValueServerValue, newValue: String) {
+        val converted = when (keyValueServerValue.value.type) {
+            StorageType.string -> newValue
+            StorageType.integer -> newValue.toInt()
+            StorageType.double -> newValue.toDouble()
+            StorageType.boolean -> (newValue.lowercase() == "true" || newValue.lowercase() == Tr.TypeBooleanTrue.tr().lowercase())
+            StorageType.datetime -> TODO()
+            StorageType.binary -> TODO()
+            StorageType.stringList -> TODO()
+        }
+        editValue(keyValueServerValue.key, keyValueServerValue.value.copy(value = converted))
     }
 
     fun doRemoveSelectedRows() {
@@ -68,6 +82,7 @@ private class TableViewColumnInfo(
     name: String,
     private val selector: (KeyValueServerValue) -> ValueWithType,
     private val editable: Boolean,
+    private val onEdited: (KeyValueServerValue, stringValue: String) -> Unit = { _, _ -> },
 ) : ColumnInfo<KeyValueServerValue, String>(name) {
 
     override fun valueOf(item: KeyValueServerValue): String {
@@ -93,5 +108,9 @@ private class TableViewColumnInfo(
             }
             else -> null
         }
+    }
+
+    override fun setValue(item: KeyValueServerValue, value: String) {
+        onEdited(item, value)
     }
 }
