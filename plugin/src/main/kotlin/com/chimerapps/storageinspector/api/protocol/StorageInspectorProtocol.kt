@@ -4,6 +4,7 @@ import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueProtocol
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueServerInterface
+import com.chimerapps.storageinspector.ui.util.json.GsonCreator
 import com.google.gsonpackaged.Gson
 import com.google.gsonpackaged.JsonObject
 import com.google.gsonpackaged.JsonParser
@@ -19,7 +20,7 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
         const val SERVER_TYPE_KEY_VALUE = "key_value"
     }
 
-    private val gson = Gson()
+    private val gson = GsonCreator.newGsonInstance()
     private val listeners = mutableListOf<StorageInspectorProtocolListener>()
     private var serverId: ServerId? = null
 

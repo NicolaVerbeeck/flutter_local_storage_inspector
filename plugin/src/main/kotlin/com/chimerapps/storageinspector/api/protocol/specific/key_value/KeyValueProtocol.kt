@@ -9,6 +9,7 @@ import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueRequ
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerIdentification
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerStatus
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerValues
+import com.chimerapps.storageinspector.ui.util.json.GsonCreator
 import com.chimerapps.storageinspector.util.classLogger
 import com.google.gsonpackaged.Gson
 import com.google.gsonpackaged.JsonObject
@@ -35,7 +36,7 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) : KeyValu
         const val TYPE_IDENTIFY = "identify"
     }
 
-    private val gson = Gson()
+    private val gson = GsonCreator.newGsonInstance()
     private val listeners = mutableListOf<KeyValueProtocolListener>()
     var serverId: KeyValueServerIdentification? = null
 
@@ -55,6 +56,7 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) : KeyValu
     }
 
     fun handleMessage(requestId: String?, data: JsonObject?, error: String?) {
+        println(data)
         try {
             if (requestId == null && data != null) {
                 handleUnannouncedKeyValue(data)

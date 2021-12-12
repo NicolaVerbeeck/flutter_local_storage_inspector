@@ -63,12 +63,12 @@ class KeyValueTableView(
     private fun onValueEdited(keyValueServerValue: KeyValueServerValue, newValue: String) {
         val converted = when (keyValueServerValue.value.type) {
             StorageType.string -> newValue
-            StorageType.integer -> newValue.toInt()
+            StorageType.int -> newValue.toLong()
             StorageType.double -> newValue.toDouble()
-            StorageType.boolean -> (newValue.lowercase() == "true" || newValue.lowercase() == Tr.TypeBooleanTrue.tr().lowercase())
+            StorageType.bool -> (newValue.lowercase() == "true" || newValue.lowercase() == Tr.TypeBooleanTrue.tr().lowercase())
             StorageType.datetime -> TODO()
             StorageType.binary -> TODO()
-            StorageType.stringList -> TODO()
+            StorageType.stringlist -> TODO()
         }
         editValue(keyValueServerValue.key, keyValueServerValue.value.copy(value = converted))
     }
@@ -89,11 +89,11 @@ private class TableViewColumnInfo(
         return when (selector(item).type) {
             StorageType.string,
             StorageType.double,
-            StorageType.integer -> selector(item).value.toString()
+            StorageType.int -> selector(item).value.toString()
             StorageType.datetime -> DefaultJBDateTimeFormatter().formatDateTime(selector(item).value as Long)
             StorageType.binary -> Tr.TypeBinary.tr()
-            StorageType.boolean -> if (selector(item).value as Boolean) Tr.TypeBooleanTrue.tr() else Tr.TypeBooleanFalse.tr()
-            StorageType.stringList -> (selector(item).value as List<*>).joinToString(", ")
+            StorageType.bool -> if (selector(item).value as Boolean) Tr.TypeBooleanTrue.tr() else Tr.TypeBooleanFalse.tr()
+            StorageType.stringlist -> (selector(item).value as List<*>).joinToString(", ")
         }
     }
 
@@ -101,7 +101,7 @@ private class TableViewColumnInfo(
 
     override fun getEditor(item: KeyValueServerValue): TableCellEditor? {
         return when (selector(item).type) {
-            StorageType.boolean -> return object : ComboBoxCellEditor() {
+            StorageType.bool -> return object : ComboBoxCellEditor() {
                 override fun getComboBoxItems(): List<String> {
                     return listOf(Tr.TypeBooleanTrue.tr(), Tr.TypeBooleanFalse.tr())
                 }
