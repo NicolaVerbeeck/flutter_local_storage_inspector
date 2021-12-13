@@ -8,7 +8,6 @@ import com.chimerapps.storageinspector.ui.util.list.TableModelDiffUtilDispatchMo
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.intellij.ui.table.TableView
 import com.intellij.util.PlatformIcons
-import com.intellij.util.text.DefaultJBDateTimeFormatter
 import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.ComboBoxCellEditor
 import com.intellij.util.ui.JBUI
@@ -86,15 +85,7 @@ private class TableViewColumnInfo(
 ) : ColumnInfo<KeyValueServerValue, String>(name) {
 
     override fun valueOf(item: KeyValueServerValue): String {
-        return when (selector(item).type) {
-            StorageType.string,
-            StorageType.double,
-            StorageType.int -> selector(item).value.toString()
-            StorageType.datetime -> DefaultJBDateTimeFormatter().formatDateTime(selector(item).value as Long)
-            StorageType.binary -> Tr.TypeBinary.tr()
-            StorageType.bool -> if (selector(item).value as Boolean) Tr.TypeBooleanTrue.tr() else Tr.TypeBooleanFalse.tr()
-            StorageType.stringlist -> (selector(item).value as List<*>).joinToString(", ")
-        }
+        return selector(item).asString
     }
 
     override fun isCellEditable(item: KeyValueServerValue?): Boolean = editable

@@ -1,9 +1,8 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storage_inspector/src/util/observable_server_list.dart';
 
 void main() {
-  group('Observable list tests', (){
+  group('Observable list tests', () {
     test('Test add notifies', () {
       final list = ObservableList<String>();
       final listener = TestListener();
@@ -32,7 +31,6 @@ void main() {
 }
 
 class TestListener implements ObservableListObserver<String> {
-
   var addedCalled = 0;
   var removedCalled = 0;
 
@@ -45,5 +43,4 @@ class TestListener implements ObservableListObserver<String> {
   void onRemoved(String removed) {
     ++removedCalled;
   }
-
 }

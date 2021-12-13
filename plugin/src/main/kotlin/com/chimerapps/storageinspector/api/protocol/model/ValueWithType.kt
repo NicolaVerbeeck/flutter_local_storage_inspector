@@ -1,5 +1,6 @@
 package com.chimerapps.storageinspector.api.protocol.model
 
+import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.google.gsonpackaged.JsonArray
 import com.google.gsonpackaged.JsonDeserializationContext
 import com.google.gsonpackaged.JsonDeserializer
@@ -7,12 +8,24 @@ import com.google.gsonpackaged.JsonElement
 import com.google.gsonpackaged.JsonObject
 import com.google.gsonpackaged.JsonSerializationContext
 import com.google.gsonpackaged.JsonSerializer
+import com.intellij.util.text.DefaultJBDateTimeFormatter
 import java.lang.reflect.Type
 
 /**
  * @author Nicola Verbeeck
  */
-data class ValueWithType(val type: StorageType, val value: Any)
+data class ValueWithType(val type: StorageType, val value: Any) {
+    val asString: String
+        get() = when (type) {
+            StorageType.string,
+            StorageType.double,
+            StorageType.int -> value.toString()
+            StorageType.datetime -> DefaultJBDateTimeFormatter().formatDateTime(value as Long)
+            StorageType.binary -> Tr.TypeBinary.tr()
+            StorageType.bool -> if (value as Boolean) Tr.TypeBooleanTrue.tr() else Tr.TypeBooleanFalse.tr()
+            StorageType.stringlist -> (value as List<*>).joinToString(", ")
+        }
+}
 
 enum class StorageType {
     string,

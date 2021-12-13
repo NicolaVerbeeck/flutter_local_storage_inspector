@@ -1,0 +1,7 @@
+build/
+test/
+.idea/
+coverage/
+.dart_tool/
+tool/
+analysis_options.yaml

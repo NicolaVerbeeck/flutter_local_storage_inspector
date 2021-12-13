@@ -6,7 +6,6 @@ import 'package:tuple/tuple.dart';
 /// Helper class for simple key-value servers that only support string keys
 /// and string values
 abstract class SimpleStringKeyValueServer implements KeyValueServer {
-
   @override
   final String name;
 

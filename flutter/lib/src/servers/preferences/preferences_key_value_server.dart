@@ -54,10 +54,12 @@ class PreferencesKeyValueServer implements KeyValueServer {
     /// Hints indicating for which specific key, which type is expected
     Map<String, StorageType> typeForKey = const {},
   })  : typeForKey = typeForKey.map(
-          (key, value) => MapEntry(ValueWithType(StorageType.string, key), value),
+          (key, value) =>
+              MapEntry(ValueWithType(StorageType.string, key), value),
         ),
         keyIcons = keyIcons.map(
-          (key, value) => MapEntry(ValueWithType(StorageType.string, key), value),
+          (key, value) =>
+              MapEntry(ValueWithType(StorageType.string, key), value),
         );
 
   @override
@@ -92,7 +94,8 @@ class PreferencesKeyValueServer implements KeyValueServer {
   Future<void> clear() => _preferences.clear();
 
   @override
-  Future<void> remove(ValueWithType key) => _preferences.remove(key.value.toString());
+  Future<void> remove(ValueWithType key) =>
+      _preferences.remove(key.value.toString());
 
   @override
   Future<void> set(ValueWithType key, ValueWithType newValue) async {
@@ -115,9 +118,11 @@ class PreferencesKeyValueServer implements KeyValueServer {
         await _preferences.setStringList(preferenceKey, newValue.value);
         break;
       case StorageType.datetime:
-        throw ArgumentError('Shared preferences does not support datetime values');
+        throw ArgumentError(
+            'Shared preferences does not support datetime values');
       case StorageType.binary:
-        throw ArgumentError('Shared preferences does not support binary values');
+        throw ArgumentError(
+            'Shared preferences does not support binary values');
     }
   }
 }

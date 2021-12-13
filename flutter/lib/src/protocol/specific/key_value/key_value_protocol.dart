@@ -23,10 +23,14 @@ class KeyValueProtocol {
         'id': server.id,
         'name': server.name,
         'icon': server.icon,
-        'keySuggestions': server.keySuggestions.map(mapValueWithType).toList(growable: false),
-        'keyOptions': server.keyOptions.map(mapValueWithType).toList(growable: false),
-        'supportedKeyTypes': server.supportedKeyTypes.map(typeString).toList(growable: false),
-        'supportedValueTypes': server.supportedValueTypes.map(typeString).toList(growable: false),
+        'keySuggestions':
+            server.keySuggestions.map(mapValueWithType).toList(growable: false),
+        'keyOptions':
+            server.keyOptions.map(mapValueWithType).toList(growable: false),
+        'supportedKeyTypes':
+            server.supportedKeyTypes.map(typeString).toList(growable: false),
+        'supportedValueTypes':
+            server.supportedValueTypes.map(typeString).toList(growable: false),
         'keyTypeHints': server.typeForKey.entries
             .map((entry) => {
                   'key': mapValueWithType(entry.key),
@@ -52,11 +56,14 @@ class KeyValueProtocol {
       case commandClear:
         return _handleClear(jsonData['data']['id'] as String);
       case commandSet:
-        return _handleSet(jsonData['data']['id'] as String, jsonData['data']['key'], jsonData['data']['value']);
+        return _handleSet(jsonData['data']['id'] as String,
+            jsonData['data']['key'], jsonData['data']['value']);
       case commandRemove:
-        return _handleRemove(jsonData['data']['id'] as String, jsonData['data']['key']);
+        return _handleRemove(
+            jsonData['data']['id'] as String, jsonData['data']['key']);
       default:
-        return Future.error(ArgumentError('Unknown key-value protocol command: ${jsonData['type']}'));
+        return Future.error(ArgumentError(
+            'Unknown key-value protocol command: ${jsonData['type']}'));
     }
   }
 

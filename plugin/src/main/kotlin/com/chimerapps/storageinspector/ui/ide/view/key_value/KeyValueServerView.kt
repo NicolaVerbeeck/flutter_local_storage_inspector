@@ -4,6 +4,7 @@ import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerValue
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueInspectorInterface
+import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueStorageServer
 import com.chimerapps.storageinspector.ui.ide.actions.RefreshAction
 import com.chimerapps.storageinspector.ui.util.list.DiffUtilComparator
 import com.chimerapps.storageinspector.ui.util.list.ListUpdateHelper
@@ -47,7 +48,17 @@ class KeyValueServerView : JPanel(BorderLayout()) {
 
         val decorator = ToolbarDecorator.createDecorator(table)
         decorator.disableUpDownActions()
-        decorator.disableAddAction() //TODO re-enable
+        decorator.setAddAction {
+            val server = server as? KeyValueStorageServer
+            if (server != null) {
+                EditKeyValueDialog(
+                    server.keyOptions,
+                    server.supportedKeyTypes,
+                    server.keySuggestions,
+                    server.supportedValueTypes,
+                ).show()
+            }
+        }
         decorator.setRemoveAction { table.doRemoveSelectedRows() }
 
         table.autoResizeMode = JTable.AUTO_RESIZE_OFF

@@ -8,6 +8,13 @@ import 'package:uuid/uuid.dart';
 
 const _announcementPort = 6396;
 
+/// Tooling server that drives the storage inspector server
+/// A single instance needs to be created and all storage
+/// servers registered with it.
+///
+/// The servet does not start automatically upon creation,
+/// call [start] first. When you are done with the
+/// server, call [stop]
 class StorageServerDriver extends ToolingServer {
   final tag = const Uuid().v4().substring(0, 6);
 
@@ -20,10 +27,18 @@ class StorageServerDriver extends ToolingServer {
   @override
   int get protocolVersion => StorageProtocol.version;
 
+  /// Create a new server driver.
+  ///
+  /// [icon] denotes an SVG or a base64 encoded png (16x16 or 32x32)
+  ///
+  /// [bundleId] id of the application being instrumented
+  ///
+  /// [port] port to use for the server instance, use 0 to use an
+  /// automatic free port
   StorageServerDriver({
-    required int port,
     String? icon,
     required String bundleId,
+    int port = 0,
   }) : _server = StorageProtocolServer(
           server: createRawProtocolServer(port),
           icon: icon,
@@ -37,6 +52,7 @@ class StorageServerDriver extends ToolingServer {
     _announcementManager.addExtension(TagExtension(tag));
   }
 
+  /// Starts the server and announcement system for IDE integration
   Future<void> start() async {
     await _server.start();
     await _announcementManager.start();
@@ -45,11 +61,13 @@ class StorageServerDriver extends ToolingServer {
     print('Storage Inspector server running on $port [$tag]');
   }
 
+  /// Shuts down the internal server and announcement system
   Future<void> stop() async {
     await _server.shutdown();
     await _announcementManager.stop();
   }
 
+  /// Register a key value server for inspection
   void addKeyValueServer(KeyValueServer server) {
     _server.addKeyValueServer(server);
   }

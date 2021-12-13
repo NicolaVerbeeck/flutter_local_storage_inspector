@@ -15,7 +15,8 @@ void main() {
   late StreamQueue socketQueue;
 
   setUp(() async {
-    driver = StorageServerDriver(bundleId: 'com.chimerapps.test', port: 0, icon: 'iconData');
+    driver = StorageServerDriver(
+        bundleId: 'com.chimerapps.test', port: 0, icon: 'iconData');
     keyValueServer = SimpleMemoryKeyValueServer({});
     driver.addKeyValueServer(keyValueServer);
 
@@ -33,8 +34,10 @@ void main() {
   group('Key value protocol and driver tests', () {
     test('Test identify', () async {
       final driverIdMessage = await socketQueue.next as String;
-      expect(driverIdMessage, '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test","icon":"iconData"}}');
-      final serverIdMessage = json.decode(await socketQueue.next as String) as Map<String, dynamic>;
+      expect(driverIdMessage,
+          '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test","icon":"iconData"}}');
+      final serverIdMessage =
+          json.decode(await socketQueue.next as String) as Map<String, dynamic>;
 
       expect(serverIdMessage['messageId'], isNotNull);
       expect(serverIdMessage['serverType'], 'key_value');
@@ -72,7 +75,9 @@ void main() {
         ),
       );
       expect(
-          await socketQueue.next, matches('{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[\\]}\\]}}'));
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[{"id":"123","values":\\[\\]}\\]}}'));
     });
 
     test('Test get all initial data', () async {
@@ -114,7 +119,10 @@ void main() {
           ),
         ),
       );
-      expect(await socketQueue.next, matches('{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[\\]}}'));
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"all":\\[\\]}}'));
     });
 
     test('Test get single server', () async {
@@ -246,12 +254,18 @@ void main() {
         ),
       );
 
-      expect(await socketQueue.next,
-          matches('{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
-      expect(await socketQueue.next,
-          matches('{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
-      expect(await socketQueue.next,
-          matches('{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
     });
 
     test('Test remove', () async {
@@ -366,7 +380,8 @@ class SimpleMemoryKeyValueServer extends SimpleStringKeyValueServer {
         );
 
   @override
-  Map<ValueWithType, StorageType> get typeForKey => {const ValueWithType(StorageType.string, '2'): StorageType.string};
+  Map<ValueWithType, StorageType> get typeForKey =>
+      {const ValueWithType(StorageType.string, '2'): StorageType.string};
 
   @override
   Future<void> clearValues() {
@@ -390,5 +405,7 @@ class SimpleMemoryKeyValueServer extends SimpleStringKeyValueServer {
   }
 
   @override
-  Future<Iterable<MapEntry<String, String>>> get values => throwGetAll ? Future.error(ArgumentError('Error getting all')) : Future.value(backingMap.entries);
+  Future<Iterable<MapEntry<String, String>>> get values => throwGetAll
+      ? Future.error(ArgumentError('Error getting all'))
+      : Future.value(backingMap.entries);
 }
