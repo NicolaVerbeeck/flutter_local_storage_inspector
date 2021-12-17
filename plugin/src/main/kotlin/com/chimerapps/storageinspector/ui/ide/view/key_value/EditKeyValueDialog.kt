@@ -7,8 +7,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBTextField
 import java.awt.Dimension
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -25,15 +25,20 @@ class EditKeyValueDialog(
     private val project: Project,
 ) : DialogWrapper(project, false, IdeModalityType.PROJECT) {
 
-    var freeKeyField: TypedValueEntryView? = null
-    var keyField: ComboBox<String>? = null
-    lateinit var keyTypeField: ComboBox<StorageType>
-    lateinit var valueTypeField: ComboBox<StorageType>
-    lateinit var valueField: TypedValueEntryView
+    private var freeKeyField: TypedValueEntryView? = null
+    private var keyField: ComboBox<String>? = null
+    private lateinit var keyTypeField: ComboBox<StorageType>
+    private lateinit var valueTypeField: ComboBox<StorageType>
+    private lateinit var valueField: TypedValueEntryView
+
+    var results: Pair<ValueWithType, ValueWithType>? = null
+        private set
 
     init {
         init()
     }
+
+    override fun getDimensionServiceKey(): String = "edit_key_value"
 
     override fun createCenterPanel(): JComponent {
         return DialogPanel().also { root ->
@@ -60,22 +65,46 @@ class EditKeyValueDialog(
             })
 
             root.add(JBLabel("Value").also { it.alignmentX = 0.0f })
-            root.add(TypedValueEntryView(project).also {
+            root.add(TypedValueEntryView(project, valueTypeField.model.getElementAt(valueTypeField.selectedIndex)).also {
                 valueField = it
                 it.alignmentX = 0.0f
                 it.maximumSize = Dimension(30000, it.preferredSize.height)
             })
             root.add(Box.createVerticalGlue())
 
+            keyTypeField.addActionListener {
+                freeKeyField?.updateType(keyTypeField.model.getElementAt(keyTypeField.selectedIndex))
+            }
+
             valueTypeField.addActionListener {
                 valueField.updateType(valueTypeField.model.getElementAt(valueTypeField.selectedIndex))
             }
+
+            root.revalidate()
+            root.minimumSize = Dimension(300, root.preferredSize.height)
         }
+    }
+
+    override fun doValidate(): ValidationInfo? {
+        var key = freeKeyField?.doValidate { false }
+
+        if (key == null) {
+            val keyValue = keyField!!.selectedItem as String
+            key = TypedValueEntryView.doValidateFromString(keyTypeField.model.getElementAt(keyTypeField.selectedIndex), keyValue, keyField!!) { false }
+        }
+        key.error?.let { return it }
+
+        val valueResult = valueField.doValidate() { storageType -> storageType == StorageType.string }
+        valueResult.error?.let { return it }
+
+        results = Pair(key.rawValue!!, valueResult.rawValue!!)
+
+        return null
     }
 
     private fun makeStorageKeySelector(): JComponent {
         if (restrictKeysTo.isEmpty() && keyHints.isEmpty()) {
-            freeKeyField = TypedValueEntryView(project)
+            freeKeyField = TypedValueEntryView(project, keyTypeField.model.getElementAt(keyTypeField.selectedIndex))
             return freeKeyField!!
         }
 

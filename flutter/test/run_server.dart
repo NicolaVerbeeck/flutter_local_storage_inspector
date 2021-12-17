@@ -27,6 +27,6 @@ void main() async {
 
   await driver.start();
 
-  await Future<void>.delayed(const Duration(seconds: 1000));
+  await Future<void>.delayed(const Duration(seconds: 10000));
   await driver.stop();
 }

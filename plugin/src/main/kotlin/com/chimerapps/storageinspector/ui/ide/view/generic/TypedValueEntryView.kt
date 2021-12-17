@@ -1,6 +1,7 @@
 package com.chimerapps.storageinspector.ui.ide.view.generic
 
 import com.chimerapps.storageinspector.api.protocol.model.StorageType
+import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import com.chimerapps.storageinspector.ui.util.file.chooseOpenFile
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.chimerapps.storageinspector.ui.util.notification.NotificationUtil
@@ -8,10 +9,12 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.FixedSizeButton
+import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.components.JBTextField
 import java.awt.BorderLayout
 import java.awt.Toolkit
 import javax.swing.JButton
+import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.text.AbstractDocument
 import javax.swing.text.AttributeSet
@@ -20,7 +23,7 @@ import javax.swing.text.DocumentFilter
 /**
  * @author Nicola Verbeeck
  */
-class TypedValueEntryView(private val project: Project) : JPanel(BorderLayout()) {
+class TypedValueEntryView(private val project: Project, private var storageType: StorageType) : JPanel(BorderLayout()) {
 
     private val booleanSelector = ComboBox(arrayOf(Tr.TypeBooleanTrue.tr(), Tr.TypeBooleanFalse.tr()))
     private val freeEditField = JBTextField()
@@ -28,9 +31,11 @@ class TypedValueEntryView(private val project: Project) : JPanel(BorderLayout())
 
     init {
         add(freeEditField, BorderLayout.CENTER)
+        updateType(storageType)
     }
 
     fun updateType(type: StorageType) {
+        storageType = type
         when (type) {
             StorageType.string -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = null
@@ -112,7 +117,58 @@ class TypedValueEntryView(private val project: Project) : JPanel(BorderLayout())
         valueButton.actionListeners.toList().forEach(valueButton::removeActionListener)
         return valueButton
     }
+
+    fun doValidate(allowEmpty: (StorageType) -> Boolean): ValueResult {
+        return when (storageType) {
+            StorageType.string,
+            StorageType.int,
+            StorageType.double -> doValidateFromString(storageType, freeEditField.text, freeEditField, allowEmpty)
+            StorageType.datetime -> TODO()
+            StorageType.binary -> TODO()
+            StorageType.bool -> doValidateFromString(storageType, if (booleanSelector.selectedIndex == 0) "true" else "false", freeEditField, allowEmpty)
+            StorageType.stringlist -> TODO()
+        }
+
+    }
+
+    companion object {
+        fun doValidateFromString(storageType: StorageType, text: String, component: JComponent, allowEmpty: (StorageType) -> Boolean): ValueResult {
+            when (storageType) {
+                StorageType.string -> {
+                    if (text.isEmpty() && !allowEmpty(storageType)) {
+                        return ValueResult(error = ValidationInfo("Empty value is not allowed", component))
+                    }
+                    return ValueResult(ValueWithType(storageType, text))
+                }
+                StorageType.int -> {
+                    if (text.isEmpty() && !allowEmpty(storageType)) {
+                        return ValueResult(error = ValidationInfo("Empty value is not allowed", component))
+                    }
+                    val value = text.toIntOrNull() ?: return ValueResult(error = ValidationInfo("Value is not integer", component))
+                    return ValueResult(ValueWithType(storageType, value))
+                }
+                StorageType.double -> {
+                    if (text.isEmpty() && !allowEmpty(storageType)) {
+                        return ValueResult(error = ValidationInfo("Empty value is not allowed", component))
+                    }
+                    val value = text.toDoubleOrNull() ?: return ValueResult(error = ValidationInfo("Value is not double", component))
+                    return ValueResult(ValueWithType(storageType, value))
+                }
+                StorageType.datetime -> TODO()
+                StorageType.binary -> TODO()
+                StorageType.bool -> {
+                    return ValueResult(ValueWithType(storageType, text.equals(Tr.TypeBooleanTrue.tr(), ignoreCase = true) || text.equals("true", ignoreCase = true)))
+                }
+                StorageType.stringlist -> TODO()
+            }
+        }
+    }
 }
+
+data class ValueResult(
+    val rawValue: ValueWithType? = null,
+    val error: ValidationInfo? = null,
+)
 
 private class IntegerOnlyDocumentFilter : DocumentFilter() {
 

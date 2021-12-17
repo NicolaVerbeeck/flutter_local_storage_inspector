@@ -51,14 +51,24 @@ class KeyValueServerView(private val project: Project) : JPanel(BorderLayout()) 
         decorator.disableUpDownActions()
         decorator.setAddAction {
             val server = server as? KeyValueStorageServer
-            if (server != null) {
+            val serverInterface = serverInterface
+            if (server != null && serverInterface != null) {
                 EditKeyValueDialog(
                     server.keyOptions,
                     server.supportedKeyTypes,
                     server.keySuggestions,
                     server.supportedValueTypes,
                     project,
-                ).show()
+                ).also {
+                    if (it.showAndGet()) {
+                        it.results?.let { results ->
+                            scope.launch {
+                                serverInterface.set(server, results.first, results.second)
+                                dispatchHelper.onListUpdated(serverInterface.getData(server).values)
+                            }
+                        }
+                    }
+                }
             }
         }
         decorator.setRemoveAction { table.doRemoveSelectedRows() }
