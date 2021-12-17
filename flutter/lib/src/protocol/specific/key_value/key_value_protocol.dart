@@ -9,6 +9,7 @@ class KeyValueProtocol {
   static const commandClear = 'clear';
   static const commandSet = 'set';
   static const commandRemove = 'remove';
+  static const commandGetValue = 'get_value';
 
   final StorageProtocolServer _server;
 
@@ -53,6 +54,9 @@ class KeyValueProtocol {
         return _handleGetAll();
       case commandGet:
         return _handleGet(jsonData['data']['id'] as String);
+      case commandGetValue:
+        return _handleGetValue(
+            jsonData['data']['id'] as String, jsonData['data']['key']);
       case commandClear:
         return _handleClear(jsonData['data']['id'] as String);
       case commandSet:
@@ -140,6 +144,26 @@ class KeyValueProtocol {
       'id': id,
       'data': {
         'success': true,
+      },
+    };
+  }
+
+  Future<Map<String, dynamic>> _handleGetValue(
+    String id,
+    dynamic key,
+  ) async {
+    final keyData = decodeValueWithType(key);
+
+    final keyValueServer = _server.keyValueServers.firstWhere(
+      (element) => element.id == id,
+      orElse: () => throw ArgumentError('No server with id $id found'),
+    );
+
+    final value = await keyValueServer.get(keyData);
+    return {
+      'id': id,
+      'data': {
+        'value': mapValueWithType(value),
       },
     };
   }

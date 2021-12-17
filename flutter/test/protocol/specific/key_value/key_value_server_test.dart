@@ -176,6 +176,33 @@ void main() {
       await socketQueue.next;
       expect(keyValueServer.backingMap['hello'], 'world');
     });
+    test('Test get value', () async {
+      await socketQueue.skip(2);
+      keyValueServer.backingMap['hello'] = 'world';
+
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'get_value',
+                'data': {
+                  'id': '123',
+                  'key': {'type': 'string', 'value': 'hello'},
+                }
+              },
+            },
+          ),
+        ),
+      );
+
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","data":{"id":"123","data":{"value":{"type":"string","value":"world"}}'));
+    });
 
     test('Test actions wrong server', () async {
       await socketQueue.skip(2);
@@ -253,7 +280,28 @@ void main() {
           ),
         ),
       );
+      socket.addUtf8Text(
+        utf8.encode(
+          json.encode(
+            {
+              'requestId': '1234',
+              'serverType': 'key_value',
+              'data': {
+                'type': 'get_value',
+                'data': {
+                  'id': '1234',
+                  'key': {'type': 'string', 'value': 'hello'},
+                }
+              },
+            },
+          ),
+        ),
+      );
 
+      expect(
+          await socketQueue.next,
+          matches(
+              '{"messageId":".*","serverType":"key_value","requestId":"1234","error":"Invalid argument\\(s\\): No server with id 1234 found.*}'));
       expect(
           await socketQueue.next,
           matches(
@@ -408,4 +456,9 @@ class SimpleMemoryKeyValueServer extends SimpleStringKeyValueServer {
   Future<Iterable<MapEntry<String, String>>> get values => throwGetAll
       ? Future.error(ArgumentError('Error getting all'))
       : Future.value(backingMap.entries);
+
+  @override
+  Future<String> getValue(String key) {
+    return Future.value(backingMap[key]!);
+  }
 }

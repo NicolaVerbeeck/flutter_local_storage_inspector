@@ -53,6 +53,10 @@ abstract class SimpleStringKeyValueServer implements KeyValueServer {
   @protected
   Future<void> setValue(String key, String value);
 
+  /// Gets the value for this key
+  @protected
+  Future<String> getValue(String key);
+
   /// Removes the value for this key
   @protected
   Future<void> removeValue(String key);
@@ -83,5 +87,11 @@ abstract class SimpleStringKeyValueServer implements KeyValueServer {
   @override
   Future<void> set(ValueWithType key, ValueWithType newValue) {
     return setValue(key.value.toString(), newValue.value.toString());
+  }
+
+  @override
+  Future<ValueWithType> get(ValueWithType key) async {
+    return ValueWithType(
+        StorageType.string, await getValue(key.value.toString()));
   }
 }

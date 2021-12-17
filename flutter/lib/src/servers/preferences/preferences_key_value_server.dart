@@ -69,24 +69,8 @@ class PreferencesKeyValueServer implements KeyValueServer {
     return _preferences.getKeys().map((key) {
       final rawValue = _preferences.get(key);
 
-      final StorageType type;
-      if (rawValue is bool) {
-        type = StorageType.boolean;
-      } else if (rawValue is String) {
-        type = StorageType.string;
-      } else if (rawValue is List<String>) {
-        type = StorageType.stringList;
-      } else if (rawValue is int) {
-        type = StorageType.integer;
-      } else if (rawValue is double) {
-        type = StorageType.double;
-      } else {
-        throw ArgumentError('Failed to serialize preferences, '
-            'unknown type: ${rawValue.runtimeType}');
-      }
-      final value = ValueWithType(type, rawValue);
-
-      return Tuple2(ValueWithType(StorageType.string, key), value);
+      return Tuple2(
+          ValueWithType(StorageType.string, key), fromObject(rawValue));
     }).toList(growable: false);
   }
 
@@ -124,5 +108,30 @@ class PreferencesKeyValueServer implements KeyValueServer {
         throw ArgumentError(
             'Shared preferences does not support binary values');
     }
+  }
+
+  @override
+  Future<ValueWithType> get(ValueWithType key) async {
+    final preferenceKey = key.value.toString();
+    return fromObject(_preferences.get(preferenceKey));
+  }
+
+  static ValueWithType fromObject(Object? rawValue) {
+    final StorageType type;
+    if (rawValue is bool) {
+      type = StorageType.boolean;
+    } else if (rawValue is String) {
+      type = StorageType.string;
+    } else if (rawValue is List<String>) {
+      type = StorageType.stringList;
+    } else if (rawValue is int) {
+      type = StorageType.integer;
+    } else if (rawValue is double) {
+      type = StorageType.double;
+    } else {
+      throw ArgumentError('Failed to serialize preferences, '
+          'unknown type: ${rawValue.runtimeType}');
+    }
+    return ValueWithType(type, rawValue);
   }
 }

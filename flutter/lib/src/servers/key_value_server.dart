@@ -14,10 +14,15 @@ abstract class KeyValueServer implements StorageServerInfo {
   Set<StorageType> get supportedKeyTypes;
 
   /// Gets (reloads if applicable) all values associated with this server
+  /// Implementations are allowed to set certain large values to 'null' to
+  /// allow lazy loading using [get]
   Future<List<Tuple2<ValueWithType, ValueWithType>>> get allValues;
 
   /// Sets the value for the given key
   Future<void> set(ValueWithType key, ValueWithType newValue);
+
+  /// Gets the value for the given key
+  Future<ValueWithType> get(ValueWithType key);
 
   /// Removes the value for the given key
   Future<void> remove(ValueWithType key);

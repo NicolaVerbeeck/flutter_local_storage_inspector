@@ -22,11 +22,14 @@ class IOFileServer implements FileServer {
   Future<List<String>> browse(String root) => Future.value(List.empty());
 
   @override
-  Future<void> delete(String path, {required bool recursive}) => Future.error(ArgumentError('Not supported on web'));
+  Future<void> delete(String path, {required bool recursive}) =>
+      Future.error(ArgumentError('Not supported on web'));
 
   @override
-  Future<Uint8List> read(String path) => Future.error(ArgumentError('Not supported on web'));
+  Future<Uint8List> read(String path) =>
+      Future.error(ArgumentError('Not supported on web'));
 
   @override
-  Future<void> write(String path, Uint8List data) => Future.error(ArgumentError('Not supported on web'));
+  Future<void> write(String path, Uint8List data) =>
+      Future.error(ArgumentError('Not supported on web'));
 }

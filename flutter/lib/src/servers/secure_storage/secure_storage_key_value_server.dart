@@ -34,4 +34,9 @@ class SecureStorageKeyValueServer extends SimpleStringKeyValueServer {
   @override
   Future<Iterable<MapEntry<String, String>>> get values =>
       _storage.readAll().then((value) => value.entries);
+
+  @override
+  Future<String> getValue(String key) => _storage.read(key: key).then(
+      // ignore: prefer_if_null_operators
+      (value) => value == null ? throw ArgumentError('Value not set') : value);
 }
