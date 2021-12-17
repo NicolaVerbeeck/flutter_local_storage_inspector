@@ -189,7 +189,7 @@ class InspectorSessionWindow(
         val connection = connection?.storageInterface ?: return
         when (storageServer.type) {
             StorageServerType.KEY_VALUE -> {
-                val detail = currentDetailView as? KeyValueServerView ?: KeyValueServerView()
+                val detail = currentDetailView as? KeyValueServerView ?: KeyValueServerView(project)
                 detail.setServer(connection.keyValueInterface, storageServer)
 
                 currentDetailView = detail

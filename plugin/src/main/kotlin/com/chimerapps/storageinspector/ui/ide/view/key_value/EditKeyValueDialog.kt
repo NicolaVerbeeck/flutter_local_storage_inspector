@@ -3,6 +3,7 @@ package com.chimerapps.storageinspector.ui.ide.view.key_value
 import com.chimerapps.storageinspector.api.protocol.model.StorageType
 import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import com.chimerapps.storageinspector.ui.ide.view.generic.TypedValueEntryView
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.DialogWrapper
@@ -21,7 +22,8 @@ class EditKeyValueDialog(
     private val restrictKeyTypesTo: List<StorageType>,
     private val keyHints: List<ValueWithType>,
     private val restrictValueTypesTo: List<StorageType>,
-) : DialogWrapper(null, false, IdeModalityType.PROJECT) {
+    private val project: Project,
+) : DialogWrapper(project, false, IdeModalityType.PROJECT) {
 
     var freeKeyField: TypedValueEntryView? = null
     var keyField: ComboBox<String>? = null
@@ -58,7 +60,7 @@ class EditKeyValueDialog(
             })
 
             root.add(JBLabel("Value").also { it.alignmentX = 0.0f })
-            root.add(TypedValueEntryView().also {
+            root.add(TypedValueEntryView(project).also {
                 valueField = it
                 it.alignmentX = 0.0f
                 it.maximumSize = Dimension(30000, it.preferredSize.height)
@@ -73,7 +75,7 @@ class EditKeyValueDialog(
 
     private fun makeStorageKeySelector(): JComponent {
         if (restrictKeysTo.isEmpty() && keyHints.isEmpty()) {
-            freeKeyField = TypedValueEntryView()
+            freeKeyField = TypedValueEntryView(project)
             return freeKeyField!!
         }
 

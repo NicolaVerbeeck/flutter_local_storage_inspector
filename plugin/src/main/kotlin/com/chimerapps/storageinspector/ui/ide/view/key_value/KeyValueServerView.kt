@@ -12,6 +12,7 @@ import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.project.Project
 import com.intellij.ui.ToolbarDecorator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +24,7 @@ import javax.swing.JTable
 /**
  * @author Nicola Verbeeck
  */
-class KeyValueServerView : JPanel(BorderLayout()) {
+class KeyValueServerView(private val project: Project) : JPanel(BorderLayout()) {
 
     private val table = KeyValueTableView(::removeKeys, ::editValue)
 
@@ -56,6 +57,7 @@ class KeyValueServerView : JPanel(BorderLayout()) {
                     server.supportedKeyTypes,
                     server.keySuggestions,
                     server.supportedValueTypes,
+                    project,
                 ).show()
             }
         }
