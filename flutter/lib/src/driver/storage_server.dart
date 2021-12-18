@@ -82,7 +82,7 @@ class StorageProtocolServer implements StorageProtocolListener {
     });
   }
 
-  Future<void> waitForResume() async => _resumeFuture.isCompleted;
+  Future<void> waitForResume() => _resumeFuture.future;
 
   void _onNewConnection(StorageProtocolConnection connection) {
     connection.init(_onNewConnectionReady, this);

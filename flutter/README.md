@@ -28,12 +28,11 @@ final driver = StorageServerDriver(
 Once the driver is created, you can register the individual servers you wish to expose:
 
 ```dart
-
 final preferencesServer =
-PreferencesKeyValueServer(preferences, 'Base Preferences');
+  PreferencesKeyValueServer(preferences, 'Base Preferences');
 
 final secureStorageServer =
-SecureStorageKeyValueServer(secureStorage, 'Super secret storage');
+  SecureStorageKeyValueServer(secureStorage, 'Super secret storage');
 
 final fileServer = DefaultFileServer('<cache dir path>', "Cache files");
 
@@ -47,11 +46,11 @@ driver.addFileServer(fileServer);
 The following servers are built-in with this package:
 
 ```dart
-class PreferencesKeyValueServer //Wraps Flutter's SharedPreferences
+class PreferencesKeyValueServer{} //Wraps Flutter's SharedPreferences
 
-class SecureStorageKeyValueServer //Wraps Flutter's FlutterSecureStorage package
+class SecureStorageKeyValueServer{} //Wraps Flutter's FlutterSecureStorage package
 
-class DefaultFileServer //Uses dart:io to serve a specified directory
+class DefaultFileServer{} //Uses dart:io to serve a specified directory
 ```
 
 ### Start inspector
@@ -59,8 +58,7 @@ class DefaultFileServer //Uses dart:io to serve a specified directory
 Once all the servers have been configured, you can start the driver to start the inspector and announcement server for the plugin:
 
 ```dart
-await
-driver.start();
+await driver.start();
 ```
 
 ### Shutdown
@@ -68,8 +66,7 @@ driver.start();
 If so required, you can shut down the server:
 
 ```dart
-await
-driver.stop();
+await driver.stop();
 ```
 
 ## Advanced usage
@@ -86,9 +83,9 @@ To write your own integration into the system (eg: modify pure in-memory key val
 requirements.
 
 ```dart
-abstract class KeyValueServer //Most generic key-value server. Supports arbitrary key and value types
+abstract class KeyValueServer{} //Most generic key-value server. Supports arbitrary key and value types
 
-abstract class SimpleKeyValueServer //Simpler variant of the key value server, supports only string keys and values
+abstract class SimpleKeyValueServer{} //Simpler variant of the key value server, supports only string keys and values
 
-abstract class FileServer //Server that server hierarchical storage of binary data   
+abstract class FileServer{} //Server that server hierarchical storage of binary data   
 ```
