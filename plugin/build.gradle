@@ -124,3 +124,13 @@ tasks.create("buildTranslationsEnum") {
         file << "}"
     }
 }
+
+signPlugin {
+    certificateChain = new File(System.getenv("STORAGE_PLUGIN_CERTIFICATE_CHAIN")).text
+    privateKey = new File(System.getenv("STORAGE_PLUGIN_PRIVATE_KEY")).text
+    password = System.getenv("STORAGE_PLUGIN_PRIVATE_KEY_PASSWORD")
+}
+
+publishPlugin {
+    token = System.getenv("STORAGE_PLUGIN_PUBLISH_TOKEN")
+}
