@@ -33,9 +33,8 @@ void main() {
 
   group('Key value protocol and driver tests', () {
     test('Test identify', () async {
-      final driverIdMessage = await socketQueue.next as String;
-      expect(driverIdMessage,
-          '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test","icon":"iconData"}}');
+      await socketQueue.skip(1);
+
       final serverIdMessage =
           json.decode(await socketQueue.next as String) as Map<String, dynamic>;
 

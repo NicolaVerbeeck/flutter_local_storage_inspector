@@ -3,6 +3,7 @@ import 'package:storage_inspector/src/driver/storage_server.dart';
 import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart'
     if (dart.library.html) 'package:storage_inspector/src/protocol/web/web_storage_protocol_server.dart';
 import 'package:storage_inspector/src/protocol/storage_protocol.dart';
+import 'package:storage_inspector/src/servers/file_server.dart';
 import 'package:storage_inspector/src/servers/key_value_server.dart';
 import 'package:uuid/uuid.dart';
 
@@ -53,12 +54,28 @@ class StorageServerDriver extends ToolingServer {
   }
 
   /// Starts the server and announcement system for IDE integration
-  Future<void> start() async {
-    await _server.start();
+  ///
+  /// You can have the driver start in [paused] mode. In this mode,
+  /// the driver will start up but it will wait until it receives
+  /// the `resume` command from the inspection tool/API. This allows
+  /// you to pre-set (or un-set) some data that modifies your app's
+  /// startup behaviour. Defaults to [false]
+  Future<void> start({bool paused = false}) async {
+    await _server.start(paused: paused);
+
+    _announcementManager.removeExtension(_PauseExtension(false));
+    if (paused) {
+      _announcementManager.addExtension(_PauseExtension(true));
+    }
+
     await _announcementManager.start();
 
     // ignore: avoid_print
-    print('Storage Inspector server running on $port [$tag]');
+    print('Storage Inspector server running on $port [$tag][paused=$paused]');
+
+    if (paused) {
+      await _server.waitForResume();
+    }
   }
 
   /// Shuts down the internal server and announcement system
@@ -71,4 +88,20 @@ class StorageServerDriver extends ToolingServer {
   void addKeyValueServer(KeyValueServer server) {
     _server.addKeyValueServer(server);
   }
+
+  /// Register a file server for inspection
+  void addFileServer(FileServer server) {
+    _server.addFileServer(server);
+  }
+}
+
+const _pauseExtensionId = EXTENSION_USER_START + 1;
+
+class _PauseExtension extends UserExtension {
+  _PauseExtension(bool paused)
+      : super(_pauseExtensionId, paused ? const [1] : const [0]);
+
+  @override
+  // ignore: hash_and_equals
+  bool operator ==(Object other) => other is _PauseExtension;
 }

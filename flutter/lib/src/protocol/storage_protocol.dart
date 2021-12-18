@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:storage_inspector/src/driver/storage_server.dart';
+import 'package:storage_inspector/src/protocol/specific/file/file_protocol.dart';
 import 'package:storage_inspector/src/protocol/specific/key_value/key_value_protocol.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 import 'package:uuid/uuid.dart';
@@ -9,20 +10,27 @@ import 'package:uuid/uuid.dart';
 class StorageProtocol {
   static const int version = 1;
   static const serverTypeKeyValue = 'key_value';
+  static const serverTypeFile = 'file';
+  static const serverTypeInspector = 'inspector';
+  static const _inspectorCommandUnpause = 'resume';
 
   final Set<StorageProtocolExtension> extensions;
   final KeyValueProtocol _keyValueProtocol;
+  final FileProtocol _fileProtocol;
   final String bundleId;
   final String? icon;
+  final StorageProtocolListener listener;
 
   StorageProtocol({
     required this.extensions,
     required this.bundleId,
     required StorageProtocolServer server,
+    required this.listener,
     this.icon,
-  }) : _keyValueProtocol = KeyValueProtocol(server);
+  })  : _keyValueProtocol = KeyValueProtocol(server),
+        _fileProtocol = FileProtocol(server);
 
-  List<int> get serverIdentificationMessage => utf8.encode(
+  List<int> serverIdentificationMessage({required bool paused}) => utf8.encode(
         json.encode(
           {
             'messageId': '1',
@@ -31,6 +39,7 @@ class StorageProtocol {
               'version': version,
               'bundleId': bundleId,
               if (icon != null) 'icon': icon,
+              'paused': paused,
             },
           },
         ),
@@ -60,6 +69,35 @@ class StorageProtocol {
               requestId: requestId, error: e, stackTrace: trace));
         }
         break;
+      case serverTypeFile:
+        try {
+          onConnection.send(encodeWithBody(
+            serverType,
+            data: await _fileProtocol
+                .onMessage(envelope['data'] as Map<String, dynamic>),
+            requestId: requestId,
+          ));
+        } catch (e, trace) {
+          storageInspectorLogger('Failed to handle file message: $e\n $trace');
+          onConnection.send(_reportError(serverType,
+              requestId: requestId, error: e, stackTrace: trace));
+        }
+        break;
+      case serverTypeInspector:
+        try {
+          onConnection.send(encodeWithBody(
+            serverType,
+            data: await _handleInspectorMessage(
+                envelope['data'] as Map<String, dynamic>),
+            requestId: requestId,
+          ));
+        } catch (e, trace) {
+          storageInspectorLogger(
+              'Failed to handle key value message: $e\n $trace');
+          onConnection.send(_reportError(serverType,
+              requestId: requestId, error: e, stackTrace: trace));
+        }
+        break;
       default:
         onConnection.send(encodeWithBody(serverType,
             requestId: requestId, error: 'Unknown server type: $serverType'));
@@ -69,6 +107,10 @@ class StorageProtocol {
   Future<List<int>> keyValueServerIdentification(KeyValueServer server) async =>
       encodeWithBody(serverTypeKeyValue,
           data: await _keyValueProtocol.identify(server));
+
+  Future<List<int>> fileServerIdentification(FileServer server) async =>
+      encodeWithBody(serverTypeFile,
+          data: await _fileProtocol.identify(server));
 
   List<int> encodeWithBody(String serverType,
       {dynamic data, String? requestId, String? error}) {
@@ -97,6 +139,18 @@ class StorageProtocol {
       error: '${error.toString()}\n${stackTrace.toString()}',
     );
   }
+
+  Future<Map<String, dynamic>> _handleInspectorMessage(
+      Map<String, dynamic> envelope) async {
+    switch (envelope['type']) {
+      case _inspectorCommandUnpause:
+        await listener.onResumeSignal();
+        return {'success': 'true'};
+      default:
+        return throw ArgumentError(
+            'Unknown key-value protocol command: ${envelope['type']}');
+    }
+  }
 }
 
 @immutable
@@ -104,4 +158,8 @@ class StorageProtocolExtension {
   final String name;
 
   const StorageProtocolExtension(this.name);
+}
+
+abstract class StorageProtocolListener {
+  Future<void> onResumeSignal();
 }

@@ -10,8 +10,8 @@ import 'package:uuid/uuid.dart';
 /// are returned without filtering.
 ///
 /// NOTE: No security checks are performed on the input paths
-class IOFileServer implements FileServer {
-  final Directory _root;
+class DefaultFileServer implements FileServer {
+  final String _root;
 
   @override
   final String? icon = null;
@@ -22,11 +22,11 @@ class IOFileServer implements FileServer {
   @override
   final String id = const Uuid().v4();
 
-  IOFileServer(this._root, this.name);
+  DefaultFileServer(this._root, this.name);
 
   @override
   Future<List<String>> browse(String root) async {
-    final newPath = join(_root.path, root);
+    final newPath = join(_root, root);
     if (File(newPath).existsSync()) return [root];
 
     final dir = Directory(newPath);
@@ -40,14 +40,14 @@ class IOFileServer implements FileServer {
 
   @override
   Future<void> delete(String path, {required bool recursive}) {
-    final newPath = join(_root.path, path);
+    final newPath = join(_root, path);
     File(newPath).deleteSync(recursive: recursive);
     return SynchronousFuture(null);
   }
 
   @override
   Future<Uint8List> read(String path) {
-    final filePath = File(join(_root.path, path));
+    final filePath = File(join(_root, path));
     if (!filePath.existsSync()) {
       throw ArgumentError('File "$path" does not exist');
     }
@@ -56,7 +56,7 @@ class IOFileServer implements FileServer {
 
   @override
   Future<void> write(String path, Uint8List data) {
-    final filePath = File(join(_root.path, path));
+    final filePath = File(join(_root, path));
     if (!filePath.parent.existsSync()) {
       filePath.parent.createSync(recursive: true);
     }

@@ -6,7 +6,7 @@ import 'package:uuid/uuid.dart';
 /// Faked web file server that serves empty directory.
 /// All methods result in either empty responses or
 /// errors
-class IOFileServer implements FileServer {
+class DefaultFileServer implements FileServer {
   @override
   final String? icon = null;
 
@@ -16,7 +16,7 @@ class IOFileServer implements FileServer {
   @override
   final String id = const Uuid().v4();
 
-  IOFileServer(this.name);
+  DefaultFileServer(String root, this.name);
 
   @override
   Future<List<String>> browse(String root) => Future.value(List.empty());

@@ -4,12 +4,12 @@ import 'package:storage_inspector/src/protocol/specific/generic.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 
 class KeyValueProtocol {
-  static const commandGetAll = 'getAll';
-  static const commandGet = 'get';
-  static const commandClear = 'clear';
-  static const commandSet = 'set';
-  static const commandRemove = 'remove';
-  static const commandGetValue = 'get_value';
+  static const _commandGetAll = 'getAll';
+  static const _commandGet = 'get';
+  static const _commandClear = 'clear';
+  static const _commandSet = 'set';
+  static const _commandRemove = 'remove';
+  static const _commandGetValue = 'get_value';
 
   final StorageProtocolServer _server;
 
@@ -50,19 +50,19 @@ class KeyValueProtocol {
 
   Future<Map<String, dynamic>> onMessage(Map<String, dynamic> jsonData) {
     switch (jsonData['type']) {
-      case commandGetAll:
+      case _commandGetAll:
         return _handleGetAll();
-      case commandGet:
+      case _commandGet:
         return _handleGet(jsonData['data']['id'] as String);
-      case commandGetValue:
+      case _commandGetValue:
         return _handleGetValue(
             jsonData['data']['id'] as String, jsonData['data']['key']);
-      case commandClear:
+      case _commandClear:
         return _handleClear(jsonData['data']['id'] as String);
-      case commandSet:
+      case _commandSet:
         return _handleSet(jsonData['data']['id'] as String,
             jsonData['data']['key'], jsonData['data']['value']);
-      case commandRemove:
+      case _commandRemove:
         return _handleRemove(
             jsonData['data']['id'] as String, jsonData['data']['key']);
       default:
