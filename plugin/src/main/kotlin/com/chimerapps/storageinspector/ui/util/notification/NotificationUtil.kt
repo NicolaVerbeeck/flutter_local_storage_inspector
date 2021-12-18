@@ -14,14 +14,15 @@ object NotificationUtil {
     fun info(title: String, message: String, project: Project?) {
         val group = NotificationGroup("${NOTIFICATION_CHANNEL}_info", NotificationDisplayType.BALLOON, true)
 
-        val notification = group.createNotification(title, message, NotificationType.INFORMATION, RevealFileAction.FILE_SELECTING_LISTENER)
+        val notification = group.createNotification(title, message, NotificationType.INFORMATION)
+        notification.setListener(RevealFileAction.FILE_SELECTING_LISTENER)
         Notifications.Bus.notify(notification, project)
     }
 
     fun error(title: String, message: String, project: Project?) {
         val group = NotificationGroup("${NOTIFICATION_CHANNEL}_error", NotificationDisplayType.BALLOON, true)
 
-        val notification = group.createNotification(title, message, NotificationType.ERROR, null)
+        val notification = group.createNotification(title, message, NotificationType.ERROR)
         Notifications.Bus.notify(notification, project)
     }
 }

@@ -37,7 +37,7 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) : KeyValu
 
     private val gson = GsonCreator.newGsonInstance()
     private val listeners = mutableListOf<KeyValueProtocolListener>()
-    var serverId: KeyValueServerIdentification? = null
+    private var serverId: KeyValueServerIdentification? = null
 
     private val waitingFutures = mutableMapOf<String, Pair<CompletableDeferred<*>, (JsonObject, CompletableDeferred<*>) -> Unit>>()
 
