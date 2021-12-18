@@ -15,11 +15,13 @@ import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
 import com.chimerapps.storageinspector.ui.ide.actions.ConnectAction
 import com.chimerapps.storageinspector.ui.ide.actions.DisconnectAction
+import com.chimerapps.storageinspector.ui.ide.actions.ResumeAction
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorServersView
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorStatusBar
 import com.chimerapps.storageinspector.ui.ide.view.key_value.KeyValueServerView
 import com.chimerapps.storageinspector.ui.util.ProjectSessionIconProvider
+import com.chimerapps.storageinspector.ui.util.dispatchMain
 import com.chimerapps.storageinspector.ui.util.ensureMain
 import com.chimerapps.storageinspector.ui.util.preferences.AppPreferences
 import com.chimerapps.storageinspector.util.classLogger
@@ -31,6 +33,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.content.Content
 import com.intellij.util.IconUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.awt.BorderLayout
 import java.io.File
 import javax.swing.JPanel
@@ -52,16 +57,19 @@ class InspectorSessionWindow(
     private val connectToolbar = setupConnectToolbar()
     private var lastConnection: PreparedDeviceConnection? = null
     private val statusBar = StorageInspectorStatusBar()
-    private var connection: StorageInspectorProtocolConnection? = null
+    var connection: StorageInspectorProtocolConnection? = null
+        private set
     private val serversView = StorageInspectorServersView(ProjectSessionIconProvider.instance(project), ::onServerSelectionChanged)
     private var currentDetailView: Any? = null
     private val splitter: JBSplitter
+    private val scope = CoroutineScope(Dispatchers.Default)
+    private lateinit var connectActionGroup: DefaultActionGroup
 
     var connectionMode: ConnectionMode = ConnectionMode.MODE_DISCONNECTED
         private set(value) {
             field = value
             ensureMain {
-                connectToolbar.updateActionsImmediately()
+                updateConnectActionGroup()
             }
         }
 
@@ -74,21 +82,14 @@ class InspectorSessionWindow(
         splitter.secondComponent = JPanel()
 
         rootContent.add(splitter, BorderLayout.CENTER)
+
+        updateConnectActionGroup()
     }
 
     private fun setupConnectToolbar(): ActionToolbar {
-        val actionGroup = DefaultActionGroup()
+        connectActionGroup = DefaultActionGroup()
 
-        actionGroup.add(ConnectAction(this) {
-            showConnectDialog()
-        })
-        actionGroup.add(DisconnectAction(this) {
-            disconnect()
-
-            connectionMode = ConnectionMode.MODE_DISCONNECTED
-        })
-
-        val toolbar = ActionManager.getInstance().createActionToolbar("Storage Inspector", actionGroup, true)
+        val toolbar = ActionManager.getInstance().createActionToolbar("Storage Inspector", connectActionGroup, true)
         val toolbarContainer = JPanel(BorderLayout())
         toolbarContainer.add(toolbar.component, BorderLayout.WEST)
 
@@ -169,11 +170,15 @@ class InspectorSessionWindow(
                                 ProjectSessionIconProvider.instance(project, requestedHeight = 16, requestedWidth = 16).iconForString(iconString)
                             }
                             content.icon = newIcon
+                            dispatchMain {
+                                updateConnectActionGroup()
+                            }
                         }
                     }
                 })
                 it.protocol.addListener(serversView)
                 serversView.inspectorInterface = it.storageInterface
+                it.protocol.addListener(it.storageInterface)
                 it.storageInterface.keyValueInterface.addListener(serversView)
             }
         this.connection?.connect()
@@ -198,6 +203,36 @@ class InspectorSessionWindow(
         }
 
         classLogger.debug("onServerSelectionChanged: $storageServer")
+    }
+
+    private fun updateConnectActionGroup() {
+        val showResume = connectionMode == ConnectionMode.MODE_CONNECTED && connection?.storageInterface?.isPaused == true
+        connectActionGroup.removeAll()
+        connectActionGroup.add(ConnectAction(this) {
+            showConnectDialog()
+        })
+
+        if (showResume) {
+            lateinit var resumeAction: ResumeAction
+            resumeAction = ResumeAction(this) {
+                scope.launch {
+                    connection?.storageInterface?.unpause()
+                    ensureMain {
+                        connectActionGroup.remove(resumeAction)
+                        connectToolbar.updateActionsImmediately()
+                    }
+                }
+            }
+            connectActionGroup.add(resumeAction)
+        }
+
+        connectActionGroup.add(DisconnectAction(this) {
+            disconnect()
+
+            connectionMode = ConnectionMode.MODE_DISCONNECTED
+        })
+
+        connectToolbar.updateActionsImmediately()
     }
 }
 

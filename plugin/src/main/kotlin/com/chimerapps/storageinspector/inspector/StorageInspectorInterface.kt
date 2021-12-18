@@ -9,22 +9,32 @@ import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueInsp
 /**
  * @author Nicola Verbeeck
  */
-interface StorageInspectorInterface {
+interface StorageInspectorInterface : StorageInspectorProtocolListener {
 
     val keyValueInterface: KeyValueInspectorInterface
 
+    val isPaused: Boolean
+
+    suspend fun unpause()
 }
 
-class StorageInspectorInterfaceImpl(protocol: StorageInspectorProtocol) : StorageInspectorInterface, StorageInspectorProtocolListener {
+class StorageInspectorInterfaceImpl(private val protocol: StorageInspectorProtocol) : StorageInspectorInterface, StorageInspectorProtocolListener {
 
     override val keyValueInterface = KeyValueInspectorInterfaceImpl(protocol.keyValueServerInterface)
+
+    override var isPaused: Boolean = false
 
     init {
         protocol.addListener(this)
     }
 
     override fun onServerIdentification(serverId: ServerId) {
+        isPaused = serverId.paused
+    }
 
+    override suspend fun unpause() {
+        protocol.sendUnpause()
+        isPaused = false
     }
 }
 

@@ -1,28 +1,34 @@
 package com.chimerapps.storageinspector.api.protocol
 
+import com.chimerapps.storageinspector.api.RemoteError
 import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueProtocol
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueServerInterface
 import com.chimerapps.storageinspector.ui.util.json.GsonCreator
-import com.google.gsonpackaged.Gson
+import com.chimerapps.storageinspector.util.classLogger
 import com.google.gsonpackaged.JsonObject
 import com.google.gsonpackaged.JsonParser
+import kotlinx.coroutines.CompletableDeferred
 import java.util.UUID
 
 /**
  * @author Nicola Verbeeck
  */
+@Suppress("unused")
 class StorageInspectorProtocol(private val onConnection: StorageInspectorProtocolConnection) {
 
     companion object {
         const val SERVER_TYPE_ID = "id"
         const val SERVER_TYPE_KEY_VALUE = "key_value"
+        private const val SERVER_TYPE_INSPECTOR = "inspector"
+        private const val COMMAND_UNPAUSE = "resume"
     }
 
     private val gson = GsonCreator.newGsonInstance()
     private val listeners = mutableListOf<StorageInspectorProtocolListener>()
     private var serverId: ServerId? = null
+    private val waitingFutures = mutableMapOf<String, Pair<CompletableDeferred<*>, (JsonObject, CompletableDeferred<*>) -> Unit>>()
 
     private val keyValueProtocol = KeyValueProtocol(this)
 
@@ -42,6 +48,23 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
         }
     }
 
+    suspend fun sendUnpause() {
+        val requestId = UUID.randomUUID().toString()
+
+        val future = CompletableDeferred<Unit>()
+        waitingFutures[requestId] = Pair(future) { _, _ ->
+            future.complete(Unit)
+        }
+
+        sendRequest(
+            serverType = SERVER_TYPE_INSPECTOR,
+            requestId = requestId,
+            data = JsonObject().also { it.addProperty("type", COMMAND_UNPAUSE) }
+        )
+
+        return future.await()
+    }
+
     fun onMessage(message: String) {
         val root = JsonParser.parseString(message).asJsonObject
         val serverType = root.get("serverType").asString
@@ -51,9 +74,19 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
             when (serverType) {
                 SERVER_TYPE_ID -> handleId(root.get("data").asJsonObject)
                 SERVER_TYPE_KEY_VALUE -> keyValueProtocol.handleMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
+                SERVER_TYPE_INSPECTOR -> handleInspectorMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
             }
         } catch (e: Throwable) {
             e.printStackTrace()
+        }
+    }
+
+    private fun handleInspectorMessage(requestId: String?, data: JsonObject?, error: String?) {
+        val futurePair = waitingFutures.remove(requestId) ?: return classLogger.warn("Got unsolicited response with unknown request id: $requestId. Error: $error")
+        when {
+            error != null -> futurePair.first.completeExceptionally(RemoteError(error))
+            data != null -> futurePair.second(data, futurePair.first)
+            else -> classLogger.warn("Received response message without data: $requestId")
         }
     }
 

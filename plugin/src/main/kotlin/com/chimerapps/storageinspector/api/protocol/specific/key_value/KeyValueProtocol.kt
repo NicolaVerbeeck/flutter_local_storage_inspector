@@ -11,7 +11,6 @@ import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServ
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerValues
 import com.chimerapps.storageinspector.ui.util.json.GsonCreator
 import com.chimerapps.storageinspector.util.classLogger
-import com.google.gsonpackaged.Gson
 import com.google.gsonpackaged.JsonObject
 import kotlinx.coroutines.CompletableDeferred
 import java.util.UUID
@@ -56,7 +55,6 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) : KeyValu
     }
 
     fun handleMessage(requestId: String?, data: JsonObject?, error: String?) {
-        println(data)
         try {
             if (requestId == null && data != null) {
                 handleUnannouncedKeyValue(data)

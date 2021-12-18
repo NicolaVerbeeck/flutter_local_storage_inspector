@@ -7,4 +7,5 @@ data class ServerId(
     val bundleId: String,
     val version: Int,
     val icon: String?,
+    val paused: Boolean = false,
 )
