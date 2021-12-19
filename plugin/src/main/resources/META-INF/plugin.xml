@@ -2,8 +2,9 @@
     <id>com.chimerapps.tools.storage-inspector-plugin</id>
     <name>Local Storage Inspector</name>
     <vendor email="support@chimerapps.com" url="https://github.com/NicolaVerbeeck">Nicola Verbeeck</vendor>
+    <version>0.0.2</version>
 
-    <description>This plugin enables the local storage inspector library UI inside the IDE.</description>
+    <description>This plugin enables the local storage inspector library UI inside the IDE. See: https://pub.dev/packages/storage_inspector</description>
 
     <idea-version since-build="203" />
 
@@ -17,8 +18,19 @@
         <applicationConfigurable instance="com.chimerapps.storageinspector.ui.ide.settings.ApplicationConfigurationProvider"
                                  id="StorageInspectorRoot" displayName="Storage Inspector" />
 
+        <projectService serviceImplementation="com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorProjectSettings" />
         <applicationService
             serviceImplementation="com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings" />
     </extensions>
+
+    <change-notes><![CDATA[
+        <p>
+           <b>0.0.2</b>
+           <ul>
+                <li>Added per project key value column configuration</li>
+           </ul>
+        </p>
+        ]]>
+    </change-notes>
 
 </idea-plugin>

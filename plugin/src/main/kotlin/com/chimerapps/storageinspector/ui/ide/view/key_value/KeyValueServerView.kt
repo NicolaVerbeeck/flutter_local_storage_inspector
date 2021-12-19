@@ -26,7 +26,7 @@ import javax.swing.JTable
  */
 class KeyValueServerView(private val project: Project) : JPanel(BorderLayout()) {
 
-    private val table = KeyValueTableView(::removeKeys, ::editValue)
+    private val table = KeyValueTableView(project, ::removeKeys, ::editValue)
 
     private val refreshAction: RefreshAction
     private val toolbar: ActionToolbar

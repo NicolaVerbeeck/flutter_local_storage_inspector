@@ -1,3 +1,7 @@
+## 0.0.1-dev.5
+
+* As soon as the resume signal is given, remove the paused flag
+
 ## 0.0.1-dev.4
 
 * Fixed issue where pause was not actually pausing

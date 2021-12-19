@@ -6,7 +6,7 @@ plugins {
 apply from: 'dependencies.gradle'
 
 group 'com.chimerapps.tools'
-version '0.0.1'
+version '0.0.2'
 
 repositories {
     mavenCentral()
@@ -52,12 +52,6 @@ compileKotlin {
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "11"
-}
-
-patchPluginXml {
-    changeNotes = """
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>"""
 }
 
 task downloadPatchLibs(type: Copy) {

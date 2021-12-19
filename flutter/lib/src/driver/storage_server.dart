@@ -143,6 +143,7 @@ class StorageProtocolServer implements StorageProtocolListener {
     if (!_resumeFuture.isCompleted) {
       _resumeFuture.complete();
     }
+    _paused = false;
     return Future.value();
   }
 }

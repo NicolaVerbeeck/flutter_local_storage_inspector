@@ -21,6 +21,7 @@ class StorageServerDriver extends ToolingServer {
 
   final StorageProtocolServer _server;
   late final BaseServerAnnouncementManager _announcementManager;
+  var _stopped = true;
 
   @override
   int get port => _server.port;
@@ -61,6 +62,7 @@ class StorageServerDriver extends ToolingServer {
   /// you to pre-set (or un-set) some data that modifies your app's
   /// startup behaviour. Defaults to [false]
   Future<void> start({bool paused = false}) async {
+    _stopped = false;
     await _server.start(paused: paused);
 
     _announcementManager.removeExtension(_PauseExtension(false));
@@ -75,11 +77,17 @@ class StorageServerDriver extends ToolingServer {
 
     if (paused) {
       await _server.waitForResume();
+      if (!_stopped) {
+        _announcementManager.removeExtension(_PauseExtension(false));
+        await _announcementManager.stop();
+        await _announcementManager.start();
+      }
     }
   }
 
   /// Shuts down the internal server and announcement system
   Future<void> stop() async {
+    _stopped = true;
     await _server.shutdown();
     await _announcementManager.stop();
   }
