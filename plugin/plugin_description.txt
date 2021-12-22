@@ -1,0 +1,4 @@
+This plugin enables the local storage inspector library UI inside the IDE.
+
+Use the flutter library 'storage_inspector' (https://pub.dev/packages/storage_inspector) to instrument
+your flutter application and use this IDE plugin to inspect and/or modify your app's local storage.

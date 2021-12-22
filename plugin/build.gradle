@@ -1,6 +1,13 @@
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
 plugins {
     id 'org.jetbrains.intellij' version '1.3.0'
     id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+    id "dev.bmac.intellij.plugin-uploader" version "1.2.2"
 }
 
 apply from: 'dependencies.gradle'
@@ -45,6 +52,10 @@ dependencies {
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version = versions.minIntelliJ
+    updateSinceUntilBuild = false
+}
+patchPluginXml {
+    changeNotes = file('change-notes.txt').text
 }
 
 compileKotlin {
@@ -127,4 +138,23 @@ signPlugin {
 
 publishPlugin {
     token = System.getenv("STORAGE_PLUGIN_PUBLISH_TOKEN")
+}
+
+uploadPlugin {
+    dependsOn(project.tasks.named('signPlugin'))
+    def signPluginTask = project.tasks.named("signPlugin").get()
+    def archive = signPluginTask.outputArchiveFile.asFile
+
+    def publishToken = System.getenv("PLUGIN_UPLOAD_TOKEN")
+
+    pluginName.set('StorageInspector')
+    file.set(archive.get())
+    pluginId.set(project.group)
+    version.set(project.version)
+    pluginDescription.set(file('plugin_description.txt').text)
+    changeNotes.set(file('change-notes.txt').text)
+    sinceBuild.set("203")
+
+    url.set(System.getenv("PLUGIN_UPLOAD_PATH"))
+    authentication.set("Bearer $publishToken");
 }

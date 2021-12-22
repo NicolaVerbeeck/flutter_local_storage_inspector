@@ -1,0 +1,14 @@
+<![CDATA[
+<p>
+   <b>0.0.3</b>
+   <ul>
+        <li>Update description and plugin configuration</li>
+   </ul>
+</p>
+<p>
+   <b>0.0.2</b>
+   <ul>
+        <li>Added per project key value column configuration</li>
+   </ul>
+</p>
+]]>

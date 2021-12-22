@@ -4,7 +4,10 @@
     <vendor email="support@chimerapps.com" url="https://github.com/NicolaVerbeeck">Nicola Verbeeck</vendor>
     <version>0.0.2</version>
 
-    <description>This plugin enables the local storage inspector library UI inside the IDE. See: https://pub.dev/packages/storage_inspector</description>
+    <description>This plugin enables the local storage inspector library UI inside the IDE.
+        Use the flutter library 'storage_inspector' (https://pub.dev/packages/storage_inspector) to instrument
+        your flutter application and use this IDE plugin to inspect and/or modify your app's local storage.
+    </description>
 
     <idea-version since-build="203" />
 
@@ -22,15 +25,5 @@
         <applicationService
             serviceImplementation="com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings" />
     </extensions>
-
-    <change-notes><![CDATA[
-        <p>
-           <b>0.0.2</b>
-           <ul>
-                <li>Added per project key value column configuration</li>
-           </ul>
-        </p>
-        ]]>
-    </change-notes>
 
 </idea-plugin>
