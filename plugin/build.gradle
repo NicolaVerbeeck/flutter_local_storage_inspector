@@ -147,7 +147,7 @@ uploadPlugin {
 
     def publishToken = System.getenv("PLUGIN_UPLOAD_TOKEN")
 
-    pluginName.set('StorageInspector')
+    pluginName.set('Local Storage Inspector')
     file.set(archive.get())
     pluginId.set(project.group)
     version.set(project.version)
