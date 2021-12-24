@@ -1,3 +1,7 @@
+## 0.0.1-dev.7
+
+* Remove print statements
+
 ## 0.0.1-dev.6
 
 * Fixed bug when updating string lists in key value server

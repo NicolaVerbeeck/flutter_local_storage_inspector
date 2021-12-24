@@ -13,7 +13,7 @@ plugins {
 apply from: 'dependencies.gradle'
 
 group 'com.chimerapps.tools'
-version '0.0.3'
+version '0.0.4'
 
 repositories {
     mavenCentral()
@@ -149,7 +149,7 @@ uploadPlugin {
 
     pluginName.set('Local Storage Inspector')
     file.set(archive.get())
-    pluginId.set(project.group)
+    pluginId.set('com.chimerapps.tools.storage-inspector-plugin')
     version.set(project.version)
     pluginDescription.set(file('plugin_description.txt').text)
     changeNotes.set(file('change-notes.txt').text)

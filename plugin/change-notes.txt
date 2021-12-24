@@ -1,4 +1,12 @@
 <p>
+   <b>0.0.4</b>
+   <ul>
+        <li>Added string list editing</li>
+        <li>Fixed some bugs</li>
+        <li>Updated min IDE version to 2020.3</li>
+   </ul>
+</p>
+<p>
    <b>0.0.3</b>
    <ul>
         <li>Update description and plugin configuration</li>

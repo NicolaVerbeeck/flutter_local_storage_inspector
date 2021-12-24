@@ -49,7 +49,6 @@ class StorageProtocol {
     String messageData,
     StorageProtocolConnection onConnection,
   ) async {
-    print('Got message: $messageData');
     final envelope = jsonDecode(messageData) as Map<String, dynamic>;
     final requestId = envelope['requestId'] as String?;
     final serverType = envelope['serverType'] as String;
