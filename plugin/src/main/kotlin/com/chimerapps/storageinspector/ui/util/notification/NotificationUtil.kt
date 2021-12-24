@@ -1,28 +1,27 @@
 package com.chimerapps.storageinspector.ui.util.notification
 
 import com.intellij.ide.actions.RevealFileAction
-import com.intellij.notification.NotificationDisplayType
-import com.intellij.notification.NotificationGroup
+import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
-import com.intellij.notification.Notifications
 import com.intellij.openapi.project.Project
 
 object NotificationUtil {
 
-    private const val NOTIFICATION_CHANNEL = "local-storage-inspector"
+    private const val NOTIFICATION_GROUP_ID = "local-storage-inspector"
 
     fun info(title: String, message: String, project: Project?) {
-        val group = NotificationGroup("${NOTIFICATION_CHANNEL}_info", NotificationDisplayType.BALLOON, true)
+        val group = NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP_ID)
 
-        val notification = group.createNotification(title, message, NotificationType.INFORMATION)
-        notification.setListener(RevealFileAction.FILE_SELECTING_LISTENER)
-        Notifications.Bus.notify(notification, project)
+        group.createNotification(title, message, NotificationType.INFORMATION)
+            .setListener(RevealFileAction.FILE_SELECTING_LISTENER)
+            .notify(project)
     }
 
     fun error(title: String, message: String, project: Project?) {
-        val group = NotificationGroup("${NOTIFICATION_CHANNEL}_error", NotificationDisplayType.BALLOON, true)
+        val group = NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP_ID)
 
-        val notification = group.createNotification(title, message, NotificationType.ERROR)
-        Notifications.Bus.notify(notification, project)
+        group.createNotification(title, message, NotificationType.ERROR)
+            .setListener(RevealFileAction.FILE_SELECTING_LISTENER)
+            .notify(project)
     }
 }

@@ -99,7 +99,8 @@ class PreferencesKeyValueServer implements KeyValueServer {
         await _preferences.setBool(preferenceKey, newValue.value);
         break;
       case StorageType.stringList:
-        await _preferences.setStringList(preferenceKey, newValue.value);
+        await _preferences.setStringList(
+            preferenceKey, (newValue.value as List<dynamic>).cast<String>());
         break;
       case StorageType.datetime:
         throw ArgumentError(

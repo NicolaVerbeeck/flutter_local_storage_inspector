@@ -16,6 +16,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.ToolbarDecorator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.awt.BorderLayout
 import javax.swing.JPanel
@@ -35,7 +36,7 @@ class KeyValueServerView(private val project: Project) : JPanel(BorderLayout()) 
     private val dispatchHelper = ListUpdateHelper(table.dispatchModel, object : DiffUtilComparator<KeyValueServerValue> {
         override fun representSameItem(left: KeyValueServerValue, right: KeyValueServerValue): Boolean = left.key == right.key
     })
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob())
 
     init {
         val actionGroup = DefaultActionGroup()

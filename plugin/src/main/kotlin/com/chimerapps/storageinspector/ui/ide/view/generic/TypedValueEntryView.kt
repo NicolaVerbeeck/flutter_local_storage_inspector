@@ -23,11 +23,15 @@ import javax.swing.text.DocumentFilter
 /**
  * @author Nicola Verbeeck
  */
-class TypedValueEntryView(private val project: Project, private var storageType: StorageType) : JPanel(BorderLayout()) {
+class TypedValueEntryView(
+    private val project: Project,
+    private var storageType: StorageType,
+) : JPanel(BorderLayout()) {
 
     private val booleanSelector = ComboBox(arrayOf(Tr.TypeBooleanTrue.tr(), Tr.TypeBooleanFalse.tr()))
     private val freeEditField = JBTextField()
     private val valueButton = FixedSizeButton()
+    private var stringListItems: List<String>? = null
 
     init {
         add(freeEditField, BorderLayout.CENTER)
@@ -39,18 +43,22 @@ class TypedValueEntryView(private val project: Project, private var storageType:
         when (type) {
             StorageType.string -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = null
+                stringListItems = null
                 removeButton()
             }
             StorageType.int -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = IntegerOnlyDocumentFilter()
+                stringListItems = null
                 removeButton()
             }
             StorageType.double -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = DoubleOnlyDocumentFilter()
+                stringListItems = null
                 removeButton()
             }
             StorageType.datetime -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = null
+                stringListItems = null
                 it.isEnabled = false
                 addButton().also { btn ->
                     btn.icon = AllIcons.Vcs.History
@@ -60,6 +68,7 @@ class TypedValueEntryView(private val project: Project, private var storageType:
             StorageType.binary -> ensureFreeEditField().also {
                 //TODO implement
                 (it.document as AbstractDocument).documentFilter = null
+                stringListItems = null
                 it.isEnabled = false
                 addButton().also { btn ->
                     btn.icon = AllIcons.FileTypes.Text
@@ -70,17 +79,22 @@ class TypedValueEntryView(private val project: Project, private var storageType:
                 }
             }
             StorageType.bool -> {
+                stringListItems = null
                 ensureBooleanSelector()
                 removeButton()
             }
             StorageType.stringlist -> ensureFreeEditField().also {
-                //TODO implement
                 (it.document as AbstractDocument).documentFilter = null
                 it.isEnabled = false
                 addButton().also { btn ->
                     btn.icon = AllIcons.Json.Array
                     btn.addActionListener {
-                        NotificationUtil.info("Under construction", "This feature is under construction", project)
+                        StringListEditDialog(stringListItems ?: emptyList(), "Edit string list", project).also { dialog ->
+                            if (dialog.showAndGet()) {
+                                stringListItems = dialog.results
+                                //TODO update UI
+                            }
+                        }
                     }
                 }
             }
@@ -126,7 +140,7 @@ class TypedValueEntryView(private val project: Project, private var storageType:
             StorageType.datetime -> TODO()
             StorageType.binary -> TODO()
             StorageType.bool -> doValidateFromString(storageType, if (booleanSelector.selectedIndex == 0) "true" else "false", freeEditField, allowEmpty)
-            StorageType.stringlist -> TODO()
+            StorageType.stringlist -> ValueResult(ValueWithType(storageType, stringListItems ?: emptyList<String>()))
         }
 
     }

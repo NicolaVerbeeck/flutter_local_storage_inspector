@@ -71,12 +71,15 @@ class KeyValueInspectorInterfaceImpl(
     }
 
     override suspend fun getData(server: StorageServer): KeyValueServerValues {
+        println("Request to get data. Cached? $cachedData")
         cachedData?.let { return it }
         return reloadData(server)
     }
 
     override suspend fun reloadData(server: StorageServer): KeyValueServerValues {
+        println("Request reload")
         val serverData = keyValueProtocol.get(server.id)
+        println("Updating cache")
         cachedData = serverData
         return serverData
     }

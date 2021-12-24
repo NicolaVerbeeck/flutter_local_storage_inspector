@@ -7,9 +7,17 @@ import 'package:storage_inspector/storage_inspector.dart';
 void main() async {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  storageInspectorLogger = (message) {
+    print(message);
+  };
+
   SharedPreferences.setMockInitialValues({
     'testBool': true,
     'testInt': 1,
+    'testListOfData': [
+      'value1',
+      'value2',
+    ],
   });
   final preferences = await SharedPreferences.getInstance();
 
@@ -29,10 +37,14 @@ void main() async {
 
   driver.addFileServer(DefaultFileServer('/', 'Test folder'));
 
-  print('Starting driver');
-  await driver.start(paused: true);
-  print('Driver started');
+  try {
+    print('Starting driver');
+    await driver.start(paused: true);
+    print('Driver started');
 
-  await Future<void>.delayed(const Duration(seconds: 10000));
-  await driver.stop();
+    await Future<void>.delayed(const Duration(seconds: 10000));
+    await driver.stop();
+  } finally {
+    await driver.stop();
+  }
 }

@@ -5,6 +5,8 @@ import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerValue
 import com.chimerapps.storageinspector.ui.ide.settings.KeyValueTableConfiguration
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorProjectSettings
+import com.chimerapps.storageinspector.ui.ide.view.generic.StringListEditDialog
+import com.chimerapps.storageinspector.ui.util.dispatchMain
 import com.chimerapps.storageinspector.ui.util.list.DiffUtilDispatchModel
 import com.chimerapps.storageinspector.ui.util.list.TableModelDiffUtilDispatchModel
 import com.chimerapps.storageinspector.ui.util.localization.Tr
@@ -15,16 +17,24 @@ import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.ComboBoxCellEditor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.ListTableModel
+import java.awt.Component
+import java.awt.Font
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.util.EventObject
+import javax.swing.AbstractCellEditor
+import javax.swing.JLabel
+import javax.swing.JTable
 import javax.swing.ListSelectionModel
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ListSelectionEvent
 import javax.swing.event.TableColumnModelEvent
 import javax.swing.event.TableColumnModelListener
+import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.TableCellEditor
+import javax.swing.table.TableCellRenderer
 import javax.swing.table.TableColumnModel
 
 
@@ -80,8 +90,8 @@ class KeyValueTableView(
 
         internalModel = ListTableModel(
             arrayOf(
-                TableViewColumnInfo(Tr.KeyValueKey.tr(), KeyValueServerValue::key, editable = false),
-                TableViewColumnInfo(Tr.KeyValueValue.tr(), KeyValueServerValue::value, editable = true, onEdited = ::onValueEdited),
+                TableViewColumnInfo(project, Tr.KeyValueKey.tr(), KeyValueServerValue::key, editable = false),
+                TableViewColumnInfo(project, Tr.KeyValueValue.tr(), KeyValueServerValue::value, editable = true, onEdited = ::onValueEdited),
             ),
             listOf(),
             0
@@ -109,15 +119,17 @@ class KeyValueTableView(
         column.preferredWidth = width
     }
 
-    private fun onValueEdited(keyValueServerValue: KeyValueServerValue, newValue: String) {
+    private fun onValueEdited(keyValueServerValue: KeyValueServerValue, newValue: Any?) {
+        if (newValue == null) return
+
         val converted = when (keyValueServerValue.value.type) {
-            StorageType.string -> newValue
-            StorageType.int -> newValue.toLong()
-            StorageType.double -> newValue.toDouble()
-            StorageType.bool -> (newValue.lowercase() == "true" || newValue.lowercase() == Tr.TypeBooleanTrue.tr().lowercase())
+            StorageType.string -> newValue as String
+            StorageType.int -> if (newValue is String) newValue.toLong() else newValue as Long
+            StorageType.double -> if (newValue is String) newValue.toDouble() else newValue as Double
+            StorageType.bool -> if (newValue is String) (newValue.lowercase() == "true" || newValue.lowercase() == Tr.TypeBooleanTrue.tr().lowercase()) else newValue as Boolean
             StorageType.datetime -> TODO()
             StorageType.binary -> TODO()
-            StorageType.stringlist -> TODO()
+            StorageType.stringlist -> newValue
         }
         editValue(keyValueServerValue.key, keyValueServerValue.value.copy(value = converted))
     }
@@ -152,14 +164,15 @@ class KeyValueTableView(
 }
 
 private class TableViewColumnInfo(
+    private val project: Project,
     name: String,
     private val selector: (KeyValueServerValue) -> ValueWithType,
     private val editable: Boolean,
-    private val onEdited: (KeyValueServerValue, stringValue: String) -> Unit = { _, _ -> },
-) : ColumnInfo<KeyValueServerValue, String>(name) {
+    private val onEdited: (KeyValueServerValue, stringValue: Any?) -> Unit = { _, _ -> },
+) : ColumnInfo<KeyValueServerValue, Any>(name) {
 
-    override fun valueOf(item: KeyValueServerValue): String {
-        return selector(item).asString
+    override fun valueOf(item: KeyValueServerValue): Any {
+        return selector(item).value
     }
 
     override fun isCellEditable(item: KeyValueServerValue?): Boolean = editable
@@ -171,11 +184,73 @@ private class TableViewColumnInfo(
                     return listOf(Tr.TypeBooleanTrue.tr(), Tr.TypeBooleanFalse.tr())
                 }
             }
+            StorageType.stringlist -> return StringListCellEditor(project)
             else -> null
         }
     }
 
-    override fun setValue(item: KeyValueServerValue, value: String) {
+    override fun setValue(item: KeyValueServerValue, value: Any) {
+        //TODO handle lists
         onEdited(item, value)
     }
+
+    override fun getRenderer(item: KeyValueServerValue): TableCellRenderer? {
+        if (selector(item).type == StorageType.stringlist) {
+            return CursiveTableCellRenderer()
+        }
+        return super.getRenderer(item)
+    }
+}
+
+private class CursiveTableCellRenderer : DefaultTableCellRenderer() {
+
+    override fun getTableCellRendererComponent(
+        table: JTable?,
+        value: Any?,
+        isSelected: Boolean,
+        hasFocus: Boolean,
+        row: Int,
+        column: Int,
+    ): Component {
+        val default = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+        default.font = Font(default.font.fontName, Font.ITALIC, default.font.size)
+        (default as JLabel).text = (value as? List<*>)?.joinToString() ?: ""
+        return default
+    }
+}
+
+private class StringListCellEditor(private val project: Project) : AbstractCellEditor(), TableCellEditor {
+
+    private var ignoreAction = false
+    private var currentList: List<String>? = null
+
+    init {
+    }
+
+    override fun getCellEditorValue(): Any? {
+        return currentList
+    }
+
+    override fun getTableCellEditorComponent(table: JTable?, value: Any?, isSelected: Boolean, row: Int, column: Int): Component {
+        @Suppress("UNCHECKED_CAST")
+        currentList = value as? List<String>
+        dispatchMain {
+            StringListEditDialog(currentList ?: emptyList(), "Edit string list", project).also { dialog ->
+                if (dialog.showAndGet()) {
+                    currentList = dialog.results
+                }
+                fireEditingStopped()
+            }
+        }
+        return JLabel()
+    }
+
+    override fun isCellEditable(anEvent: EventObject?): Boolean {
+        return if (anEvent is MouseEvent) {
+            anEvent.clickCount >= 2
+        } else {
+            super.isCellEditable(anEvent)
+        }
+    }
+
 }

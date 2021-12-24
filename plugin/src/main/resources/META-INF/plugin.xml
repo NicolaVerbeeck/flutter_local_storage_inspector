@@ -23,6 +23,8 @@
         <projectService serviceImplementation="com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorProjectSettings" />
         <applicationService
             serviceImplementation="com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings" />
+
+        <notificationGroup displayType="BALLOON" id="local-storage-inspector" isLogByDefault="true" />
     </extensions>
 
 </idea-plugin>

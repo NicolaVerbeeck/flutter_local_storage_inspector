@@ -103,7 +103,7 @@ class StorageServerDriver extends ToolingServer {
   }
 }
 
-const _pauseExtensionId = EXTENSION_USER_START + 1;
+const _pauseExtensionId = extensionUserStart + 1;
 
 class _PauseExtension extends UserExtension {
   _PauseExtension(bool paused)

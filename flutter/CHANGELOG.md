@@ -1,3 +1,8 @@
+## 0.0.1-dev.6
+
+* Fixed bug when updating string lists in key value server
+* Update to latest version of discovery protocol to avoid race conditions
+
 ## 0.0.1-dev.5
 
 * As soon as the resume signal is given, remove the paused flag

@@ -23,7 +23,7 @@ class EditKeyValueDialog(
     private val keyHints: List<ValueWithType>,
     private val restrictValueTypesTo: List<StorageType>,
     private val project: Project,
-) : DialogWrapper(project, false, IdeModalityType.PROJECT) {
+) : DialogWrapper(project, true, IdeModalityType.PROJECT) {
 
     private var freeKeyField: TypedValueEntryView? = null
     private var keyField: ComboBox<String>? = null

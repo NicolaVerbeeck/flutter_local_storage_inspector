@@ -49,6 +49,7 @@ class KeyValueProtocol {
   }
 
   Future<Map<String, dynamic>> onMessage(Map<String, dynamic> jsonData) {
+    print(jsonData);
     switch (jsonData['type']) {
       case _commandGetAll:
         return _handleGetAll();
@@ -76,6 +77,7 @@ class KeyValueProtocol {
 
     final serverData = <Map<String, dynamic>>[];
 
+    print('Getting all');
     for (final element in _server.keyValueServers) {
       try {
         serverData.add(await _getAllFromServer(element));
@@ -91,6 +93,7 @@ class KeyValueProtocol {
   Future<Map<String, dynamic>> _getAllFromServer(KeyValueServer element) async {
     final allValues = await element.allValues;
 
+    print('Got all: $allValues');
     return {
       'id': element.id,
       'values': allValues
