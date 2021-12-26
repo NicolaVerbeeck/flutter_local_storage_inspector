@@ -22,6 +22,7 @@ interface KeyValueServerInterface {
 
     suspend fun get(serverId: String): KeyValueServerValues
     suspend fun set(serverId: String, key: ValueWithType, value: ValueWithType): Boolean
+    suspend fun get(serverId: String, key: ValueWithType): ValueWithType
     suspend fun remove(serverId: String, key: ValueWithType): Boolean
     suspend fun clear(serverId: String): Boolean
 }
@@ -95,6 +96,10 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) : KeyValu
         )
 
         return future.await()
+    }
+
+    override suspend fun get(serverId: String, key: ValueWithType): ValueWithType {
+        TODO("Not yet implemented")
     }
 
     override suspend fun set(serverId: String, key: ValueWithType, value: ValueWithType): Boolean {

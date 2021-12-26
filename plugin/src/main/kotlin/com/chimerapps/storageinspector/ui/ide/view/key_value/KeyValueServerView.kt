@@ -9,16 +9,18 @@ import com.chimerapps.storageinspector.ui.ide.actions.RefreshAction
 import com.chimerapps.storageinspector.ui.util.list.DiffUtilComparator
 import com.chimerapps.storageinspector.ui.util.list.ListUpdateHelper
 import com.chimerapps.storageinspector.ui.util.localization.Tr
+import com.chimerapps.storageinspector.ui.util.notification.NotificationUtil
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.ui.ToolbarDecorator
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.awt.BorderLayout
+import java.io.File
 import javax.swing.JPanel
 import javax.swing.JTable
 
@@ -27,7 +29,7 @@ import javax.swing.JTable
  */
 class KeyValueServerView(private val project: Project) : JPanel(BorderLayout()) {
 
-    private val table = KeyValueTableView(project, ::removeKeys, ::editValue)
+    private val table = KeyValueTableView(project, ::removeKeys, ::editValue, ::saveBinary)
 
     private val refreshAction: RefreshAction
     private val toolbar: ActionToolbar
@@ -120,6 +122,21 @@ class KeyValueServerView(private val project: Project) : JPanel(BorderLayout()) 
         scope.launch {
             if (serverInterface.set(server, key, newValue)) {
                 dispatchHelper.onListUpdated(serverInterface.getData(server).values)
+            }
+        }
+    }
+
+    private fun saveBinary(key: ValueWithType, toFile: File) {
+        val serverInterface = serverInterface ?: return
+        val server = server ?: return
+        scope.launch {
+            try {
+                val binaryData = serverInterface.get(server, key)
+                ApplicationManager.getApplication().runWriteAction {
+                    toFile.writeBytes(binaryData.value as ByteArray)
+                }
+            } catch (e: Throwable) {
+                NotificationUtil.error("Error", "Failed to get data from server: ${e.message}", project)
             }
         }
     }

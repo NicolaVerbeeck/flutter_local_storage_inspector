@@ -5,34 +5,30 @@ import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerValue
 import com.chimerapps.storageinspector.ui.ide.settings.KeyValueTableConfiguration
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorProjectSettings
-import com.chimerapps.storageinspector.ui.ide.view.generic.StringListEditDialog
-import com.chimerapps.storageinspector.ui.util.dispatchMain
+import com.chimerapps.storageinspector.ui.util.file.chooseSaveFile
 import com.chimerapps.storageinspector.ui.util.list.DiffUtilDispatchModel
 import com.chimerapps.storageinspector.ui.util.list.TableModelDiffUtilDispatchModel
 import com.chimerapps.storageinspector.ui.util.localization.Tr
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.table.TableView
 import com.intellij.util.PlatformIcons
 import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.ComboBoxCellEditor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.ListTableModel
-import java.awt.Component
-import java.awt.Font
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.util.EventObject
-import javax.swing.AbstractCellEditor
-import javax.swing.JLabel
-import javax.swing.JTable
+import java.io.File
+import java.io.InputStream
 import javax.swing.ListSelectionModel
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ListSelectionEvent
 import javax.swing.event.TableColumnModelEvent
 import javax.swing.event.TableColumnModelListener
-import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.TableCellEditor
 import javax.swing.table.TableCellRenderer
 import javax.swing.table.TableColumnModel
@@ -45,6 +41,7 @@ class KeyValueTableView(
     private val project: Project,
     private val removeKeys: (List<ValueWithType>) -> Unit,
     private val editValue: (key: ValueWithType, newValue: ValueWithType) -> Unit,
+    private val saveBinaryValue: (key: ValueWithType, toFile: File) -> Unit,
 ) : TableView<KeyValueServerValue>() {
 
     private val internalModel: ListTableModel<KeyValueServerValue>
@@ -90,8 +87,8 @@ class KeyValueTableView(
 
         internalModel = ListTableModel(
             arrayOf(
-                TableViewColumnInfo(project, Tr.KeyValueKey.tr(), KeyValueServerValue::key, editable = false),
-                TableViewColumnInfo(project, Tr.KeyValueValue.tr(), KeyValueServerValue::value, editable = true, onEdited = ::onValueEdited),
+                TableViewColumnInfo(project, Tr.KeyValueKey.tr(), KeyValueServerValue::key, editable = false, onSaveBinaryTapped = ::saveBinary),
+                TableViewColumnInfo(project, Tr.KeyValueValue.tr(), KeyValueServerValue::value, editable = true, onEdited = ::onValueEdited, onSaveBinaryTapped = ::saveBinary),
             ),
             listOf(),
             0
@@ -128,7 +125,14 @@ class KeyValueTableView(
             StorageType.double -> if (newValue is String) newValue.toDouble() else newValue as Double
             StorageType.bool -> if (newValue is String) (newValue.lowercase() == "true" || newValue.lowercase() == Tr.TypeBooleanTrue.tr().lowercase()) else newValue as Boolean
             StorageType.datetime -> TODO()
-            StorageType.binary -> TODO()
+            StorageType.binary -> {
+                newValue as VirtualFile
+                lateinit var bytes: ByteArray
+                ApplicationManager.getApplication().runReadAction {
+                    bytes = newValue.inputStream.use(InputStream::readAllBytes)
+                }
+                bytes
+            }
             StorageType.stringlist -> newValue
         }
         editValue(keyValueServerValue.key, keyValueServerValue.value.copy(value = converted))
@@ -161,6 +165,17 @@ class KeyValueTableView(
         super.setColumnModel(columnModel)
         columnModel.addColumnModelListener(columnObserver)
     }
+
+    private fun saveBinary() {
+        println("Button pressed!")
+        val row = selectedRow
+        if (row == -1) return
+
+        val file = chooseSaveFile("Save binary data to","") ?: return
+        //TODO Support binary keys
+        val item = internalModel.getItem(row)
+        saveBinaryValue(item.key, file)
+    }
 }
 
 private class TableViewColumnInfo(
@@ -169,10 +184,18 @@ private class TableViewColumnInfo(
     private val selector: (KeyValueServerValue) -> ValueWithType,
     private val editable: Boolean,
     private val onEdited: (KeyValueServerValue, stringValue: Any?) -> Unit = { _, _ -> },
+    onSaveBinaryTapped: () -> Unit,
 ) : ColumnInfo<KeyValueServerValue, Any>(name) {
 
+    private val stringListRenderer = CursiveTableCellRenderer()
+    private val binaryRenderer = BinaryTableCellRenderer(onSaveBinaryTapped)
+
     override fun valueOf(item: KeyValueServerValue): Any {
-        return selector(item).value
+        val selected = selector(item)
+        return when (selected.type) {
+            StorageType.binary -> "binary"
+            else -> selected.value!!
+        }
     }
 
     override fun isCellEditable(item: KeyValueServerValue?): Boolean = editable
@@ -185,72 +208,21 @@ private class TableViewColumnInfo(
                 }
             }
             StorageType.stringlist -> return StringListCellEditor(project)
+            StorageType.binary -> return BinaryCellEditor()
             else -> null
         }
     }
 
-    override fun setValue(item: KeyValueServerValue, value: Any) {
-        //TODO handle lists
+    override fun setValue(item: KeyValueServerValue, value: Any?) {
         onEdited(item, value)
     }
 
     override fun getRenderer(item: KeyValueServerValue): TableCellRenderer? {
-        if (selector(item).type == StorageType.stringlist) {
-            return CursiveTableCellRenderer()
+        return when (selector(item).type) {
+            StorageType.stringlist -> stringListRenderer
+            StorageType.binary -> binaryRenderer
+            else -> super.getRenderer(item)
         }
-        return super.getRenderer(item)
     }
 }
 
-private class CursiveTableCellRenderer : DefaultTableCellRenderer() {
-
-    override fun getTableCellRendererComponent(
-        table: JTable?,
-        value: Any?,
-        isSelected: Boolean,
-        hasFocus: Boolean,
-        row: Int,
-        column: Int,
-    ): Component {
-        val default = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-        default.font = Font(default.font.fontName, Font.ITALIC, default.font.size)
-        (default as JLabel).text = (value as? List<*>)?.joinToString() ?: ""
-        return default
-    }
-}
-
-private class StringListCellEditor(private val project: Project) : AbstractCellEditor(), TableCellEditor {
-
-    private var ignoreAction = false
-    private var currentList: List<String>? = null
-
-    init {
-    }
-
-    override fun getCellEditorValue(): Any? {
-        return currentList
-    }
-
-    override fun getTableCellEditorComponent(table: JTable?, value: Any?, isSelected: Boolean, row: Int, column: Int): Component {
-        @Suppress("UNCHECKED_CAST")
-        currentList = value as? List<String>
-        dispatchMain {
-            StringListEditDialog(currentList ?: emptyList(), "Edit string list", project).also { dialog ->
-                if (dialog.showAndGet()) {
-                    currentList = dialog.results
-                }
-                fireEditingStopped()
-            }
-        }
-        return JLabel()
-    }
-
-    override fun isCellEditable(anEvent: EventObject?): Boolean {
-        return if (anEvent is MouseEvent) {
-            anEvent.clickCount >= 2
-        } else {
-            super.isCellEditable(anEvent)
-        }
-    }
-
-}

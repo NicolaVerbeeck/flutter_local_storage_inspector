@@ -1,8 +1,12 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storage_inspector/storage_inspector.dart';
+import 'package:tuple/tuple.dart';
 
 void main() async {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +38,9 @@ void main() async {
     const ValueWithType(StorageType.string, "testFloat"),
   });
   driver.addKeyValueServer(keyValueServer);
+  driver.addKeyValueServer(BinaryServer(seed: {
+    'someBinaryData': Uint8List.fromList(utf8.encode('Clever string')),
+  }));
 
   driver.addFileServer(DefaultFileServer('/', 'Test folder'));
 
@@ -47,4 +54,71 @@ void main() async {
   } finally {
     await driver.stop();
   }
+}
+
+class BinaryServer extends KeyValueServer {
+  final data = <String, Uint8List>{};
+
+  BinaryServer({Map<String, Uint8List>? seed}) {
+    if (seed != null) {
+      data.addAll(seed);
+    }
+  }
+
+  @override
+  Future<List<Tuple2<ValueWithType, ValueWithType>>> get allValues async =>
+      data.keys
+          .map(
+            (e) => Tuple2(
+              ValueWithType(StorageType.string, e),
+              const ValueWithType(StorageType.binary, null),
+            ),
+          )
+          .toList();
+
+  @override
+  Future<void> clear() async => data.clear();
+
+  @override
+  Future<ValueWithType> get(ValueWithType key) async {
+    return ValueWithType(StorageType.binary, data[key.value.toString()]!);
+  }
+
+  @override
+  String? get icon => null;
+
+  @override
+  String get id => '12345';
+
+  @override
+  Map<ValueWithType, String?> get keyIcons => {};
+
+  @override
+  Set<ValueWithType> get keyOptions => {};
+
+  @override
+  Set<ValueWithType> get keySuggestions => {};
+
+  @override
+  String get name => 'Binary test server';
+
+  @override
+  Future<void> remove(ValueWithType key) async {
+    data.remove(key.value.toString());
+  }
+
+  @override
+  Future<void> set(ValueWithType key, ValueWithType newValue) async {
+    data[key.value.toString()] = newValue.value as Uint8List;
+    print('Set new data: ${(newValue.value as Uint8List).length}');
+  }
+
+  @override
+  Set<StorageType> get supportedKeyTypes => {StorageType.string};
+
+  @override
+  Set<StorageType> get supportedValueTypes => {StorageType.binary};
+
+  @override
+  Map<ValueWithType, StorageType> get typeForKey => {};
 }

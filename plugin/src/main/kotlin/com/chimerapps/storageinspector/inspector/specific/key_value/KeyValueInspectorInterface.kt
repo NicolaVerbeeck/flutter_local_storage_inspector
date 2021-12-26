@@ -29,6 +29,8 @@ interface KeyValueInspectorInterface {
     suspend fun remove(server: StorageServer, key: ValueWithType): Boolean
 
     suspend fun set(server: StorageServer, key: ValueWithType, value: ValueWithType): Boolean
+
+    suspend fun get(server: StorageServer, key: ValueWithType): ValueWithType
 }
 
 interface KeyValueInspectorListener {
@@ -56,7 +58,7 @@ class KeyValueInspectorInterfaceImpl(
 
     private val listeners = mutableListOf<KeyValueInspectorListener>()
 
-    private var cachedData: KeyValueServerValues? = null
+    private var cachedData = mutableMapOf<String, KeyValueServerValues>()
 
     init {
         keyValueProtocol.addListener(this)
@@ -71,22 +73,22 @@ class KeyValueInspectorInterfaceImpl(
     }
 
     override suspend fun getData(server: StorageServer): KeyValueServerValues {
-        println("Request to get data. Cached? $cachedData")
-        cachedData?.let { return it }
+        println("Request to get data. Cached? ${cachedData[server.id]}")
+        cachedData[server.id]?.let { return it }
         return reloadData(server)
     }
 
     override suspend fun reloadData(server: StorageServer): KeyValueServerValues {
         println("Request reload")
         val serverData = keyValueProtocol.get(server.id)
-        println("Updating cache")
-        cachedData = serverData
+        println("Updating cache: $serverData")
+        cachedData[server.id] = serverData
         return serverData
     }
 
     override suspend fun clear(server: StorageServer): Boolean {
         if (keyValueProtocol.clear(server.id)) {
-            cachedData = KeyValueServerValues(server.id, emptyList())
+            cachedData.remove(server.id)
             return true
         }
         return false
@@ -94,7 +96,8 @@ class KeyValueInspectorInterfaceImpl(
 
     override suspend fun remove(server: StorageServer, key: ValueWithType): Boolean {
         if (keyValueProtocol.remove(server.id, key)) {
-            cachedData = cachedData?.let { data -> data.copy(values = data.values.filterNot { it.key == key }) }
+            val newData = cachedData[server.id]?.let { data -> data.copy(values = data.values.filterNot { it.key == key }) }
+            newData?.let { cachedData[server.id] = it }
             return true
         }
         return false
@@ -102,16 +105,35 @@ class KeyValueInspectorInterfaceImpl(
 
     override suspend fun set(server: StorageServer, key: ValueWithType, value: ValueWithType): Boolean {
         if (keyValueProtocol.set(server.id, key, value)) {
-            cachedData = cachedData?.let { data ->
+            //We do not cache binary data for performance reasons
+            if (value.type == StorageType.binary) return true
+
+            val newData = cachedData[server.id]?.let { data ->
                 val index = data.values.indexOfFirst { it.key == key }
                 if (index == -1)
                     data.copy(values = data.values + KeyValueServerValue(key = key, value = value))
                 else
                     data.copy(values = data.values.withReplacementAt(index, KeyValueServerValue(key = key, value = value)))
             }
+            newData?.let { cachedData[server.id] = it }
             return true
         }
         return false
+    }
+
+    override suspend fun get(server: StorageServer, key: ValueWithType): ValueWithType {
+        val data = keyValueProtocol.get(server.id, key)
+        if (data.type != StorageType.binary){
+            val newData = cachedData[server.id]?.let { cachedValues ->
+                val index = cachedValues.values.indexOfFirst { it.key == key }
+                if (index == -1)
+                    cachedValues.copy(values = cachedValues.values + KeyValueServerValue(key = key, value = data))
+                else
+                    cachedValues.copy(values = cachedValues.values.withReplacementAt(index, KeyValueServerValue(key = key, value = data)))
+            }
+            newData?.let { cachedData[server.id] = it }
+        }
+        return data
     }
 
     override fun onServerIdentification(identification: KeyValueServerIdentification) {

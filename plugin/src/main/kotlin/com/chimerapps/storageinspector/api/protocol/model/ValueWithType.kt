@@ -10,11 +10,12 @@ import com.google.gsonpackaged.JsonSerializationContext
 import com.google.gsonpackaged.JsonSerializer
 import com.intellij.util.text.DefaultJBDateTimeFormatter
 import java.lang.reflect.Type
+import java.util.Base64
 
 /**
  * @author Nicola Verbeeck
  */
-data class ValueWithType(val type: StorageType, val value: Any) {
+data class ValueWithType(val type: StorageType, val value: Any?) {
     val asString: String
         get() = when (type) {
             StorageType.string,
@@ -48,7 +49,13 @@ class ValueWithTypeTypeAdapter : JsonDeserializer<ValueWithType>, JsonSerializer
             StorageType.int -> typeObject.get("value").asLong
             StorageType.double -> typeObject.get("value").asDouble
             StorageType.datetime -> typeObject.get("value").asLong
-            StorageType.binary -> typeObject.get("value").asString
+            StorageType.binary -> {
+                val raw = typeObject.get("value")
+                if (raw == null || raw.isJsonNull)
+                    null
+                else
+                    Base64.getDecoder().decode(raw.asString)
+            }
             StorageType.bool -> typeObject.get("value").asBoolean
             StorageType.stringlist -> typeObject.get("value").asJsonArray.map { it.asString }
         }
@@ -66,7 +73,7 @@ class ValueWithTypeTypeAdapter : JsonDeserializer<ValueWithType>, JsonSerializer
             StorageType.int -> asJson.addProperty("value", (value.value as Number).toLong())
             StorageType.double -> asJson.addProperty("value", (value.value as Number).toDouble())
             StorageType.datetime -> asJson.addProperty("value", (value.value as Number).toLong())
-            StorageType.binary -> asJson.addProperty("value", value.value as String)
+            StorageType.binary -> asJson.addProperty("value", Base64.getEncoder().encodeToString(value.value as ByteArray))
             StorageType.bool -> asJson.addProperty("value", value.value as Boolean)
             StorageType.stringlist -> asJson.add("value", JsonArray().also {
                 (value.value as List<*>).forEach { element -> it.add(element.toString()) }
@@ -75,6 +82,5 @@ class ValueWithTypeTypeAdapter : JsonDeserializer<ValueWithType>, JsonSerializer
 
         return asJson
     }
-
 
 }

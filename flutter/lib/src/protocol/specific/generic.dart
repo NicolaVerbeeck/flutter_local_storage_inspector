@@ -1,19 +1,57 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 
 Map<String, dynamic> mapValueWithType(ValueWithType data) {
   return {
     'type': typeString(data.type),
-    'value': data.value,
+    'value': _serializeValue(data),
   };
+}
+
+dynamic _serializeValue(ValueWithType data) {
+  switch (data.type) {
+    case StorageType.string:
+    case StorageType.integer:
+    case StorageType.double:
+    case StorageType.boolean:
+    case StorageType.stringList:
+      return data.value;
+    case StorageType.datetime:
+      return (data.value as DateTime).millisecondsSinceEpoch;
+    case StorageType.binary:
+      if (data.value == null) return null;
+      return base64.encode(data.value as Uint8List);
+  }
 }
 
 ValueWithType decodeValueWithType(dynamic data) {
   assert(data is Map<String, dynamic>);
+  final type = stringToType(data['type'] as String);
   return ValueWithType(
-    stringToType(data['type'] as String),
-    data['value'],
+    type,
+    _deserializeValue(type, data['value']),
   );
+}
+
+dynamic _deserializeValue(StorageType type, dynamic data) {
+  switch (type) {
+    case StorageType.string:
+    case StorageType.integer:
+    case StorageType.double:
+    case StorageType.boolean:
+      return data;
+    case StorageType.stringList:
+      if (data is List<String>) return data;
+      if (data is List<dynamic>) return data.cast<String>();
+      return (data as Iterable).map((e) => e.toString()).toList();
+    case StorageType.binary:
+      return base64.decode(data as String);
+    case StorageType.datetime:
+      return DateTime.fromMillisecondsSinceEpoch(data as int, isUtc: true);
+  }
 }
 
 String typeString(StorageType type) {

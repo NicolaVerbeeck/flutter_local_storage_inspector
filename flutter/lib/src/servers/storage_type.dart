@@ -14,7 +14,7 @@ enum StorageType {
   /// Datetime values. Serialized as milliseconds since epoch on the wire
   datetime,
 
-  /// Binary data. Serialized as base64 on the wire
+  /// Binary data. Serialized as base64 on the wire, Uint8List internally
   binary,
 
   /// Boolean values
