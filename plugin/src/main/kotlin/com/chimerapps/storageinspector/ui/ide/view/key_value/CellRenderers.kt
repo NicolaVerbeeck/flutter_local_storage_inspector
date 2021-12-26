@@ -3,33 +3,26 @@ package com.chimerapps.storageinspector.ui.ide.view.key_value
 import com.chimerapps.storageinspector.ui.ide.view.generic.StringListEditDialog
 import com.chimerapps.storageinspector.ui.util.dispatchMain
 import com.chimerapps.storageinspector.ui.util.file.chooseOpenFile
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.FixedSizeButton
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.ui.components.JBLabel
-import java.awt.BorderLayout
-import java.awt.Color
 import java.awt.Component
 import java.awt.Font
 import java.awt.event.MouseEvent
 import java.util.EventObject
 import javax.swing.AbstractCellEditor
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTable
-import javax.swing.UIManager
-import javax.swing.border.Border
-import javax.swing.border.EmptyBorder
-import javax.swing.plaf.UIResource
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.TableCellEditor
-import javax.swing.table.TableCellRenderer
 
 /**
  * @author Nicola Verbeeck
  */
-class CursiveTableCellRenderer : DefaultTableCellRenderer() {
+class StringListTableCellRenderer : DefaultTableCellRenderer() {
 
     override fun getTableCellRendererComponent(
         table: JTable?,
@@ -78,7 +71,7 @@ class StringListCellEditor(private val project: Project) : AbstractCellEditor(),
 
 }
 
-class BinaryCellEditor : AbstractCellEditor(), TableCellEditor {
+class BinaryCellEditor(private val onSaveBinaryTapped: () -> Unit) : AbstractCellEditor(), TableCellEditor {
 
     private var file: VirtualFile? = null
 
@@ -87,11 +80,32 @@ class BinaryCellEditor : AbstractCellEditor(), TableCellEditor {
     }
 
     override fun getTableCellEditorComponent(table: JTable?, value: Any?, isSelected: Boolean, row: Int, column: Int): Component {
-        dispatchMain {
-            file = chooseOpenFile("Pick file")
-            fireEditingStopped()
+        val shownAt = System.currentTimeMillis()
+        return JPanel().also { panel ->
+            panel.layout = BoxLayout(panel, BoxLayout.LINE_AXIS)
+            panel.add(Box.createHorizontalGlue())
+            panel.add(JButton("Download").also { btn ->
+                btn.addActionListener {
+                    //Prevent click-through
+                    if ((System.currentTimeMillis() - shownAt) < 500L) return@addActionListener
+
+                    file = null
+                    onSaveBinaryTapped()
+                    fireEditingStopped()
+                }
+            })
+            panel.add(Box.createHorizontalGlue())
+            panel.add(JButton("Upload").also { btn ->
+                btn.addActionListener {
+                    //Prevent click-through
+                    if ((System.currentTimeMillis() - shownAt) < 500L) return@addActionListener
+
+                    file = chooseOpenFile("Pick file")
+                    fireEditingStopped()
+                }
+            })
+            panel.add(Box.createHorizontalGlue())
         }
-        return JLabel()
     }
 
     override fun isCellEditable(anEvent: EventObject?): Boolean {
@@ -104,139 +118,19 @@ class BinaryCellEditor : AbstractCellEditor(), TableCellEditor {
 
 }
 
-class BinaryTableCellRenderer(private val onSaveTapped: () -> Unit) : TableCellRenderer, JPanel(BorderLayout()) {
-
-    private val safeNoFocusBorder: Border = EmptyBorder(1, 1, 1, 1)
-    private val defaultNoFocusBorder: Border = EmptyBorder(1, 1, 1, 1)
-
-    private var noFocusBorder: Border? = defaultNoFocusBorder
-
-    private var unselectedForeground: Color? = null
-    private var unselectedBackground: Color? = null
-
-    private val label = JBLabel()
-    private val actionButton = FixedSizeButton()
-
-    init {
-        isOpaque = true
-        border = getInitNoFocusBorder()
-        name = "Table.cellRenderer"
-
-        add(label, BorderLayout.CENTER)
-        add(actionButton, BorderLayout.EAST)
-
-        actionButton.addActionListener { onSaveTapped() }
-
-        actionButton.icon = AllIcons.Actions.MenuSaveall
-    }
-
-    private fun getInitNoFocusBorder(): Border? {
-
-        val border = UIManager.get("Table.cellNoFocusBorder", locale) as? Border
-        if (System.getSecurityManager() != null) {
-            return border ?: safeNoFocusBorder
-        } else if (border != null) {
-            if (noFocusBorder == null || noFocusBorder === defaultNoFocusBorder) {
-                return border
-            }
-        }
-        return noFocusBorder
-    }
-
-    override fun setForeground(c: Color?) {
-        super.setForeground(c)
-        unselectedForeground = c
-    }
-
-    override fun setBackground(c: Color?) {
-        super.setBackground(c)
-        unselectedBackground = c
-    }
-
-    override fun updateUI() {
-        super.updateUI()
-        foreground = null
-        background = null
-    }
+class BinaryTableCellRenderer : DefaultTableCellRenderer() {
 
     override fun getTableCellRendererComponent(
-        table: JTable?, value: Any?,
-        isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int
+        table: JTable?,
+        value: Any?,
+        isSelected: Boolean,
+        hasFocus: Boolean,
+        row: Int,
+        column: Int,
     ): Component {
-        var overrideSelected = isSelected
-        if (table == null) {
-            return this
-        }
-        var fg: Color? = null
-        var bg: Color? = null
-        val dropLocation = table.dropLocation
-        if (dropLocation != null && !dropLocation.isInsertRow
-            && !dropLocation.isInsertColumn
-            && dropLocation.row == row && dropLocation.column == column
-        ) {
-            fg = UIManager.get("Table.dropCellForeground", locale) as? Color
-            bg = UIManager.get("Table.dropCellBackground", locale) as? Color
-            overrideSelected = true
-        }
-        if (overrideSelected) {
-            super.setForeground(fg ?: table.selectionForeground)
-            super.setBackground(bg ?: table.selectionBackground)
-        } else {
-            var background = if (unselectedBackground != null) unselectedBackground else table.background
-            if (background == null || background is UIResource) {
-                val alternateColor = UIManager.get("Table.alternateRowColor", locale) as? Color
-                if (alternateColor != null && row % 2 != 0) {
-                    background = alternateColor
-                }
-            }
-            super.setForeground(if (unselectedForeground != null) unselectedForeground else table.foreground)
-            super.setBackground(background)
-        }
-        label.font = table.font
-        if (hasFocus) {
-            var border: Border? = null
-            if (overrideSelected) {
-                border = UIManager.get("Table.focusSelectedCellHighlightBorder", locale) as? Border
-            }
-            if (border == null) {
-                border = UIManager.get("Table.focusCellHighlightBorder", locale) as? Border
-            }
-            setBorder(border)
-            if (!overrideSelected && table.isCellEditable(row, column)) {
-                var col: Color? = UIManager.get("Table.focusCellForeground", locale) as? Color
-                if (col != null) {
-                    super.setForeground(col)
-                }
-                col = UIManager.get("Table.focusCellBackground", locale) as? Color
-                if (col != null) {
-                    super.setBackground(col)
-                }
-            }
-        } else {
-            border = getInitNoFocusBorder()
-        }
-        label.text = value?.toString() ?: ""
-        return this
+        val default = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+        default.font = Font(default.font.fontName, Font.ITALIC, default.font.size)
+        (default as JLabel).text = "<binary>"
+        return default
     }
-
-    /*
-     * The following methods are overridden as a performance measure to
-     * to prune code-paths are often called in the case of renders
-     * but which we know are unnecessary.  Great care should be taken
-     * when writing your own renderer to weigh the benefits and
-     * drawbacks of overriding methods like these.
-     */
-    override fun isOpaque(): Boolean {
-        val back: Color? = background
-        var p: Component? = parent
-        if (p != null) {
-            p = p.parent
-        }
-
-        // p should now be the JTable.
-        val colorMatch = back != null && p != null && back == p.background &&
-                p.isOpaque
-        return !colorMatch && super.isOpaque()
-    }
-
 }

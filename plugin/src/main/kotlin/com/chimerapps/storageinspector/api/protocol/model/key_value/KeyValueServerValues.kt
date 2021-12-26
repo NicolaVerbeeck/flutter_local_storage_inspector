@@ -14,3 +14,10 @@ data class KeyValueServerValue(
     val key: ValueWithType,
     val value: ValueWithType,
 )
+
+data class KeyValueGetResponse(
+    val id: String,
+    val data: KeyValueGetResult,
+)
+
+data class KeyValueGetResult(val value: ValueWithType)

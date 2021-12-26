@@ -167,7 +167,6 @@ class KeyValueTableView(
     }
 
     private fun saveBinary() {
-        println("Button pressed!")
         val row = selectedRow
         if (row == -1) return
 
@@ -184,11 +183,11 @@ private class TableViewColumnInfo(
     private val selector: (KeyValueServerValue) -> ValueWithType,
     private val editable: Boolean,
     private val onEdited: (KeyValueServerValue, stringValue: Any?) -> Unit = { _, _ -> },
-    onSaveBinaryTapped: () -> Unit,
+    private val onSaveBinaryTapped: () -> Unit,
 ) : ColumnInfo<KeyValueServerValue, Any>(name) {
 
-    private val stringListRenderer = CursiveTableCellRenderer()
-    private val binaryRenderer = BinaryTableCellRenderer(onSaveBinaryTapped)
+    private val stringListRenderer = StringListTableCellRenderer()
+    private val binaryRenderer = BinaryTableCellRenderer()
 
     override fun valueOf(item: KeyValueServerValue): Any {
         val selected = selector(item)
@@ -208,7 +207,7 @@ private class TableViewColumnInfo(
                 }
             }
             StorageType.stringlist -> return StringListCellEditor(project)
-            StorageType.binary -> return BinaryCellEditor()
+            StorageType.binary -> return BinaryCellEditor(onSaveBinaryTapped)
             else -> null
         }
     }

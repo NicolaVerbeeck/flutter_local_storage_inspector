@@ -1,4 +1,10 @@
 <p>
+   <b>0.0.5</b>
+   <ul>
+        <li>Support binary values in edit/new</li>
+   </ul>
+</p>
+<p>
    <b>0.0.4</b>
    <ul>
         <li>Added string list editing</li>

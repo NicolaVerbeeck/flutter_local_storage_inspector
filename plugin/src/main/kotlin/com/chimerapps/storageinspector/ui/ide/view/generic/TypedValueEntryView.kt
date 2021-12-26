@@ -6,13 +6,16 @@ import com.chimerapps.storageinspector.ui.util.file.chooseOpenFile
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.chimerapps.storageinspector.ui.util.notification.NotificationUtil
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.FixedSizeButton
 import com.intellij.openapi.ui.ValidationInfo
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.components.JBTextField
 import java.awt.BorderLayout
 import java.awt.Toolkit
+import java.io.InputStream
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -32,6 +35,7 @@ class TypedValueEntryView(
     private val freeEditField = JBTextField()
     private val valueButton = FixedSizeButton()
     private var stringListItems: List<String>? = null
+    private var binaryFile: VirtualFile? = null
 
     init {
         add(freeEditField, BorderLayout.CENTER)
@@ -44,16 +48,19 @@ class TypedValueEntryView(
             StorageType.string -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = null
                 stringListItems = null
+                binaryFile = null
                 removeButton()
             }
             StorageType.int -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = IntegerOnlyDocumentFilter()
                 stringListItems = null
+                binaryFile = null
                 removeButton()
             }
             StorageType.double -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = DoubleOnlyDocumentFilter()
                 stringListItems = null
+                binaryFile = null
                 removeButton()
             }
             StorageType.datetime -> ensureFreeEditField().also {
@@ -65,27 +72,33 @@ class TypedValueEntryView(
                     NotificationUtil.info("Under construction", "This feature is under construction", project)
                 }
             }
-            StorageType.binary -> ensureFreeEditField().also {
-                //TODO implement
-                (it.document as AbstractDocument).documentFilter = null
+            StorageType.binary -> ensureFreeEditField().also { textField ->
+                (textField.document as AbstractDocument).documentFilter = null
                 stringListItems = null
-                it.isEnabled = false
+                textField.isEnabled = false
                 addButton().also { btn ->
                     btn.icon = AllIcons.FileTypes.Text
                     btn.addActionListener {
                         val file = chooseOpenFile("Pick file")
-                        NotificationUtil.info("Under construction", "This feature is under construction", project)
+                        binaryFile = file
+                        if (file == null) {
+                            textField.text = ""
+                        } else {
+                            textField.text = "<${file.name} (${file.length} bytes)>"
+                        }
                     }
                 }
             }
             StorageType.bool -> {
                 stringListItems = null
+                binaryFile = null
                 ensureBooleanSelector()
                 removeButton()
             }
             StorageType.stringlist -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = null
                 it.isEnabled = false
+                binaryFile = null
                 addButton().also { btn ->
                     btn.icon = AllIcons.Json.Array
                     btn.addActionListener {
@@ -138,11 +151,17 @@ class TypedValueEntryView(
             StorageType.int,
             StorageType.double -> doValidateFromString(storageType, freeEditField.text, freeEditField, allowEmpty)
             StorageType.datetime -> TODO()
-            StorageType.binary -> TODO()
+            StorageType.binary -> doValidateBinary()
             StorageType.bool -> doValidateFromString(storageType, if (booleanSelector.selectedIndex == 0) "true" else "false", freeEditField, allowEmpty)
             StorageType.stringlist -> ValueResult(ValueWithType(storageType, stringListItems ?: emptyList<String>()))
         }
 
+    }
+
+    private fun doValidateBinary(): ValueResult {
+        val file = binaryFile ?: return ValueResult(error = ValidationInfo("No binary data provided", freeEditField))
+        val bytes = ApplicationManager.getApplication().runReadAction<ByteArray> { file.inputStream.use(InputStream::readAllBytes) }
+        return ValueResult(rawValue = ValueWithType(StorageType.binary, bytes))
     }
 
     companion object {

@@ -26,4 +26,6 @@ enum class KeyValueRequestType {
     CLEAR,
     @SerializedName("remove")
     REMOVE,
+    @SerializedName("get_value")
+    GET_VALUE,
 }

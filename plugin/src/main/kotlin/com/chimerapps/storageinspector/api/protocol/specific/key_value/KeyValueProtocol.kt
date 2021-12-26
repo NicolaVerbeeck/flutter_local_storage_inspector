@@ -3,6 +3,8 @@ package com.chimerapps.storageinspector.api.protocol.specific.key_value
 import com.chimerapps.storageinspector.api.RemoteError
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocol
 import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
+import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueGetResponse
+import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueGetResult
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueRequest
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueRequestData
 import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueRequestType
@@ -99,7 +101,21 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) : KeyValu
     }
 
     override suspend fun get(serverId: String, key: ValueWithType): ValueWithType {
-        TODO("Not yet implemented")
+        val requestId = UUID.randomUUID().toString()
+        val future = CompletableDeferred<ValueWithType>()
+        waitingFutures[requestId] = Pair(future) { data, _ ->
+            future.complete(gson.fromJson(data, KeyValueGetResponse::class.java).data.value)
+        }
+
+        protocol.sendRequest(
+            serverType = StorageInspectorProtocol.SERVER_TYPE_KEY_VALUE,
+            requestId = requestId,
+            data = gson.toJsonTree(
+                KeyValueRequest(KeyValueRequestType.GET_VALUE, KeyValueRequestData(serverId, key = key))
+            ).asJsonObject
+        )
+
+        return future.await()
     }
 
     override suspend fun set(serverId: String, key: ValueWithType, value: ValueWithType): Boolean {

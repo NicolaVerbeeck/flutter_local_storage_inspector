@@ -105,15 +105,14 @@ class KeyValueInspectorInterfaceImpl(
 
     override suspend fun set(server: StorageServer, key: ValueWithType, value: ValueWithType): Boolean {
         if (keyValueProtocol.set(server.id, key, value)) {
-            //We do not cache binary data for performance reasons
-            if (value.type == StorageType.binary) return true
 
+            val cleanedData = if (value.type == StorageType.binary) value.copy(value = null) else value
             val newData = cachedData[server.id]?.let { data ->
                 val index = data.values.indexOfFirst { it.key == key }
                 if (index == -1)
-                    data.copy(values = data.values + KeyValueServerValue(key = key, value = value))
+                    data.copy(values = data.values + KeyValueServerValue(key = key, value = cleanedData))
                 else
-                    data.copy(values = data.values.withReplacementAt(index, KeyValueServerValue(key = key, value = value)))
+                    data.copy(values = data.values.withReplacementAt(index, KeyValueServerValue(key = key, value = cleanedData)))
             }
             newData?.let { cachedData[server.id] = it }
             return true
@@ -123,16 +122,16 @@ class KeyValueInspectorInterfaceImpl(
 
     override suspend fun get(server: StorageServer, key: ValueWithType): ValueWithType {
         val data = keyValueProtocol.get(server.id, key)
-        if (data.type != StorageType.binary){
-            val newData = cachedData[server.id]?.let { cachedValues ->
-                val index = cachedValues.values.indexOfFirst { it.key == key }
-                if (index == -1)
-                    cachedValues.copy(values = cachedValues.values + KeyValueServerValue(key = key, value = data))
-                else
-                    cachedValues.copy(values = cachedValues.values.withReplacementAt(index, KeyValueServerValue(key = key, value = data)))
-            }
-            newData?.let { cachedData[server.id] = it }
+        val newData = cachedData[server.id]?.let { cachedValues ->
+            val index = cachedValues.values.indexOfFirst { it.key == key }
+            val cleanedData = if (data.type == StorageType.binary) data.copy(value = null) else data
+            if (index == -1)
+                cachedValues.copy(values = cachedValues.values + KeyValueServerValue(key = key, value = cleanedData))
+            else
+                cachedValues.copy(values = cachedValues.values.withReplacementAt(index, KeyValueServerValue(key = key, value = cleanedData)))
         }
+        newData?.let { cachedData[server.id] = it }
+
         return data
     }
 

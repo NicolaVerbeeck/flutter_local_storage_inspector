@@ -6,6 +6,7 @@ import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueInspectorInterface
 import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueStorageServer
 import com.chimerapps.storageinspector.ui.ide.actions.RefreshAction
+import com.chimerapps.storageinspector.ui.util.ensureMain
 import com.chimerapps.storageinspector.ui.util.list.DiffUtilComparator
 import com.chimerapps.storageinspector.ui.util.list.ListUpdateHelper
 import com.chimerapps.storageinspector.ui.util.localization.Tr
@@ -132,8 +133,10 @@ class KeyValueServerView(private val project: Project) : JPanel(BorderLayout()) 
         scope.launch {
             try {
                 val binaryData = serverInterface.get(server, key)
-                ApplicationManager.getApplication().runWriteAction {
-                    toFile.writeBytes(binaryData.value as ByteArray)
+                ensureMain {
+                    ApplicationManager.getApplication().runWriteAction {
+                        toFile.writeBytes(binaryData.value as ByteArray)
+                    }
                 }
             } catch (e: Throwable) {
                 NotificationUtil.error("Error", "Failed to get data from server: ${e.message}", project)
