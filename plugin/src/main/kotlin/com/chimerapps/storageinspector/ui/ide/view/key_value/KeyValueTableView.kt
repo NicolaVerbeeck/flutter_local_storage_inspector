@@ -124,7 +124,7 @@ class KeyValueTableView(
             StorageType.int -> if (newValue is String) newValue.toLong() else newValue as Long
             StorageType.double -> if (newValue is String) newValue.toDouble() else newValue as Double
             StorageType.bool -> if (newValue is String) (newValue.lowercase() == "true" || newValue.lowercase() == Tr.TypeBooleanTrue.tr().lowercase()) else newValue as Boolean
-            StorageType.datetime -> TODO()
+            StorageType.datetime -> newValue
             StorageType.binary -> {
                 newValue as VirtualFile
                 lateinit var bytes: ByteArray
@@ -170,7 +170,7 @@ class KeyValueTableView(
         val row = selectedRow
         if (row == -1) return
 
-        val file = chooseSaveFile("Save binary data to","") ?: return
+        val file = chooseSaveFile("Save binary data to", "") ?: return
         //TODO Support binary keys
         val item = internalModel.getItem(row)
         saveBinaryValue(item.key, file)
@@ -188,6 +188,7 @@ private class TableViewColumnInfo(
 
     private val stringListRenderer = StringListTableCellRenderer()
     private val binaryRenderer = BinaryTableCellRenderer()
+    private val datetimeRenderer = DateTimeTableCellRenderer()
 
     override fun valueOf(item: KeyValueServerValue): Any {
         val selected = selector(item)
@@ -208,6 +209,7 @@ private class TableViewColumnInfo(
             }
             StorageType.stringlist -> return StringListCellEditor(project)
             StorageType.binary -> return BinaryCellEditor(onSaveBinaryTapped)
+            StorageType.datetime -> return DateTimeCellEditor(project)
             else -> null
         }
     }
@@ -220,6 +222,7 @@ private class TableViewColumnInfo(
         return when (selector(item).type) {
             StorageType.stringlist -> stringListRenderer
             StorageType.binary -> binaryRenderer
+            StorageType.datetime -> datetimeRenderer
             else -> super.getRenderer(item)
         }
     }

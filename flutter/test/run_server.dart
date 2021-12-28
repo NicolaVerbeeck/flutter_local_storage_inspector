@@ -41,15 +41,20 @@ void main() async {
   driver.addKeyValueServer(BinaryServer(seed: {
     'someBinaryData': Uint8List.fromList(utf8.encode('Clever string')),
   }));
+  driver.addKeyValueServer(DateTimeServer(seed: {
+    'startup': DateTime.now(),
+  }));
 
   driver.addFileServer(DefaultFileServer('/', 'Test folder'));
 
   try {
     print('Starting driver');
-    await driver.start(paused: true);
+    await driver.start(paused: false);
     print('Driver started');
 
-    await Future<void>.delayed(const Duration(seconds: 10000));
+    await Future<void>.delayed(const Duration(minutes: 10));
+    print('Delay finished');
+
     await driver.stop();
   } finally {
     await driver.stop();
@@ -118,6 +123,73 @@ class BinaryServer extends KeyValueServer {
 
   @override
   Set<StorageType> get supportedValueTypes => {StorageType.binary};
+
+  @override
+  Map<ValueWithType, StorageType> get typeForKey => {};
+}
+
+class DateTimeServer extends KeyValueServer {
+  final data = <String, DateTime>{};
+
+  DateTimeServer({Map<String, DateTime>? seed}) {
+    if (seed != null) {
+      data.addAll(seed);
+    }
+  }
+
+  @override
+  Future<List<Tuple2<ValueWithType, ValueWithType>>> get allValues async =>
+      data.entries
+          .map(
+            (e) => Tuple2(
+              ValueWithType(StorageType.string, e.key),
+              ValueWithType(StorageType.datetime, e.value),
+            ),
+          )
+          .toList();
+
+  @override
+  Future<void> clear() async => data.clear();
+
+  @override
+  Future<ValueWithType> get(ValueWithType key) async {
+    return ValueWithType(StorageType.binary, data[key.value.toString()]!);
+  }
+
+  @override
+  String? get icon => null;
+
+  @override
+  String get id => '123456';
+
+  @override
+  Map<ValueWithType, String?> get keyIcons => {};
+
+  @override
+  Set<ValueWithType> get keyOptions => {};
+
+  @override
+  Set<ValueWithType> get keySuggestions => {};
+
+  @override
+  String get name => 'Date time test server';
+
+  @override
+  Future<void> remove(ValueWithType key) async {
+    data.remove(key.value.toString());
+  }
+
+  @override
+  Future<void> set(ValueWithType key, ValueWithType newValue) async {
+    data[key.value.toString()] = newValue.value as DateTime;
+    print('Set new data: ${newValue.value}');
+  }
+
+  @override
+  Set<StorageType> get supportedKeyTypes => {StorageType.string};
+
+  @override
+  Set<StorageType> get supportedValueTypes => {StorageType.datetime};
 
   @override
   Map<ValueWithType, StorageType> get typeForKey => {};

@@ -4,7 +4,6 @@ import com.chimerapps.storageinspector.api.protocol.model.StorageType
 import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import com.chimerapps.storageinspector.ui.util.file.chooseOpenFile
 import com.chimerapps.storageinspector.ui.util.localization.Tr
-import com.chimerapps.storageinspector.ui.util.notification.NotificationUtil
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
@@ -16,6 +15,10 @@ import com.intellij.ui.components.JBTextField
 import java.awt.BorderLayout
 import java.awt.Toolkit
 import java.io.InputStream
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Date
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -36,6 +39,7 @@ class TypedValueEntryView(
     private val valueButton = FixedSizeButton()
     private var stringListItems: List<String>? = null
     private var binaryFile: VirtualFile? = null
+    private var dateTime: Date? = null
 
     init {
         add(freeEditField, BorderLayout.CENTER)
@@ -48,6 +52,7 @@ class TypedValueEntryView(
             StorageType.string -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = null
                 stringListItems = null
+                dateTime = null
                 binaryFile = null
                 removeButton()
             }
@@ -55,26 +60,35 @@ class TypedValueEntryView(
                 (it.document as AbstractDocument).documentFilter = IntegerOnlyDocumentFilter()
                 stringListItems = null
                 binaryFile = null
+                dateTime = null
                 removeButton()
             }
             StorageType.double -> ensureFreeEditField().also {
                 (it.document as AbstractDocument).documentFilter = DoubleOnlyDocumentFilter()
                 stringListItems = null
                 binaryFile = null
+                dateTime = null
                 removeButton()
             }
-            StorageType.datetime -> ensureFreeEditField().also {
-                (it.document as AbstractDocument).documentFilter = null
+            StorageType.datetime -> ensureFreeEditField().also { field ->
+                (field.document as AbstractDocument).documentFilter = null
                 stringListItems = null
-                it.isEnabled = false
+                field.isEnabled = false
                 addButton().also { btn ->
                     btn.icon = AllIcons.Vcs.History
-                    NotificationUtil.info("Under construction", "This feature is under construction", project)
+                    btn.addActionListener {
+                        DateTimeEditDialog(project, dateTime ?: Date()).showAndReturn()?.let {
+                            dateTime = it
+                            val dateTime = LocalDateTime.ofEpochSecond(it.time / 1000, (it.time % 1000 * 1000).toInt(), ZoneOffset.UTC)
+                            field.text = DateTimeFormatter.RFC_1123_DATE_TIME.format(dateTime.atOffset(ZoneOffset.UTC))
+                        }
+                    }
                 }
             }
             StorageType.binary -> ensureFreeEditField().also { textField ->
                 (textField.document as AbstractDocument).documentFilter = null
                 stringListItems = null
+                dateTime = null
                 textField.isEnabled = false
                 addButton().also { btn ->
                     btn.icon = AllIcons.FileTypes.Text
@@ -92,20 +106,22 @@ class TypedValueEntryView(
             StorageType.bool -> {
                 stringListItems = null
                 binaryFile = null
+                dateTime = null
                 ensureBooleanSelector()
                 removeButton()
             }
-            StorageType.stringlist -> ensureFreeEditField().also {
-                (it.document as AbstractDocument).documentFilter = null
-                it.isEnabled = false
+            StorageType.stringlist -> ensureFreeEditField().also { textField ->
+                (textField.document as AbstractDocument).documentFilter = null
+                textField.isEnabled = false
                 binaryFile = null
+                dateTime = null
                 addButton().also { btn ->
                     btn.icon = AllIcons.Json.Array
                     btn.addActionListener {
                         StringListEditDialog(stringListItems ?: emptyList(), "Edit string list", project).also { dialog ->
                             if (dialog.showAndGet()) {
                                 stringListItems = dialog.results
-                                //TODO update UI
+                                textField.text = stringListItems?.joinToString(",")
                             }
                         }
                     }
@@ -150,7 +166,7 @@ class TypedValueEntryView(
             StorageType.string,
             StorageType.int,
             StorageType.double -> doValidateFromString(storageType, freeEditField.text, freeEditField, allowEmpty)
-            StorageType.datetime -> TODO()
+            StorageType.datetime -> doValidateDateTime()
             StorageType.binary -> doValidateBinary()
             StorageType.bool -> doValidateFromString(storageType, if (booleanSelector.selectedIndex == 0) "true" else "false", freeEditField, allowEmpty)
             StorageType.stringlist -> ValueResult(ValueWithType(storageType, stringListItems ?: emptyList<String>()))
@@ -162,6 +178,11 @@ class TypedValueEntryView(
         val file = binaryFile ?: return ValueResult(error = ValidationInfo("No binary data provided", freeEditField))
         val bytes = ApplicationManager.getApplication().runReadAction<ByteArray> { file.inputStream.use(InputStream::readAllBytes) }
         return ValueResult(rawValue = ValueWithType(StorageType.binary, bytes))
+    }
+
+    private fun doValidateDateTime(): ValueResult {
+        val date = dateTime ?: return ValueResult(error = ValidationInfo("No datetime provided", freeEditField))
+        return ValueResult(rawValue = ValueWithType(StorageType.datetime, date.time))
     }
 
     companion object {
@@ -187,12 +208,12 @@ class TypedValueEntryView(
                     val value = text.toDoubleOrNull() ?: return ValueResult(error = ValidationInfo("Value is not double", component))
                     return ValueResult(ValueWithType(storageType, value))
                 }
-                StorageType.datetime -> TODO()
-                StorageType.binary -> TODO()
+                StorageType.datetime,
+                StorageType.binary,
+                StorageType.stringlist -> throw IllegalArgumentException("This storage type is not editable as string")
                 StorageType.bool -> {
                     return ValueResult(ValueWithType(storageType, text.equals(Tr.TypeBooleanTrue.tr(), ignoreCase = true) || text.equals("true", ignoreCase = true)))
                 }
-                StorageType.stringlist -> TODO()
             }
         }
     }

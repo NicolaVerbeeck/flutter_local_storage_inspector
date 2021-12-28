@@ -1,5 +1,6 @@
 package com.chimerapps.storageinspector.ui.ide.view.key_value
 
+import com.chimerapps.storageinspector.ui.ide.view.generic.DateTimeEditDialog
 import com.chimerapps.storageinspector.ui.ide.view.generic.StringListEditDialog
 import com.chimerapps.storageinspector.ui.util.dispatchMain
 import com.chimerapps.storageinspector.ui.util.file.chooseOpenFile
@@ -8,6 +9,10 @@ import com.intellij.openapi.vfs.VirtualFile
 import java.awt.Component
 import java.awt.Font
 import java.awt.event.MouseEvent
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Date
 import java.util.EventObject
 import javax.swing.AbstractCellEditor
 import javax.swing.Box
@@ -133,4 +138,53 @@ class BinaryTableCellRenderer : DefaultTableCellRenderer() {
         (default as JLabel).text = "<binary>"
         return default
     }
+}
+
+class DateTimeTableCellRenderer : DefaultTableCellRenderer() {
+
+    override fun getTableCellRendererComponent(
+        table: JTable?,
+        value: Any?,
+        isSelected: Boolean,
+        hasFocus: Boolean,
+        row: Int,
+        column: Int,
+    ): Component {
+        val default = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+        default.font = Font(default.font.fontName, Font.ITALIC, default.font.size)
+
+        val time = value as Long
+        val dateTime = LocalDateTime.ofEpochSecond(time / 1000, (time % 1000 * 1000).toInt(), ZoneOffset.UTC)
+        (default as JLabel).text = DateTimeFormatter.RFC_1123_DATE_TIME.format(dateTime.atOffset(ZoneOffset.UTC))
+        return default
+    }
+}
+
+class DateTimeCellEditor(private val project: Project) : AbstractCellEditor(), TableCellEditor {
+
+    private var dateTime: Long? = null
+
+    override fun getCellEditorValue(): Any? {
+        return dateTime
+    }
+
+    override fun getTableCellEditorComponent(table: JTable?, value: Any?, isSelected: Boolean, row: Int, column: Int): Component {
+        dateTime = value as? Long
+        dispatchMain {
+            DateTimeEditDialog(project, dateTime?.let { Date(it) } ?: Date()).showAndReturn()?.let { newDateTime ->
+                dateTime = newDateTime.time
+            }
+            fireEditingStopped()
+        }
+        return JLabel()
+    }
+
+    override fun isCellEditable(anEvent: EventObject?): Boolean {
+        return if (anEvent is MouseEvent) {
+            anEvent.clickCount >= 2
+        } else {
+            super.isCellEditable(anEvent)
+        }
+    }
+
 }

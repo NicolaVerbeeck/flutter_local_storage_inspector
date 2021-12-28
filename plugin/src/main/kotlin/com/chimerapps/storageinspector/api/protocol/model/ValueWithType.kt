@@ -70,9 +70,9 @@ class ValueWithTypeTypeAdapter : JsonDeserializer<ValueWithType>, JsonSerializer
 
         when (value.type) {
             StorageType.string -> asJson.addProperty("value", value.value as String)
-            StorageType.int -> asJson.addProperty("value", (value.value as Number).toLong())
-            StorageType.double -> asJson.addProperty("value", (value.value as Number).toDouble())
-            StorageType.datetime -> asJson.addProperty("value", (value.value as Number).toLong())
+            StorageType.int -> asJson.addProperty("value", (value.value as Long))
+            StorageType.double -> asJson.addProperty("value", (value.value as Double))
+            StorageType.datetime -> asJson.addProperty("value", (value.value as Long))
             StorageType.binary -> asJson.addProperty("value", Base64.getEncoder().encodeToString(value.value as ByteArray))
             StorageType.bool -> asJson.addProperty("value", value.value as Boolean)
             StorageType.stringlist -> asJson.add("value", JsonArray().also {
