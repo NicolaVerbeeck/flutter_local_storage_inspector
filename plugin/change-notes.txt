@@ -1,7 +1,13 @@
 <p>
+   <b>0.0.6</b>
+   <ul>
+        <li>Support datetime values in edit/new in key-value servers</li>
+   </ul>
+</p>
+<p>
    <b>0.0.5</b>
    <ul>
-        <li>Support binary values in edit/new</li>
+        <li>Support binary values in edit/new in key-value servers</li>
    </ul>
 </p>
 <p>

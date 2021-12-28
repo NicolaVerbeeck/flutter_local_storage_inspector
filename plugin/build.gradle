@@ -8,12 +8,13 @@ plugins {
     id 'org.jetbrains.intellij' version '1.3.0'
     id 'org.jetbrains.kotlin.jvm' version '1.5.31'
     id "dev.bmac.intellij.plugin-uploader" version "1.2.2"
+    id "com.github.ben-manes.versions" version "0.39.0"
 }
 
 apply from: 'dependencies.gradle'
 
 group 'com.chimerapps.tools'
-version '0.0.5'
+version '0.0.6'
 
 repositories {
     mavenCentral()
@@ -156,5 +157,5 @@ uploadPlugin {
     sinceBuild.set("203")
 
     url.set(System.getenv("PLUGIN_UPLOAD_PATH"))
-    authentication.set("Bearer $publishToken");
+    authentication.set("Bearer $publishToken")
 }
