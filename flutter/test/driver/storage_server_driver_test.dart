@@ -12,12 +12,20 @@ void main() {
   late StreamQueue socketQueue;
   var didInitSocket = false;
 
-  Future<void> _startDriver(bool paused) async {
+  Future<void> _startDriverPaused() async {
     didInitSocket = true;
-    await driver.start(paused: paused);
+    await driver.start(paused: true);
+  }
 
+  Future<void> _initSocket() async {
     socket = await WebSocket.connect('ws://localhost:${driver.port}');
     socketQueue = StreamQueue(socket);
+  }
+
+  Future<void> _startDriver() async {
+    didInitSocket = true;
+    await driver.start(paused: false);
+    await _initSocket();
   }
 
   setUp(() async {
@@ -42,22 +50,23 @@ void main() {
           StorageProtocol.version);
     });
     test('Driver identification not paused', () async {
-      await _startDriver(false);
+      await _startDriver();
       final driverIdMessage = await socketQueue.next as String;
 
       expect(driverIdMessage,
           '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test","icon":"iconData","paused":false}}');
     });
     test('Driver identification paused', () async {
-      unawaited(_startDriver(true)); //We can't wait here...
+      unawaited(_startDriverPaused()); //We can't wait here...
       await Future.delayed(const Duration(seconds: 1));
+      await _initSocket();
       final driverIdMessage = await socketQueue.next as String;
 
       expect(driverIdMessage,
           '{"messageId":"1","serverType":"id","data":{"version":1,"bundleId":"com.chimerapps.test","icon":"iconData","paused":true}}');
     });
     test('Start and stop driver multiple times', () async {
-      unawaited(_startDriver(true)); //We can't wait here...
+      await _startDriver();
       await Future.delayed(const Duration(seconds: 1));
       await driver.stop();
       await driver.start();

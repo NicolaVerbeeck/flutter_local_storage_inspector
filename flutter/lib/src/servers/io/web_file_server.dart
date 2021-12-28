@@ -19,7 +19,7 @@ class DefaultFileServer implements FileServer {
   DefaultFileServer(String root, this.name);
 
   @override
-  Future<List<String>> browse(String root) => Future.value(List.empty());
+  Future<List<FileInfo>> browse(String root) => Future.value(List.empty());
 
   @override
   Future<void> delete(String path, {required bool recursive}) =>

@@ -1,3 +1,7 @@
+## 0.0.1-dev.9
+
+* Update file protocol to include file size
+
 ## 0.0.1-dev.8
 
 * Ensure correct type conversion for ValueWithType binary and datetime variants

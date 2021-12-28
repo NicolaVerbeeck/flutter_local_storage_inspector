@@ -3,6 +3,7 @@ package com.chimerapps.storageinspector.api.protocol
 import com.chimerapps.storageinspector.api.RemoteError
 import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
+import com.chimerapps.storageinspector.api.protocol.specific.file.FileInspectorProtocol
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueProtocol
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueServerInterface
 import com.chimerapps.storageinspector.ui.util.json.GsonCreator
@@ -21,6 +22,7 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
     companion object {
         const val SERVER_TYPE_ID = "id"
         const val SERVER_TYPE_KEY_VALUE = "key_value"
+        const val SERVER_TYPE_FILE = "file"
         private const val SERVER_TYPE_INSPECTOR = "inspector"
         private const val COMMAND_UNPAUSE = "resume"
     }
@@ -31,6 +33,7 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
     private val waitingFutures = mutableMapOf<String, Pair<CompletableDeferred<*>, (JsonObject, CompletableDeferred<*>) -> Unit>>()
 
     private val keyValueProtocol = KeyValueProtocol(this)
+    private val fileProtocol = FileInspectorProtocol(this)
 
     val keyValueServerInterface: KeyValueServerInterface
         get() = keyValueProtocol
@@ -74,6 +77,7 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
             when (serverType) {
                 SERVER_TYPE_ID -> handleId(root.get("data").asJsonObject)
                 SERVER_TYPE_KEY_VALUE -> keyValueProtocol.handleMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
+                SERVER_TYPE_FILE -> fileProtocol.handleMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
                 SERVER_TYPE_INSPECTOR -> handleInspectorMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
             }
         } catch (e: Throwable) {

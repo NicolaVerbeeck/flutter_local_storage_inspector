@@ -25,17 +25,21 @@ class DefaultFileServer implements FileServer {
   DefaultFileServer(this._root, this.name);
 
   @override
-  Future<List<String>> browse(String root) async {
+  Future<List<FileInfo>> browse(String root) async {
     final newPath = join(_root, root);
-    if (File(newPath).existsSync()) return [root];
+    if (!File(newPath).existsSync()) {
+      return [FileInfo(path: root, size: 0)];
+    }
 
     final dir = Directory(newPath);
     if (!dir.existsSync()) throw ArgumentError('Path "$root" does not exist');
 
-    return dir
-        .list(recursive: true)
-        .map((path) => relative(path.path, from: newPath))
-        .toList();
+    return dir.list(recursive: true).map(
+      (path) {
+        final fullPath = relative(path.path, from: newPath);
+        return FileInfo(path: fullPath, size: path.statSync().size);
+      },
+    ).toList();
   }
 
   @override
