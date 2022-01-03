@@ -1,4 +1,10 @@
 <p>
+   <b>0.0.7</b>
+   <ul>
+        <li>WIP: File server view</li>
+   </ul>
+</p>
+<p>
    <b>0.0.6</b>
    <ul>
         <li>Support datetime values in edit/new in key-value servers</li>

@@ -14,7 +14,7 @@ plugins {
 apply from: 'dependencies.gradle'
 
 group 'com.chimerapps.tools'
-version '0.0.6'
+version '0.0.7'
 
 repositories {
     mavenCentral()
