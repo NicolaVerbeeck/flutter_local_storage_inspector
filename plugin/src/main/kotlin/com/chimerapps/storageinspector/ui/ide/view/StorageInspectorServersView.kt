@@ -5,6 +5,8 @@ import com.chimerapps.storageinspector.api.protocol.model.ServerId
 import com.chimerapps.storageinspector.inspector.StorageInspectorInterface
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
+import com.chimerapps.storageinspector.inspector.specific.file.FileInspectorListener
+import com.chimerapps.storageinspector.inspector.specific.file.FileStorageServer
 import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueInspectorListener
 import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueStorageServer
 import com.chimerapps.storageinspector.ui.util.ProjectSessionIconProvider
@@ -17,6 +19,7 @@ import com.intellij.ui.ColoredTreeCellRenderer
 import com.intellij.ui.treeStructure.Tree
 import java.awt.BorderLayout
 import java.util.Enumeration
+import javax.swing.Icon
 import javax.swing.JPanel
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
@@ -30,13 +33,20 @@ import javax.swing.tree.TreeSelectionModel
 class StorageInspectorServersView(
     iconProvider: ProjectSessionIconProvider,
     onTableSelectionChanged: (server: StorageServer) -> Unit,
-) : JPanel(BorderLayout()), StorageInspectorProtocolListener, KeyValueInspectorListener {
+) : JPanel(BorderLayout()),
+    StorageInspectorProtocolListener,
+    KeyValueInspectorListener,
+    FileInspectorListener {
 
     private val model = StorageInspectorTreeModel()
     private val storageRoot = StorageRootNode()
-    private val keyValueListUpdateHelper = ListUpdateHelper<KeyValueStorageServer>(
+    private val keyValueListUpdateHelper = ListUpdateHelper(
         comparator = StorageServerComparator(),
         model = TreeModelDiffUtilDispatchModel(model, storageRoot.keyValueServersRoot),
+    )
+    private val fileServerListUpdateHelper = ListUpdateHelper(
+        comparator = StorageServerComparator(),
+        model = TreeModelDiffUtilDispatchModel(model, storageRoot.fileServersRoot),
     )
 
     lateinit var inspectorInterface: StorageInspectorInterface
@@ -65,13 +75,18 @@ class StorageInspectorServersView(
         keyValueListUpdateHelper.onListUpdated(inspectorInterface.keyValueInterface.servers)
     }
 
+    override fun onServerAdded(server: FileStorageServer) {
+        fileServerListUpdateHelper.onListUpdated(inspectorInterface.fileInterface.servers)
+    }
+
 }
 
 private class StorageRootNode : TreeNode {
 
     val keyValueServersRoot = StorageServerRootNode<KeyValueStorageServer>(this, StorageServerType.KEY_VALUE)
+    val fileServersRoot = StorageServerRootNode<FileStorageServer>(this, StorageServerType.FILE)
 
-    val serverTypeNodes = listOf(keyValueServersRoot)
+    val serverTypeNodes = listOf(keyValueServersRoot, fileServersRoot)
 
     override fun getChildAt(childIndex: Int): TreeNode = serverTypeNodes[childIndex]
 
@@ -126,6 +141,12 @@ private class StorageServerRootNode<T : StorageServer>(
 
 private class ServerNode(val server: StorageServer, private val parentNode: TreeNode) : TreeNode {
 
+    val defaultIcon: Icon
+        get() = when (server.type) {
+            StorageServerType.KEY_VALUE -> AllIcons.General.ActualZoom
+            StorageServerType.FILE -> AllIcons.Actions.Annotate
+        }
+
     override fun getChildAt(childIndex: Int): TreeNode = throw IllegalStateException("No children")
 
     override fun getChildCount(): Int = 0
@@ -161,10 +182,14 @@ private class TreeCellRenderer(private val iconProvider: ProjectSessionIconProvi
                         icon = AllIcons.General.ActualZoom
                         append("Key Value Servers")
                     }
+                    StorageServerType.FILE -> {
+                        icon = AllIcons.Actions.Annotate
+                        append("File Servers")
+                    }
                 }
             }
             is ServerNode -> {
-                icon = value.server.icon?.let(iconProvider::iconForString) ?: AllIcons.General.ActualZoom
+                icon = value.server.icon?.let(iconProvider::iconForString) ?: value.defaultIcon
                 append(value.server.name)
             }
         }

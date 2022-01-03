@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:storage_inspector/src/servers/file_server.dart';
+import 'package:storage_inspector/src/util/extensions.dart';
 import 'package:uuid/uuid.dart';
 
 /// File server that serves files using dart:io framework. By default all files
@@ -26,20 +27,32 @@ class DefaultFileServer implements FileServer {
 
   @override
   Future<List<FileInfo>> browse(String root) async {
-    final newPath = join(_root, root);
-    if (!File(newPath).existsSync()) {
+    final newPath =
+        join(_root, root.startsWith('/') ? root.substring(1) : root);
+    final findRoot = FileSystemEntity.typeSync(newPath);
+    if (findRoot != FileSystemEntityType.directory) {
+      if (findRoot == FileSystemEntityType.file) {
+        return [
+          FileInfo(path: root, size: File(newPath).statSync().size),
+        ];
+      }
       return [FileInfo(path: root, size: 0)];
     }
 
     final dir = Directory(newPath);
     if (!dir.existsSync()) throw ArgumentError('Path "$root" does not exist');
 
-    return dir.list(recursive: true).map(
+    return dir.list(recursive: true).mapNotNull(
       (path) {
         final fullPath = relative(path.path, from: newPath);
-        return FileInfo(path: fullPath, size: path.statSync().size);
+        final stat = path.statSync();
+        if (stat.type == FileSystemEntityType.file) {
+          return FileInfo(path: fullPath, size: stat.size);
+        } else {
+          return null;
+        }
       },
-    ).toList();
+    ).then((r) => r.toList());
   }
 
   @override

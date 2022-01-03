@@ -19,6 +19,7 @@ import com.chimerapps.storageinspector.ui.ide.actions.ResumeAction
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorServersView
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorStatusBar
+import com.chimerapps.storageinspector.ui.ide.view.file.FileServerView
 import com.chimerapps.storageinspector.ui.ide.view.key_value.KeyValueServerView
 import com.chimerapps.storageinspector.ui.util.ProjectSessionIconProvider
 import com.chimerapps.storageinspector.ui.util.dispatchMain
@@ -181,6 +182,7 @@ class InspectorSessionWindow(
                 serversView.inspectorInterface = it.storageInterface
                 it.protocol.addListener(it.storageInterface)
                 it.storageInterface.keyValueInterface.addListener(serversView)
+                it.storageInterface.fileInterface.addListener(serversView)
             }
         this.connection?.connect()
         lastConnection = connection
@@ -197,6 +199,13 @@ class InspectorSessionWindow(
             StorageServerType.KEY_VALUE -> {
                 val detail = currentDetailView as? KeyValueServerView ?: KeyValueServerView(project)
                 detail.setServer(connection.keyValueInterface, storageServer)
+
+                currentDetailView = detail
+                splitter.secondComponent = detail
+            }
+            StorageServerType.FILE -> {
+                val detail = currentDetailView as? FileServerView ?: FileServerView(project)
+                detail.setServer(connection.fileInterface, storageServer)
 
                 currentDetailView = detail
                 splitter.secondComponent = detail

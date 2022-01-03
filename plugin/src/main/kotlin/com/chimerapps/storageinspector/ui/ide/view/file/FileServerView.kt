@@ -20,6 +20,10 @@ class FileServerView(private val project: Project) : JPanel(BorderLayout()) {
     private var server: StorageServer? = null
     private var serverInterface: FileInspectorInterface? = null
 
+    init {
+        add(filesTree, BorderLayout.CENTER)
+    }
+
     fun setServer(serverInterface: FileInspectorInterface, server: StorageServer) {
         this.serverInterface = serverInterface
 

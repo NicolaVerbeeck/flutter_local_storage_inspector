@@ -4,6 +4,7 @@ import com.chimerapps.storageinspector.api.RemoteError
 import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
 import com.chimerapps.storageinspector.api.protocol.specific.file.FileInspectorProtocol
+import com.chimerapps.storageinspector.api.protocol.specific.file.FileStorageInterface
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueProtocol
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueServerInterface
 import com.chimerapps.storageinspector.ui.util.json.GsonCreator
@@ -37,6 +38,9 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
 
     val keyValueServerInterface: KeyValueServerInterface
         get() = keyValueProtocol
+
+    val fileServerInterface: FileStorageInterface
+        get() = fileProtocol
 
     fun addListener(listener: StorageInspectorProtocolListener) {
         synchronized(listeners) {

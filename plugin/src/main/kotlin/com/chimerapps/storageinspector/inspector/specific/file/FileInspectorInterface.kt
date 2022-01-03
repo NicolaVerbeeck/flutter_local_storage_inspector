@@ -74,7 +74,7 @@ class FileInspectorInterfaceImpl(
             id = identification.id,
             icon = identification.icon,
             name = identification.name,
-            type = StorageServerType.KEY_VALUE,
+            type = StorageServerType.FILE,
         )
         synchronized(servers) {
             servers.add(server)

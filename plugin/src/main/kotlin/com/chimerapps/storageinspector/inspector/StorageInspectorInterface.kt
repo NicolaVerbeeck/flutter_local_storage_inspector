@@ -3,6 +3,8 @@ package com.chimerapps.storageinspector.inspector
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocol
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocolListener
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
+import com.chimerapps.storageinspector.inspector.specific.file.FileInspectorInterface
+import com.chimerapps.storageinspector.inspector.specific.file.FileInspectorInterfaceImpl
 import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueInspectorInterface
 import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueInspectorInterfaceImpl
 
@@ -12,6 +14,7 @@ import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueInsp
 interface StorageInspectorInterface : StorageInspectorProtocolListener {
 
     val keyValueInterface: KeyValueInspectorInterface
+    val fileInterface: FileInspectorInterface
 
     val isPaused: Boolean
 
@@ -21,6 +24,7 @@ interface StorageInspectorInterface : StorageInspectorProtocolListener {
 class StorageInspectorInterfaceImpl(private val protocol: StorageInspectorProtocol) : StorageInspectorInterface, StorageInspectorProtocolListener {
 
     override val keyValueInterface = KeyValueInspectorInterfaceImpl(protocol.keyValueServerInterface)
+    override val fileInterface = FileInspectorInterfaceImpl(protocol.fileServerInterface)
 
     override var isPaused: Boolean = false
 
@@ -47,4 +51,5 @@ interface StorageServer {
 
 enum class StorageServerType {
     KEY_VALUE,
+    FILE,
 }

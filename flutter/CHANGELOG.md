@@ -1,3 +1,8 @@
+## 0.0.1-dev.10
+
+* Fixed bug in io file server that would prevent proper listing
+* Fixed bug in io file server that would also return intermediate directories
+
 ## 0.0.1-dev.9
 
 * Update file protocol to include file size

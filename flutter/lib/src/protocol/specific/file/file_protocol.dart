@@ -60,7 +60,12 @@ class FileProtocol {
 
     return {
       'id': id,
-      'data': fileList,
+      'data': fileList
+          .map((file) => {
+                'path': file.path,
+                'size': file.size,
+              })
+          .toList(),
     };
   }
 

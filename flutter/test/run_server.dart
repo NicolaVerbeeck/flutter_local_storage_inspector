@@ -45,7 +45,7 @@ void main() async {
     'startup': DateTime.now(),
   }));
 
-  driver.addFileServer(DefaultFileServer('/', 'Test folder'));
+  driver.addFileServer(DefaultFileServer('.', 'Test folder'));
 
   try {
     print('Starting driver');

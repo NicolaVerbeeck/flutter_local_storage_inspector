@@ -7,7 +7,7 @@ import com.google.gsonpackaged.annotations.SerializedName
  */
 data class FileServerValues(
     val id: String,
-    val values: List<FileInfo>,
+    val data: List<FileInfo>,
 )
 
 data class FileInfo(
@@ -37,5 +37,6 @@ data class FileRequest(
 data class FileRequestData(
     val id: String,
     val path: String? = null,
+    val root: String? = null,
     val data: String? = null,
 )

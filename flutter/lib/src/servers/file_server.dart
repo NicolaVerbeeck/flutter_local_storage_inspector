@@ -6,7 +6,8 @@ import 'package:storage_inspector/src/servers/storage_server.dart';
 /// Storage server that serves local files
 abstract class FileServer implements StorageServerInfo {
   /// Recursively browse the file system at the given [root].
-  /// Returned paths are relative to the provided [root]
+  /// Returned paths are relative to the provided [root] and MUST ONLY contain
+  /// leaf files, not directories
   Future<List<FileInfo>> browse(String root);
 
   /// Read the contents of the file at the given [path]

@@ -75,7 +75,7 @@ class FileInspectorProtocol(private val protocol: StorageInspectorProtocol) : Fi
             serverType = StorageInspectorProtocol.SERVER_TYPE_FILE,
             requestId = requestId,
             data = gson.toJsonTree(
-                FileRequest(FileRequestType.LIST, FileRequestData(serverId))
+                FileRequest(FileRequestType.LIST, FileRequestData(serverId, root = "/"))
             ).asJsonObject
         )
 
