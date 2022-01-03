@@ -15,6 +15,11 @@ data class FileInfo(
     val size: Long,
 )
 
+data class FileServerByteData(
+    val id: String,
+    val data: String,
+)
+
 enum class FileRequestType {
     @SerializedName("list")
     LIST,

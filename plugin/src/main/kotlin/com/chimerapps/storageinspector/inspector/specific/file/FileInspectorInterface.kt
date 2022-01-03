@@ -21,6 +21,8 @@ interface FileInspectorInterface {
     suspend fun getData(server: StorageServer): FileServerValues
 
     suspend fun reloadData(server: StorageServer): FileServerValues
+
+    suspend fun getContents(server: StorageServer, path: String): ByteArray
 }
 
 interface FileInspectorListener {
@@ -56,17 +58,18 @@ class FileInspectorInterfaceImpl(
     }
 
     override suspend fun getData(server: StorageServer): FileServerValues {
-        println("Request to get data. Cached? ${cachedData[server.id]}")
         cachedData[server.id]?.let { return it }
         return reloadData(server)
     }
 
     override suspend fun reloadData(server: StorageServer): FileServerValues {
-        println("Request reload")
         val serverData = fileProtocol.listFiles(server.id)
-        println("Updating cache: $serverData")
         cachedData[server.id] = serverData
         return serverData
+    }
+
+    override suspend fun getContents(server: StorageServer, path: String): ByteArray {
+        return fileProtocol.getFile(server.id, path)
     }
 
     override fun onServerIdentification(identification: FileServerIdentification) {

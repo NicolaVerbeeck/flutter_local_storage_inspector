@@ -5,11 +5,13 @@ import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocol
 import com.chimerapps.storageinspector.api.protocol.model.file.FileRequest
 import com.chimerapps.storageinspector.api.protocol.model.file.FileRequestData
 import com.chimerapps.storageinspector.api.protocol.model.file.FileRequestType
+import com.chimerapps.storageinspector.api.protocol.model.file.FileServerByteData
 import com.chimerapps.storageinspector.api.protocol.model.file.FileServerIdentification
 import com.chimerapps.storageinspector.api.protocol.model.file.FileServerValues
 import com.chimerapps.storageinspector.ui.util.json.GsonCreator
 import com.chimerapps.storageinspector.util.classLogger
 import com.google.gsonpackaged.JsonObject
+import com.intellij.util.Base64
 import kotlinx.coroutines.CompletableDeferred
 import java.util.UUID
 
@@ -22,6 +24,8 @@ interface FileStorageInterface {
     fun removeListener(listener: FileProtocolListener)
 
     suspend fun listFiles(serverId: String): FileServerValues
+
+    suspend fun getFile(serverId: String, path: String): ByteArray
 }
 
 class FileInspectorProtocol(private val protocol: StorageInspectorProtocol) : FileStorageInterface {
@@ -76,6 +80,26 @@ class FileInspectorProtocol(private val protocol: StorageInspectorProtocol) : Fi
             requestId = requestId,
             data = gson.toJsonTree(
                 FileRequest(FileRequestType.LIST, FileRequestData(serverId, root = "/"))
+            ).asJsonObject
+        )
+
+        return future.await()
+    }
+
+    override suspend fun getFile(serverId: String, path: String): ByteArray {
+        val requestId = UUID.randomUUID().toString()
+
+        val future = CompletableDeferred<ByteArray>()
+        waitingFutures[requestId] = Pair(future) { data, _ ->
+            val encoded = gson.fromJson(data, FileServerByteData::class.java).data
+            future.complete(Base64.decode(encoded))
+        }
+
+        protocol.sendRequest(
+            serverType = StorageInspectorProtocol.SERVER_TYPE_FILE,
+            requestId = requestId,
+            data = gson.toJsonTree(
+                FileRequest(FileRequestType.READ, FileRequestData(serverId, path = path))
             ).asJsonObject
         )
 

@@ -4,18 +4,33 @@ import com.chimerapps.storageinspector.api.protocol.model.file.FileInfo
 import com.chimerapps.storageinspector.api.protocol.model.file.FileServerValues
 import com.chimerapps.storageinspector.ui.util.ensureMain
 import com.chimerapps.storageinspector.ui.util.enumerate
-import com.intellij.ui.treeStructure.SimpleTree
 import com.intellij.ui.treeStructure.Tree
-import org.apache.xmlbeans.impl.jam.internal.javadoc.JavadocResults.setRoot
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.util.Enumeration
-import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreeNode
+
 
 /**
  * @author Nicola Verbeeck
  */
-class FilesTree : Tree() {
+class FilesTree(private val onViewFileTapped: (FileInfo) -> Unit) : Tree() {
+
+    init {
+        val listener = object : MouseAdapter() {
+            override fun mousePressed(e: MouseEvent) {
+                val selRow = getRowForLocation(e.x, e.y)
+                if (selRow != -1) {
+                    val selPath = getPathForLocation(e.x, e.y) ?: return
+                    if (e.clickCount == 2) {
+                        (selPath.lastPathComponent as? FileNode)?.info?.let(onViewFileTapped)
+                    }
+                }
+            }
+        }
+        addMouseListener(listener)
+    }
 
     fun buildTree(from: FileServerValues) {
         val root = DirectoryNode(name = "/", parentNode = null)
@@ -37,6 +52,9 @@ class FilesTree : Tree() {
             this.model = DefaultTreeModel(root)
         }
     }
+
+    val selectedFile: FileInfo?
+        get() = (selectionPath?.lastPathComponent as? FileNode)?.info
 
 }
 
