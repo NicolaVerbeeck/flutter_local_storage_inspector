@@ -1,4 +1,10 @@
 <p>
+   <b>0.0.8</b>
+   <ul>
+        <li>Allow dropping files in the file server view</li>
+   </ul>
+</p>
+<p>
    <b>0.0.7</b>
    <ul>
         <li>WIP: File server view</li>
