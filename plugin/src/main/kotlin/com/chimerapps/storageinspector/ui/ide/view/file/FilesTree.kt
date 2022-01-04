@@ -72,6 +72,9 @@ class FilesTree(
     val selectedFile: FileInfo?
         get() = (selectionPath?.lastPathComponent as? FileNode)?.info
 
+    val selectedPath: String?
+        get() =  (selectionPath?.lastPathComponent as? FileSystemNode)?.path
+
     private fun enableDnD() {
         if (!ApplicationManager.getApplication().isHeadlessEnvironment) {
             myDropTarget = object : FilesDropTarget(this) {

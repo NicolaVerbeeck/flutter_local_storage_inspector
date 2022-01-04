@@ -27,6 +27,8 @@ interface FileInspectorInterface {
     suspend fun getContents(server: StorageServer, path: String): ByteArray
 
     suspend fun putContents(server: StorageServer, path: String, bytes: ByteArray): Boolean
+
+    suspend fun remove(server: StorageServer, path: String): Boolean
 }
 
 interface FileInspectorListener {
@@ -104,6 +106,10 @@ class FileInspectorInterfaceImpl(
             return true
         }
         return false
+    }
+
+    override suspend fun remove(server: StorageServer, path: String): Boolean {
+        return fileProtocol.remove(server.id, path)
     }
 
     private fun cleanPath(path: String): String {

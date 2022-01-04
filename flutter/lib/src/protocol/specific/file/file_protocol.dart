@@ -46,8 +46,10 @@ class FileProtocol {
           jsonData['data']['data'] as String,
         );
       case _commandDelete:
-        return _handleRemove(jsonData['data']['id'] as String,
-            jsonData['data']['path'] as String);
+        return _handleRemove(
+          jsonData['data']['id'] as String,
+          jsonData['data']['path'] as String,
+        );
       default:
         return Future.error(ArgumentError(
             'Unknown file protocol command: ${jsonData['type']}'));

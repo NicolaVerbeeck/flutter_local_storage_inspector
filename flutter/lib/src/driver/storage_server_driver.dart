@@ -110,6 +110,9 @@ class _PauseExtension extends UserExtension {
       : super(_pauseExtensionId, paused ? const [1] : const [0]);
 
   @override
+  String get name => 'paused';
+
+  @override
   // ignore: hash_and_equals
   bool operator ==(Object other) => other is _PauseExtension;
 }

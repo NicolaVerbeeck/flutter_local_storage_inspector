@@ -5,6 +5,7 @@ import com.chimerapps.discovery.device.PreparedDeviceConnection
 import com.chimerapps.discovery.device.idevice.IDeviceBootstrap
 import com.chimerapps.discovery.ui.ConnectDialog
 import com.chimerapps.discovery.ui.DiscoveredDeviceConnection
+import com.chimerapps.discovery.ui.LocalizationDelegate
 import com.chimerapps.discovery.ui.ManualConnection
 import com.chimerapps.discovery.utils.freePort
 import com.chimerapps.storageinspector.api.StorageInspectorConnectionListener
@@ -16,6 +17,7 @@ import com.chimerapps.storageinspector.inspector.StorageServerType
 import com.chimerapps.storageinspector.ui.ide.actions.ConnectAction
 import com.chimerapps.storageinspector.ui.ide.actions.DisconnectAction
 import com.chimerapps.storageinspector.ui.ide.actions.ResumeAction
+import com.chimerapps.storageinspector.ui.ide.renderer.StorageInspectorConnectRenderDelegate
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorServersView
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorStatusBar
@@ -35,7 +37,6 @@ import com.intellij.ui.JBSplitter
 import com.intellij.ui.content.Content
 import com.intellij.util.IconUtil
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.awt.BorderLayout
@@ -101,10 +102,10 @@ class InspectorSessionWindow(
 
     private fun showConnectDialog() {
         val result = ConnectDialog.show(
-            SwingUtilities.getWindowAncestor(this),
-            toolWindow.adbInterface ?: return,
-            IDeviceBootstrap(File(StorageInspectorSettings.instance.state.iDeviceBinariesPath ?: DEFAULT_IDEVICE_PATH)),
-            6396,
+            parent = SwingUtilities.getWindowAncestor(this),
+            adbInterface = toolWindow.adbInterface ?: return,
+            iDeviceBootstrap = IDeviceBootstrap(File(StorageInspectorSettings.instance.state.iDeviceBinariesPath ?: DEFAULT_IDEVICE_PATH)),
+            announcementPort = 6396,
             sessionIconProvider = ProjectSessionIconProvider.instance(project),
             configurePluginCallback = {
                 ShowSettingsUtil.getInstance().showSettingsDialog(project, "Storage Inspector")
@@ -113,7 +114,10 @@ class InspectorSessionWindow(
                         StorageInspectorSettings.instance.state.iDeviceBinariesPath ?: DEFAULT_IDEVICE_PATH
                     )
                 )
-            }) ?: return
+            },
+            localizationDelegate = LocalizationDelegate(),
+            renderDelegate = StorageInspectorConnectRenderDelegate(),
+        ) ?: return
 
         result.discovered?.let {
             tryConnectSession(it)

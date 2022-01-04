@@ -1,3 +1,7 @@
+## 0.0.1-dev.12
+
+* Support renaming in file protocol
+
 ## 0.0.1-dev.11
 
 * Updated spec to allow empty directories to be returned by the file server

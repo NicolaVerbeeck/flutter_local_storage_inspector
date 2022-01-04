@@ -310,13 +310,30 @@ class SimpleFileServer extends FileServer {
 
   @override
   Future<Uint8List> read(String path) {
-    return Future.value(Uint8List.fromList(
-        utf8.encode(backingMap[FileInfo(path: path, size: 0, isDir: false)]!)));
+    return Future.value(
+      Uint8List.fromList(
+        utf8.encode(
+          backingMap[FileInfo(
+            path: path,
+            size: 0,
+            isDir: false,
+          )]!,
+        ),
+      ),
+    );
   }
 
   @override
   Future<void> write(String path, Uint8List data) {
     backingMap[FileInfo(path: path, size: 0, isDir: false)] = utf8.decode(data);
+    return Future.value();
+  }
+
+  @override
+  Future<void> move({required String path, required String newPath}) {
+    final oldData =
+        backingMap.remove(FileInfo(path: path, size: 0, isDir: false))!;
+    backingMap[FileInfo(path: newPath, size: 0, isDir: false)] = oldData;
     return Future.value();
   }
 }

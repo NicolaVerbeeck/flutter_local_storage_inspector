@@ -82,6 +82,19 @@ class DefaultFileServer implements FileServer {
     }
     return filePath.writeAsBytes(data);
   }
+
+  @override
+  Future<void> move({
+    required String path,
+    required String newPath,
+  }) {
+    final filePath = File(join(_root, _sanitizePath(path)));
+    final toPath = File(join(_root, _sanitizePath(newPath)));
+    if (!toPath.parent.existsSync()) {
+      toPath.parent.createSync(recursive: true);
+    }
+    return filePath.rename(toPath.path);
+  }
 }
 
 String _sanitizePath(String path) {

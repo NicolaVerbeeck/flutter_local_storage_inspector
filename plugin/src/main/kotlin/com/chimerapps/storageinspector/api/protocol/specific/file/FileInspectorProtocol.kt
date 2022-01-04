@@ -29,6 +29,8 @@ interface FileStorageInterface {
     suspend fun getFile(serverId: String, path: String): ByteArray
 
     suspend fun writeFile(serverId: String, path: String, bytes: ByteArray): Boolean
+
+    suspend fun remove(serverId: String, path: String): Boolean
 }
 
 class FileInspectorProtocol(private val protocol: StorageInspectorProtocol) : FileStorageInterface {
@@ -122,6 +124,25 @@ class FileInspectorProtocol(private val protocol: StorageInspectorProtocol) : Fi
             requestId = requestId,
             data = gson.toJsonTree(
                 FileRequest(FileRequestType.WRITE, FileRequestData(serverId, path = path, data = Base64.encode(bytes)))
+            ).asJsonObject
+        )
+
+        return future.await()
+    }
+
+    override suspend fun remove(serverId: String, path: String): Boolean {
+        val requestId = UUID.randomUUID().toString()
+
+        val future = CompletableDeferred<Boolean>()
+        waitingFutures[requestId] = Pair(future) { data, _ ->
+            future.complete(gson.fromJson(data, FileServerStatus::class.java).data.success)
+        }
+
+        protocol.sendRequest(
+            serverType = StorageInspectorProtocol.SERVER_TYPE_FILE,
+            requestId = requestId,
+            data = gson.toJsonTree(
+                FileRequest(FileRequestType.REMOVE, FileRequestData(serverId, path = path))
             ).asJsonObject
         )
 

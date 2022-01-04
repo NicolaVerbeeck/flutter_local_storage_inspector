@@ -32,4 +32,8 @@ class DefaultFileServer implements FileServer {
   @override
   Future<void> write(String path, Uint8List data) =>
       Future.error(ArgumentError('Not supported on web'));
+
+  @override
+  Future<void> move({required String path, required String newPath}) =>
+      Future.error(ArgumentError('Not supported on web'));
 }

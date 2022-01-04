@@ -22,6 +22,9 @@ abstract class FileServer implements StorageServerInfo {
   /// If the target is a non-empty directory and [recursive] is not specified,
   /// an error will be returned.
   Future<void> delete(String path, {required bool recursive});
+
+  /// Moves the contents at [path] to [newPath]
+  Future<void> move({required String path, required String newPath});
 }
 
 /// Holder for file data

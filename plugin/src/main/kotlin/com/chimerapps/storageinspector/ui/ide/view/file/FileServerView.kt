@@ -53,7 +53,7 @@ class FileServerView(private val project: Project) : JPanel(BorderLayout()) {
             //TODO
         }
         decorator.setRemoveAction {
-            //TODO
+            removeSelectedPaths()
         }
         decorator.addExtraAction(SaveButton {
             filesTree.selectedFile?.let { save(it, open = false) }
@@ -66,10 +66,23 @@ class FileServerView(private val project: Project) : JPanel(BorderLayout()) {
         add(contentPanel, BorderLayout.CENTER)
     }
 
+    private fun removeSelectedPaths() {
+        val serverInterface = serverInterface ?: return
+        val server = server ?: return
+
+        val pathsToRemove = filesTree.selectedPath?.let { listOf(it) } ?: return
+        scope.launch {
+            pathsToRemove.forEach { path ->
+                serverInterface.remove(server, path)
+            }
+        }
+        refresh()
+    }
+
     fun setServer(serverInterface: FileInspectorInterface, server: StorageServer) {
         this.serverInterface = serverInterface
-
         this.server = server
+
         scope.launch {
             val newData = serverInterface.getData(server)
 
