@@ -64,6 +64,7 @@ class FileProtocol {
           .map((file) => {
                 'path': file.path,
                 'size': file.size,
+                'isDir': file.isDir,
               })
           .toList(),
     };

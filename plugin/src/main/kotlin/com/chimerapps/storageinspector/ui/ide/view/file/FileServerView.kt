@@ -31,7 +31,7 @@ import javax.swing.JPanel
  */
 class FileServerView(private val project: Project) : JPanel(BorderLayout()) {
 
-    private val filesTree = FilesTree(::getAndOpenFile)
+    private val filesTree = FilesTree(::getAndOpenFile, ::putFiles)
 
     private val scope = CoroutineScope(SupervisorJob())
     private var server: StorageServer? = null
@@ -81,7 +81,7 @@ class FileServerView(private val project: Project) : JPanel(BorderLayout()) {
         val serverInterface = serverInterface ?: return
         val server = server ?: return
         scope.launch {
-            val newData = serverInterface.getData(server)
+            val newData = serverInterface.reloadData(server)
             filesTree.buildTree(newData)
         }
     }
@@ -112,6 +112,42 @@ class FileServerView(private val project: Project) : JPanel(BorderLayout()) {
                 }
             }
         }
+    }
+
+    private fun putFiles(files: List<File>, toPath: String) {
+        val serverInterface = serverInterface ?: return
+        val server = server ?: return
+
+        val allFiles = gatherFiles(files)
+
+        scope.launch {
+            allFiles.forEach { (subPath, file) ->
+                val targetPath = "$toPath$subPath"
+                if (serverInterface.putContents(server, targetPath, file.readBytes())) {
+                    filesTree.buildTree(serverInterface.getData(server))
+                }
+            }
+        }
+    }
+
+    private fun gatherFiles(files: List<File>): List<Pair<String, File>> {
+        val list = mutableListOf<Pair<String, File>>()
+        files.forEach { list += gatherFiles(it, "") }
+        return list
+    }
+
+    private fun gatherFiles(file: File, prepend: String): List<Pair<String, File>> {
+        if (!file.exists()) return emptyList()
+        if (!file.isDirectory) return listOf("${prepend}/${file.name}" to file)
+        val children = file.listFiles() ?: return emptyList()
+        val list = mutableListOf<Pair<String, File>>()
+
+        val newPrefix = "$prepend/${file.name}"
+        children.forEach { child ->
+            list += gatherFiles(child, newPrefix)
+        }
+
+        return list
     }
 }
 

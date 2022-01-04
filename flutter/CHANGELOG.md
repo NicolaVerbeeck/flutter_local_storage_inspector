@@ -1,3 +1,8 @@
+## 0.0.1-dev.11
+
+* Updated spec to allow empty directories to be returned by the file server
+* Sanitize all passed paths to remove leading '/' in default io file server
+
 ## 0.0.1-dev.10
 
 * Fixed bug in io file server that would prevent proper listing

@@ -1,5 +1,6 @@
 package com.chimerapps.storageinspector.api.protocol.model.file
 
+import com.chimerapps.storageinspector.api.protocol.model.key_value.KeyValueServerStatus
 import com.google.gsonpackaged.annotations.SerializedName
 
 /**
@@ -13,6 +14,7 @@ data class FileServerValues(
 data class FileInfo(
     val path: String,
     val size: Long,
+    val isDir: Boolean,
 )
 
 data class FileServerByteData(
@@ -45,3 +47,5 @@ data class FileRequestData(
     val root: String? = null,
     val data: String? = null,
 )
+
+typealias FileServerStatus = KeyValueServerStatus

@@ -7,6 +7,7 @@ import com.chimerapps.storageinspector.api.protocol.model.file.FileRequestData
 import com.chimerapps.storageinspector.api.protocol.model.file.FileRequestType
 import com.chimerapps.storageinspector.api.protocol.model.file.FileServerByteData
 import com.chimerapps.storageinspector.api.protocol.model.file.FileServerIdentification
+import com.chimerapps.storageinspector.api.protocol.model.file.FileServerStatus
 import com.chimerapps.storageinspector.api.protocol.model.file.FileServerValues
 import com.chimerapps.storageinspector.ui.util.json.GsonCreator
 import com.chimerapps.storageinspector.util.classLogger
@@ -26,6 +27,8 @@ interface FileStorageInterface {
     suspend fun listFiles(serverId: String): FileServerValues
 
     suspend fun getFile(serverId: String, path: String): ByteArray
+
+    suspend fun writeFile(serverId: String, path: String, bytes: ByteArray): Boolean
 }
 
 class FileInspectorProtocol(private val protocol: StorageInspectorProtocol) : FileStorageInterface {
@@ -100,6 +103,25 @@ class FileInspectorProtocol(private val protocol: StorageInspectorProtocol) : Fi
             requestId = requestId,
             data = gson.toJsonTree(
                 FileRequest(FileRequestType.READ, FileRequestData(serverId, path = path))
+            ).asJsonObject
+        )
+
+        return future.await()
+    }
+
+    override suspend fun writeFile(serverId: String, path: String, bytes: ByteArray): Boolean {
+        val requestId = UUID.randomUUID().toString()
+
+        val future = CompletableDeferred<Boolean>()
+        waitingFutures[requestId] = Pair(future) { data, _ ->
+            future.complete(gson.fromJson(data, FileServerStatus::class.java).data.success)
+        }
+
+        protocol.sendRequest(
+            serverType = StorageInspectorProtocol.SERVER_TYPE_FILE,
+            requestId = requestId,
+            data = gson.toJsonTree(
+                FileRequest(FileRequestType.WRITE, FileRequestData(serverId, path = path, data = Base64.encode(bytes)))
             ).asJsonObject
         )
 

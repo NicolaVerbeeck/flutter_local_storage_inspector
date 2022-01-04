@@ -7,7 +7,7 @@ import 'package:storage_inspector/src/servers/storage_server.dart';
 abstract class FileServer implements StorageServerInfo {
   /// Recursively browse the file system at the given [root].
   /// Returned paths are relative to the provided [root] and MUST ONLY contain
-  /// leaf files, not directories
+  /// leaf files or empty directories
   Future<List<FileInfo>> browse(String root);
 
   /// Read the contents of the file at the given [path]
@@ -33,9 +33,13 @@ class FileInfo {
   /// The size of the file in bytes
   final int size;
 
+  /// Flag indicating that this file denotes a directory
+  final bool isDir;
+
   const FileInfo({
     required this.path,
     required this.size,
+    required this.isDir,
   });
 
   @override

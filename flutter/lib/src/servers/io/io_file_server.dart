@@ -27,16 +27,16 @@ class DefaultFileServer implements FileServer {
 
   @override
   Future<List<FileInfo>> browse(String root) async {
-    final newPath =
-        join(_root, root.startsWith('/') ? root.substring(1) : root);
+    final newPath = join(_root, _sanitizePath(root));
     final findRoot = FileSystemEntity.typeSync(newPath);
     if (findRoot != FileSystemEntityType.directory) {
       if (findRoot == FileSystemEntityType.file) {
         return [
-          FileInfo(path: root, size: File(newPath).statSync().size),
+          FileInfo(
+              path: root, size: File(newPath).statSync().size, isDir: false),
         ];
       }
-      return [FileInfo(path: root, size: 0)];
+      return [FileInfo(path: root, size: 0, isDir: false)];
     }
 
     final dir = Directory(newPath);
@@ -47,7 +47,10 @@ class DefaultFileServer implements FileServer {
         final fullPath = relative(path.path, from: newPath);
         final stat = path.statSync();
         if (stat.type == FileSystemEntityType.file) {
-          return FileInfo(path: fullPath, size: stat.size);
+          return FileInfo(path: fullPath, size: stat.size, isDir: false);
+        } else if (stat.type == FileSystemEntityType.directory &&
+            Directory(path.path).listSync(recursive: false).isEmpty) {
+          return FileInfo(path: fullPath, size: 0, isDir: true);
         } else {
           return null;
         }
@@ -57,14 +60,14 @@ class DefaultFileServer implements FileServer {
 
   @override
   Future<void> delete(String path, {required bool recursive}) {
-    final newPath = join(_root, path);
+    final newPath = join(_root, _sanitizePath(path));
     File(newPath).deleteSync(recursive: recursive);
     return SynchronousFuture(null);
   }
 
   @override
   Future<Uint8List> read(String path) {
-    final filePath = File(join(_root, path));
+    final filePath = File(join(_root, _sanitizePath(path)));
     if (!filePath.existsSync()) {
       throw ArgumentError('File "$path" does not exist');
     }
@@ -73,10 +76,18 @@ class DefaultFileServer implements FileServer {
 
   @override
   Future<void> write(String path, Uint8List data) {
-    final filePath = File(join(_root, path));
+    final filePath = File(join(_root, _sanitizePath(path)));
     if (!filePath.parent.existsSync()) {
       filePath.parent.createSync(recursive: true);
     }
     return filePath.writeAsBytes(data);
   }
+}
+
+String _sanitizePath(String path) {
+  var newPath = path;
+  while (newPath.startsWith('/')) {
+    newPath = newPath.substring(1);
+  }
+  return newPath;
 }

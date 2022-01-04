@@ -102,12 +102,14 @@ void main() {
 
       await socketQueue.next;
       expect(
-          fileServer.backingMap[const FileInfo(path: '/cache/test', size: 8)],
+          fileServer.backingMap[
+              const FileInfo(path: '/cache/test', size: 8, isDir: false)],
           'Test 123');
     });
     test('Test read', () async {
       await socketQueue.skip(2);
-      fileServer.backingMap[const FileInfo(path: '/cache/test', size: 8)] =
+      fileServer.backingMap[
+              const FileInfo(path: '/cache/test', size: 8, isDir: false)] =
           'Test 123';
 
       socket.addUtf8Text(
@@ -228,7 +230,8 @@ void main() {
 
     test('Test remove', () async {
       await socketQueue.skip(2);
-      fileServer.backingMap[const FileInfo(path: '/hello', size: 5)] = 'world';
+      fileServer.backingMap[
+          const FileInfo(path: '/hello', size: 5, isDir: false)] = 'world';
       expect(fileServer.backingMap.isNotEmpty, true);
       socket.addUtf8Text(
         utf8.encode(
@@ -253,7 +256,8 @@ void main() {
 
     test('Test unknown command', () async {
       await socketQueue.skip(2);
-      fileServer.backingMap[const FileInfo(path: 'hello', size: 5)] = 'world';
+      fileServer.backingMap[
+          const FileInfo(path: 'hello', size: 5, isDir: false)] = 'world';
       socket.addUtf8Text(
         utf8.encode(
           json.encode(
@@ -300,7 +304,7 @@ class SimpleFileServer extends FileServer {
     if (recursive) {
       backingMap.removeWhere((key, value) => key.path.startsWith(path));
     } else {
-      backingMap.remove(FileInfo(path: path, size: 0));
+      backingMap.remove(FileInfo(path: path, size: 0, isDir: false));
     }
     return Future.value();
   }
@@ -308,12 +312,12 @@ class SimpleFileServer extends FileServer {
   @override
   Future<Uint8List> read(String path) {
     return Future.value(Uint8List.fromList(
-        utf8.encode(backingMap[FileInfo(path: path, size: 0)]!)));
+        utf8.encode(backingMap[FileInfo(path: path, size: 0, isDir: false)]!)));
   }
 
   @override
   Future<void> write(String path, Uint8List data) {
-    backingMap[FileInfo(path: path, size: 0)] = utf8.decode(data);
+    backingMap[FileInfo(path: path, size: 0, isDir: false)] = utf8.decode(data);
     return Future.value();
   }
 }
