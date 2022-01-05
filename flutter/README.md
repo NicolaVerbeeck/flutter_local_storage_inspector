@@ -1,4 +1,7 @@
 # Flutter local storage inspector
+[![pub package](https://img.shields.io/pub/v/storage_inspector.svg?color=blue)](https://pub.dev/packages/storage_inspector)
+[![pub points](https://badges.bar/sentry/pub%20points)](https://pub.dev/packages/storage_inspector/score)
+
 
 This library allows you to inspect your apps local storage at runtime. During development, use the "Local storage inspector" plugin (pending) in your IntelliJ based IDE to inspect
 and modify the local files, databases, models, ... of your app
