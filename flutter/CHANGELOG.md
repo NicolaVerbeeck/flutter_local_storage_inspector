@@ -1,3 +1,7 @@
+## 0.1.0
+
+* First non-dev release
+
 ## 0.0.1-dev.12
 
 * Support renaming in file protocol

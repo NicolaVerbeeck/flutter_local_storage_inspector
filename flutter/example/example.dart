@@ -19,9 +19,18 @@ void main() async {
   });
   driver.addKeyValueServer(keyValueServer);
 
-  await driver.start();
+  final fileServer = DefaultFileServer(_documentsDirectory(), 'App Documents');
+  driver.addFileServer(fileServer);
+
+  // Don't wait for a connection from the instrumentation driver
+  await driver.start(paused: false);
 
   // run app
 
   await driver.stop(); //Optional when main ends
+}
+
+//Use path_provider to provide this
+String _documentsDirectory() {
+  return '.';
 }
