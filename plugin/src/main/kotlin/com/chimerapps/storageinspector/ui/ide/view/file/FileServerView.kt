@@ -5,6 +5,7 @@ import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.specific.file.FileInspectorInterface
 import com.chimerapps.storageinspector.ui.ide.actions.RefreshAction
 import com.chimerapps.storageinspector.ui.util.ensureMain
+import com.chimerapps.storageinspector.ui.util.file.chooseOpenFile
 import com.chimerapps.storageinspector.ui.util.file.chooseSaveFile
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.intellij.icons.AllIcons
@@ -50,7 +51,16 @@ class FileServerView(private val project: Project) : JPanel(BorderLayout()) {
         val decorator = ToolbarDecorator.createDecorator(filesTree)
         decorator.disableUpDownActions()
         decorator.setAddAction {
-            //TODO
+            val serverInterface = serverInterface ?: return@setAddAction
+            val server = server ?: return@setAddAction
+
+            val file = chooseOpenFile("New file") ?: return@setAddAction
+            ApplicationManager.getApplication().runReadAction {
+                val contents = file.inputStream.use { it.readAllBytes() }
+                val toPath = filesTree.selectedDirectory ?: ""
+
+                putFile(contents, "$toPath/${file.name}")
+            }
         }
         decorator.setRemoveAction {
             removeSelectedPaths()
@@ -64,6 +74,17 @@ class FileServerView(private val project: Project) : JPanel(BorderLayout()) {
         contentPanel.add(decorator.createPanel(), BorderLayout.CENTER)
         add(toolbar.component, BorderLayout.WEST)
         add(contentPanel, BorderLayout.CENTER)
+    }
+
+    private fun putFile(contents: ByteArray, filePath: String) {
+        val serverInterface = serverInterface ?: return
+        val server = server ?: return
+
+        scope.launch {
+            if (serverInterface.putContents(server, filePath, contents)) {
+                filesTree.buildTree(serverInterface.getData(server))
+            }
+        }
     }
 
     private fun removeSelectedPaths() {

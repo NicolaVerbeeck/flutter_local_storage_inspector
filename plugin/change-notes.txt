@@ -1,4 +1,12 @@
 <p>
+   <b>0.1.0</b>
+   <ul>
+        <li>First beta release</li>
+        <li>Show pause status in connect dialog</li>
+        <li>Support + action in files tree</li>
+   </ul>
+</p>
+<p>
    <b>0.0.8</b>
    <ul>
         <li>Allow dropping files in the file server view</li>
