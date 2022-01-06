@@ -62,7 +62,7 @@ class InspectorSessionWindow(
     private val statusBar = StorageInspectorStatusBar()
     var connection: StorageInspectorProtocolConnection? = null
         private set
-    private val serversView = StorageInspectorServersView(ProjectSessionIconProvider.instance(project), ::onServerSelectionChanged)
+    private val serversView = StorageInspectorServersView(ProjectSessionIconProvider.instance(project, requestedWidth = 16, requestedHeight = 16), ::onServerSelectionChanged)
     private var currentDetailView: Any? = null
     private val splitter: JBSplitter
     private val scope = CoroutineScope(SupervisorJob())

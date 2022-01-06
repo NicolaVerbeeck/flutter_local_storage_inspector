@@ -25,7 +25,7 @@ class ProjectSessionIconProvider private constructor(
             project: Project, requestedWidth: Int = 20, requestedHeight: Int = 20, delegate: SessionIconProvider = CompoundSessionIconProvider(
                 SVGIconProvider(requestedWidth, requestedHeight),
                 DefaultSessionIconProvider(),
-                Base64SessionIconProvider(),
+                Base64SessionIconProvider(width = requestedWidth.toFloat(), height = requestedHeight.toFloat()),
             )
         ): ProjectSessionIconProvider {
             return projectInstances.getOrPut(project to (requestedWidth to requestedHeight)) { ProjectSessionIconProvider(project, delegate, requestedWidth, requestedHeight) }

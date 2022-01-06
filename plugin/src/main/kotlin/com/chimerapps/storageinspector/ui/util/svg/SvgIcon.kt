@@ -1,12 +1,16 @@
 package com.chimerapps.storageinspector.ui.util.svg
 
+import com.intellij.ui.scale.JBUIScale
 import com.intellij.util.ui.ImageUtil
 import org.apache.batik.transcoder.TranscoderInput
 import org.apache.batik.transcoder.TranscoderOutput
+import org.apache.batik.transcoder.TranscodingHints
 import org.apache.batik.transcoder.image.ImageTranscoder
 import java.awt.Component
 import java.awt.Graphics
+import java.awt.GraphicsConfiguration
 import java.awt.image.BufferedImage
+import java.io.File
 import java.io.StringReader
 import javax.swing.Icon
 
@@ -21,12 +25,24 @@ class SvgIcon(private val image: BufferedImage, private val width: Int, private 
             if (w != 0 && h != 0) {
                 t.setDimensions(w, h)
             }
+            val cssFile = File.createTempFile("batik-default-override-", ".css")
             return try {
+                val css = "svg {" +
+                        "shape-rendering: geometricPrecision;" +
+                        "text-rendering:  geometricPrecision;" +
+                        "color-rendering: optimizeQuality;" +
+                        "image-rendering: optimizeQuality;" +
+                        "}"
+                cssFile.writeText(css)
+                t.putHint(ImageTranscoder.KEY_USER_STYLESHEET_URI, cssFile.toURI().toString());
+
                 t.transcode(TranscoderInput(StringReader(svg)), null)
 
                 t.bufferedImage?.let { SvgIcon(it, it.width, it.height) }
             } catch (e: Throwable) {
                 null
+            } finally {
+                cssFile.delete()
             }
         }
     }
@@ -49,12 +65,18 @@ private class BufferedImageTranscoder : ImageTranscoder() {
         return ImageUtil.createImage(width, height, BufferedImage.TYPE_INT_ARGB)
     }
 
-    override fun writeImage(img: BufferedImage, output: TranscoderOutput) {
+    override fun writeImage(img: BufferedImage, output: TranscoderOutput?) {
         bufferedImage = img
     }
 
     fun setDimensions(w: Int, h: Int) {
-        hints[KEY_WIDTH] = w
-        hints[KEY_HEIGHT] = h
+        val scale = JBUIScale.sysScale(null as GraphicsConfiguration?)
+
+        hints[KEY_WIDTH] = w.toFloat() * scale
+        hints[KEY_HEIGHT] = h.toFloat() * scale
+    }
+
+    fun putHint(key: TranscodingHints.Key, hint: Any) {
+        hints[key] = hint
     }
 }

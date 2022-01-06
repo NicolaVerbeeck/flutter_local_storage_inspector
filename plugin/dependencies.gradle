@@ -2,7 +2,7 @@ def versions = [
         kotlin            : '1.5.31',
         websocket         : '1.5.2',
         minIntelliJ       : '2020.3.1',
-        discoveryPluginLib: '4.1.1',
+        discoveryPluginLib: '4.1.2',
         commonText        : '1.9',
 ]
 
