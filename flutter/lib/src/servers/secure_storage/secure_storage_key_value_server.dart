@@ -15,10 +15,14 @@ class SecureStorageKeyValueServer extends SimpleStringKeyValueServer {
     String name, {
     Set<String> keySuggestions = const {},
     Set<String> keyOptions = const {},
+
+    /// The icon to use. See [StorageServer.icon]
+    String? icon,
   }) : super(
           name,
           keyOptions: keyOptions,
           keySuggestions: keySuggestions,
+          icon: icon,
         );
 
   @override

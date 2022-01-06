@@ -13,7 +13,7 @@ class PreferencesKeyValueServer implements KeyValueServer {
   final String name;
 
   @override
-  final String? icon = null;
+  final String? icon;
 
   @override
   final String id = const Uuid().v4();
@@ -53,6 +53,7 @@ class PreferencesKeyValueServer implements KeyValueServer {
 
     /// Hints indicating for which specific key, which type is expected
     Map<String, StorageType> typeForKey = const {},
+    this.icon,
   })  : typeForKey = typeForKey.map(
           (key, value) =>
               MapEntry(ValueWithType(StorageType.string, key), value),

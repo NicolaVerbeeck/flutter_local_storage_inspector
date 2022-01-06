@@ -10,7 +10,7 @@ abstract class SimpleStringKeyValueServer implements KeyValueServer {
   final String name;
 
   @override
-  final String? icon = null;
+  final String? icon;
 
   @override
   final Set<StorageType> supportedValueTypes = const {StorageType.string};
@@ -35,6 +35,7 @@ abstract class SimpleStringKeyValueServer implements KeyValueServer {
     Set<String> keySuggestions = const {},
     Set<String> keyOptions = const {},
     Map<String, String> keyIcons = const {},
+    this.icon,
   })  : keySuggestions = keySuggestions
             .map((e) => ValueWithType(StorageType.string, e))
             .toSet(),

@@ -15,7 +15,7 @@ class DefaultFileServer implements FileServer {
   final String _root;
 
   @override
-  final String? icon = null;
+  final String? icon;
 
   @override
   final String name;
@@ -23,7 +23,11 @@ class DefaultFileServer implements FileServer {
   @override
   final String id = const Uuid().v4();
 
-  DefaultFileServer(this._root, this.name);
+  DefaultFileServer(
+    this._root,
+    this.name, {
+    this.icon,
+  });
 
   @override
   Future<List<FileInfo>> browse(String root) async {

@@ -1,3 +1,7 @@
+## 0.1.1
+
+* Allow specifying the icon for all built-in servers
+
 ## 0.1.0
 
 * First non-dev release

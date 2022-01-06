@@ -8,7 +8,7 @@ import 'package:uuid/uuid.dart';
 /// errors
 class DefaultFileServer implements FileServer {
   @override
-  final String? icon = null;
+  final String? icon;
 
   @override
   final String name;
@@ -16,7 +16,11 @@ class DefaultFileServer implements FileServer {
   @override
   final String id = const Uuid().v4();
 
-  DefaultFileServer(String root, this.name);
+  DefaultFileServer(
+    String root,
+    this.name, {
+    this.icon,
+  });
 
   @override
   Future<List<FileInfo>> browse(String root) => Future.value(List.empty());
