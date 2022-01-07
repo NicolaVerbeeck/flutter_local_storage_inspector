@@ -87,8 +87,23 @@ class KeyValueTableView(
 
         internalModel = ListTableModel(
             arrayOf(
-                TableViewColumnInfo(project, Tr.KeyValueKey.tr(), KeyValueServerValue::key, editable = false, onSaveBinaryTapped = ::saveBinary),
-                TableViewColumnInfo(project, Tr.KeyValueValue.tr(), KeyValueServerValue::value, editable = true, onEdited = ::onValueEdited, onSaveBinaryTapped = ::saveBinary),
+                TableViewColumnInfo(
+                    project = project,
+                    name = Tr.KeyValueKey.tr(),
+                    selector = KeyValueServerValue::key,
+                    editable = false,
+                    onSaveBinaryTapped = ::saveBinary,
+                    comparator = TableComparator(KeyValueServerValue::key),
+                ),
+                TableViewColumnInfo(
+                    project = project,
+                    name = Tr.KeyValueValue.tr(),
+                    selector = KeyValueServerValue::value,
+                    editable = true,
+                    onEdited = ::onValueEdited,
+                    onSaveBinaryTapped = ::saveBinary,
+                    comparator = TableComparator(KeyValueServerValue::value),
+                ),
             ),
             listOf(),
             0
@@ -107,7 +122,6 @@ class KeyValueTableView(
 
         dispatchModel = TableModelDiffUtilDispatchModel(internalModel)
     }
-
 
     private fun setColumnPreferredSize(index: Int, width: Int) {
         val column = columnModel.getColumn(index)
@@ -139,7 +153,7 @@ class KeyValueTableView(
     }
 
     fun doRemoveSelectedRows() {
-        removeKeys(selectedRows.map { index -> internalModel.getItem(index).key })
+        removeKeys(selectedRows.map { index -> internalModel.getItem(convertRowIndexToModel(index)).key })
     }
 
     private fun commitResize() {
@@ -183,6 +197,7 @@ private class TableViewColumnInfo(
     private val selector: (KeyValueServerValue) -> ValueWithType,
     private val editable: Boolean,
     private val onEdited: (KeyValueServerValue, stringValue: Any?) -> Unit = { _, _ -> },
+    private val comparator: Comparator<KeyValueServerValue>?,
     private val onSaveBinaryTapped: () -> Unit,
 ) : ColumnInfo<KeyValueServerValue, Any>(name) {
 
@@ -197,6 +212,8 @@ private class TableViewColumnInfo(
             else -> selected.value!!
         }
     }
+
+    override fun getComparator(): Comparator<KeyValueServerValue>? = comparator
 
     override fun isCellEditable(item: KeyValueServerValue?): Boolean = editable
 
@@ -228,3 +245,26 @@ private class TableViewColumnInfo(
     }
 }
 
+class TableComparator(private val selector: (KeyValueServerValue) -> ValueWithType) : Comparator<KeyValueServerValue> {
+
+    override fun compare(lhs: KeyValueServerValue, rhs: KeyValueServerValue): Int {
+        val left = selector(lhs)
+        val right = selector(rhs)
+        val leftAsString = asString(left)
+        val rightAsString = asString(right)
+        return leftAsString.compareTo(rightAsString)
+    }
+
+    private fun asString(value: ValueWithType): String {
+        return when (value.type) {
+            StorageType.string -> value.value as String
+            StorageType.int -> value.value.toString()
+            StorageType.double -> value.value.toString()
+            StorageType.datetime -> DateTimeTableCellRenderer.renderTime(value.value as Long)
+            StorageType.binary -> "<binary>"
+            StorageType.bool -> value.value.toString()
+            StorageType.stringlist -> (value.value as? List<*>)?.joinToString() ?: ""
+        }
+    }
+
+}

@@ -142,6 +142,13 @@ class BinaryTableCellRenderer : DefaultTableCellRenderer() {
 
 class DateTimeTableCellRenderer : DefaultTableCellRenderer() {
 
+    companion object {
+        fun renderTime(time: Long): String {
+            val dateTime = LocalDateTime.ofEpochSecond(time / 1000, (time % 1000 * 1000).toInt(), ZoneOffset.UTC)
+            return DateTimeFormatter.RFC_1123_DATE_TIME.format(dateTime.atOffset(ZoneOffset.UTC))
+        }
+    }
+
     override fun getTableCellRendererComponent(
         table: JTable?,
         value: Any?,
@@ -154,8 +161,7 @@ class DateTimeTableCellRenderer : DefaultTableCellRenderer() {
         default.font = Font(default.font.fontName, Font.ITALIC, default.font.size)
 
         val time = value as Long
-        val dateTime = LocalDateTime.ofEpochSecond(time / 1000, (time % 1000 * 1000).toInt(), ZoneOffset.UTC)
-        (default as JLabel).text = DateTimeFormatter.RFC_1123_DATE_TIME.format(dateTime.atOffset(ZoneOffset.UTC))
+        (default as JLabel).text = renderTime(time)
         return default
     }
 }
