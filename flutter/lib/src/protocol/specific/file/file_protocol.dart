@@ -17,7 +17,7 @@ class FileProtocol {
   Future<Map<String, dynamic>> identify(
     FileServer server,
   ) {
-    return SynchronousFuture({
+    return SynchronousFuture(<String, dynamic>{
       'type': 'identify',
       'data': {
         'id': server.id,
@@ -60,7 +60,7 @@ class FileProtocol {
     final server = getServerWithId(id);
     final fileList = await server.browse(root);
 
-    return {
+    return <String, dynamic>{
       'id': id,
       'data': fileList
           .map((file) => {
@@ -76,7 +76,7 @@ class FileProtocol {
     final server = getServerWithId(id);
     final fileData = await server.read(path);
 
-    return {
+    return <String, dynamic>{
       'id': id,
       'data': base64.encode(fileData),
     };
@@ -87,7 +87,7 @@ class FileProtocol {
     final server = getServerWithId(id);
     await server.write(path, base64.decode(data));
 
-    return {
+    return <String, dynamic>{
       'id': id,
       'data': {
         'success': true,
@@ -99,7 +99,7 @@ class FileProtocol {
     final server = getServerWithId(id);
     await server.delete(path, recursive: true);
 
-    return {
+    return <String, dynamic>{
       'id': id,
       'data': {
         'success': true,

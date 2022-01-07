@@ -116,7 +116,7 @@ class StorageProtocol {
       {dynamic data, String? requestId, String? error}) {
     return utf8.encode(
       json.encode(
-        {
+        <String, dynamic>{
           'messageId': const Uuid().v4(),
           'serverType': serverType,
           if (requestId != null) 'requestId': requestId,
@@ -145,7 +145,7 @@ class StorageProtocol {
     switch (envelope['type']) {
       case _inspectorCommandUnpause:
         await listener.onResumeSignal();
-        return {'success': 'true'};
+        return <String, dynamic>{'success': 'true'};
       default:
         return throw ArgumentError(
             'Unknown key-value protocol command: ${envelope['type']}');

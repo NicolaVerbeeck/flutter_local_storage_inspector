@@ -22,11 +22,11 @@ void main() {
     await driver.start();
 
     socket = await WebSocket.connect('ws://localhost:${driver.port}');
-    socketQueue = StreamQueue(socket);
+    socketQueue = StreamQueue<dynamic>(socket);
   });
 
   tearDown(() async {
-    socket.close();
+    await socket.close();
     await driver.stop();
   });
 
@@ -54,7 +54,7 @@ void main() {
           '"keyTypeHints":[{"key":{"type":"string","value":"2"},"type":"string"}],"keyIcons"'
           ':[{"key":{"type":"string","value":"key1"},"icon":"base64"}]}');
 
-      socket.close();
+      await socket.close();
     });
 
     test('Test get all empty', () async {

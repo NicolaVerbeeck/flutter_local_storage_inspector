@@ -88,19 +88,20 @@ class PreferencesKeyValueServer implements KeyValueServer {
 
     switch (newValue.type) {
       case StorageType.string:
-        await _preferences.setString(preferenceKey, newValue.value);
+        await _preferences.setString(preferenceKey, newValue.value as String);
         break;
       case StorageType.integer:
-        await _preferences.setInt(preferenceKey, newValue.value);
+        await _preferences.setInt(preferenceKey, newValue.value as int);
         break;
       case StorageType.double:
-        await _preferences.setDouble(preferenceKey, newValue.value);
+        await _preferences.setDouble(preferenceKey, newValue.value as double);
         break;
       case StorageType.boolean:
-        await _preferences.setBool(preferenceKey, newValue.value);
+        await _preferences.setBool(preferenceKey, newValue.value as bool);
         break;
       case StorageType.stringList:
-        await _preferences.setStringList(preferenceKey, newValue.value);
+        await _preferences.setStringList(
+            preferenceKey, newValue.value as List<String>);
         break;
       case StorageType.datetime:
         throw ArgumentError(

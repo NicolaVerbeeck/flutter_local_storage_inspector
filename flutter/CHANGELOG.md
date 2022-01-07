@@ -1,3 +1,9 @@
+## 0.1.2
+
+* Use more strict analysis options
+* Fixed missing await
+* Updated readme indicate released plugin
+
 ## 0.1.1
 
 * Allow specifying the icon for all built-in servers

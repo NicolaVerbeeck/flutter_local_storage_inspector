@@ -18,7 +18,7 @@ class KeyValueProtocol {
   Future<Map<String, dynamic>> identify(
     KeyValueServer server,
   ) {
-    return SynchronousFuture({
+    return SynchronousFuture(<String, dynamic>{
       'type': 'identify',
       'data': {
         'id': server.id,
@@ -91,7 +91,7 @@ class KeyValueProtocol {
   Future<Map<String, dynamic>> _getAllFromServer(KeyValueServer element) async {
     final allValues = await element.allValues;
 
-    return {
+    return <String, dynamic>{
       'id': element.id,
       'values': allValues
           .map(
@@ -118,7 +118,7 @@ class KeyValueProtocol {
       orElse: () => throw ArgumentError('No server with id $id found'),
     );
     await keyValueServer.clear();
-    return {
+    return <String, dynamic>{
       'id': id,
       'data': {
         'success': true,
@@ -140,7 +140,7 @@ class KeyValueProtocol {
     );
 
     await keyValueServer.set(keyData, valueData);
-    return {
+    return <String, dynamic>{
       'id': id,
       'data': {
         'success': true,
@@ -160,7 +160,7 @@ class KeyValueProtocol {
     );
 
     final value = await keyValueServer.get(keyData);
-    return {
+    return <String, dynamic>{
       'id': id,
       'data': {
         'value': mapValueWithType(value),
@@ -180,7 +180,7 @@ class KeyValueProtocol {
     );
 
     await keyValueServer.remove(keyData);
-    return {
+    return <String, dynamic>{
       'id': id,
       'data': {
         'success': true,

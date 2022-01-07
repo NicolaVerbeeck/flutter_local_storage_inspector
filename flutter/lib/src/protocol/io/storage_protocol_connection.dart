@@ -15,9 +15,9 @@ class IOStorageProtocolConnection implements StorageProtocolConnection {
   @override
   void start() {
     _socket.listen(
-      (data) => onMessage(data as String),
+      (dynamic data) => onMessage(data as String),
       onDone: () => _server.onConnectionClosed(this),
-      onError: (_) => _server.onConnectionClosed(this),
+      onError: (Object _) => _server.onConnectionClosed(this),
       cancelOnError: true,
     );
     _connectionListener(this);

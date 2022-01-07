@@ -19,7 +19,7 @@ void main() {
 
   Future<void> _initSocket() async {
     socket = await WebSocket.connect('ws://localhost:${driver.port}');
-    socketQueue = StreamQueue(socket);
+    socketQueue = StreamQueue<dynamic>(socket);
   }
 
   Future<void> _startDriver() async {
@@ -36,7 +36,7 @@ void main() {
 
   tearDown(() async {
     if (didInitSocket) {
-      socket.close();
+      await socket.close();
       await driver.stop();
     }
   });
@@ -58,7 +58,7 @@ void main() {
     });
     test('Driver identification paused', () async {
       unawaited(_startDriverPaused()); //We can't wait here...
-      await Future.delayed(const Duration(seconds: 1));
+      await Future<void>.delayed(const Duration(seconds: 1));
       await _initSocket();
       final driverIdMessage = await socketQueue.next as String;
 
@@ -67,7 +67,7 @@ void main() {
     });
     test('Start and stop driver multiple times', () async {
       await _startDriver();
-      await Future.delayed(const Duration(seconds: 1));
+      await Future<void>.delayed(const Duration(seconds: 1));
       await driver.stop();
       await driver.start();
       await driver.stop();

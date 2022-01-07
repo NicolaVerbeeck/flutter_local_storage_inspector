@@ -62,7 +62,7 @@ class StorageProtocolServer implements StorageProtocolListener {
   Future<void> start({bool paused = false}) async {
     _resumeFuture = Completer();
     _paused = paused;
-    _server.start(_onNewConnection);
+    await _server.start(_onNewConnection);
     if (!paused) {
       _resumeFuture.complete();
     }

@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 
 Map<String, dynamic> mapValueWithType(ValueWithType data) {
-  return {
+  return <String, dynamic>{
     'type': typeString(data.type),
     'value': _serializeValue(data),
   };
@@ -46,7 +46,7 @@ dynamic _deserializeValue(StorageType type, dynamic data) {
     case StorageType.stringList:
       if (data is List<String>) return data;
       if (data is List<dynamic>) return data.cast<String>();
-      return (data as Iterable).map((e) => e.toString()).toList();
+      return (data as Iterable).map((dynamic e) => e.toString()).toList();
     case StorageType.binary:
       return base64.decode(data as String);
     case StorageType.datetime:

@@ -23,11 +23,11 @@ void main() {
     await driver.start();
 
     socket = await WebSocket.connect('ws://localhost:${driver.port}');
-    socketQueue = StreamQueue(socket);
+    socketQueue = StreamQueue<dynamic>(socket);
   });
 
   tearDown(() async {
-    socket.close();
+    await socket.close();
     await driver.stop();
   });
 
@@ -49,7 +49,7 @@ void main() {
       final idDataString = json.encode(idMessage['data']);
       expect(idDataString, '{"id":"123","name":"Test Server","icon":null}');
 
-      socket.close();
+      await socket.close();
     });
 
     test('Test list empty', () async {
