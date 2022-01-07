@@ -25,6 +25,7 @@ import java.awt.event.MouseEvent
 import java.io.File
 import java.io.InputStream
 import javax.swing.ListSelectionModel
+import javax.swing.RowFilter
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ListSelectionEvent
 import javax.swing.event.TableColumnModelEvent
@@ -32,6 +33,7 @@ import javax.swing.event.TableColumnModelListener
 import javax.swing.table.TableCellEditor
 import javax.swing.table.TableCellRenderer
 import javax.swing.table.TableColumnModel
+import javax.swing.table.TableRowSorter
 
 
 /**
@@ -189,6 +191,20 @@ class KeyValueTableView(
         val item = internalModel.getItem(row)
         saveBinaryValue(item.key, file)
     }
+
+    fun setFilter(filter: String?) {
+        (rowSorter as TableRowSorter<*>).rowFilter = if (filter.isNullOrBlank()) {
+            null
+        } else {
+            object : RowFilter<ListTableModel<KeyValueServerValue>, Int>() {
+                override fun include(entry: Entry<out ListTableModel<KeyValueServerValue>, out Int>): Boolean {
+                    val actualEntry = entry.getValue(0) as KeyValueServerValue
+                    return (TableComparator.asString(actualEntry.key).contains(filter, ignoreCase = true)
+                            || TableComparator.asString(actualEntry.value).contains(filter, ignoreCase = true))
+                }
+            }
+        }
+    }
 }
 
 private class TableViewColumnInfo(
@@ -247,24 +263,26 @@ private class TableViewColumnInfo(
 
 class TableComparator(private val selector: (KeyValueServerValue) -> ValueWithType) : Comparator<KeyValueServerValue> {
 
+    companion object{
+        fun asString(value: ValueWithType): String {
+            return when (value.type) {
+                StorageType.string -> value.value as String
+                StorageType.int -> value.value.toString()
+                StorageType.double -> value.value.toString()
+                StorageType.datetime -> DateTimeTableCellRenderer.renderTime(value.value as Long)
+                StorageType.binary -> "<binary>"
+                StorageType.bool -> value.value.toString()
+                StorageType.stringlist -> (value.value as? List<*>)?.joinToString() ?: ""
+            }
+        }
+    }
+
     override fun compare(lhs: KeyValueServerValue, rhs: KeyValueServerValue): Int {
         val left = selector(lhs)
         val right = selector(rhs)
         val leftAsString = asString(left)
         val rightAsString = asString(right)
         return leftAsString.compareTo(rightAsString)
-    }
-
-    private fun asString(value: ValueWithType): String {
-        return when (value.type) {
-            StorageType.string -> value.value as String
-            StorageType.int -> value.value.toString()
-            StorageType.double -> value.value.toString()
-            StorageType.datetime -> DateTimeTableCellRenderer.renderTime(value.value as Long)
-            StorageType.binary -> "<binary>"
-            StorageType.bool -> value.value.toString()
-            StorageType.stringlist -> (value.value as? List<*>)?.joinToString() ?: ""
-        }
     }
 
 }

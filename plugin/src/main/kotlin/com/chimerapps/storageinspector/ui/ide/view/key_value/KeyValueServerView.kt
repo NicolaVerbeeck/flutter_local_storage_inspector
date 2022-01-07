@@ -16,6 +16,7 @@ import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.ui.FilterComponent
 import com.intellij.ui.ToolbarDecorator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -77,11 +78,22 @@ class KeyValueServerView(private val project: Project) : JPanel(BorderLayout()) 
         }
         decorator.setRemoveAction { table.doRemoveSelectedRows() }
 
+
+        val filter = object : FilterComponent("key-value-filter", 20, true) {
+            override fun filter() {
+                table.setFilter(filter)
+            }
+        }
+
         table.autoResizeMode = JTable.AUTO_RESIZE_OFF
+
+        val filterPanel = JPanel(BorderLayout())
+        filterPanel.add(filter, BorderLayout.EAST)
 
         val contentPanel = JPanel(BorderLayout())
 
         contentPanel.add(decorator.createPanel(), BorderLayout.CENTER)
+        add(filterPanel, BorderLayout.NORTH)
         add(toolbar.component, BorderLayout.WEST)
         add(contentPanel, BorderLayout.CENTER)
     }
