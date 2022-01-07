@@ -1,4 +1,12 @@
 <p>
+   <b>0.1.2</b>
+   <ul>
+        <li>Support sorting on keys in key-value server</li>
+        <li>Support sorting on values in key-value server</li>
+        <li>Support searching in keys and values in key-value server</li>
+   </ul>
+</p>
+<p>
    <b>0.1.1</b>
    <ul>
         <li>Fixed crash in svg decoding</li>
