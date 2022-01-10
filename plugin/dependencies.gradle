@@ -4,6 +4,7 @@ def versions = [
         minIntelliJ       : '2020.3.1',
         discoveryPluginLib: '4.1.2',
         commonText        : '1.9',
+        okHttp            : '4.9.3',
 ]
 
 ext.versions = versions
@@ -17,6 +18,7 @@ def pluginCompile = [
         websocket   : "org.java-websocket:Java-WebSocket:${versions.websocket}",
         coroutines  : "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2",
         commonText  : "org.apache.commons:commons-text:${versions.commonText}",
+        okHttp      : "com.squareup.okhttp3:okhttp:${versions.okHttp}"
 ]
 
 def libTestCompile = [

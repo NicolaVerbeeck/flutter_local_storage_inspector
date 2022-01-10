@@ -24,8 +24,8 @@ class ApplicationConfigurationProvider : Configurable {
         settingsForm = null
     }
 
-    override fun createComponent(): JComponent? {
-        val form = settingsForm ?: SettingsFormWrapper(StorageInspectorSettings.instance).also {
+    override fun createComponent(): JComponent {
+        val form = settingsForm ?: SettingsFormWrapper(project = null, driftInspectorSettings = StorageInspectorSettings.instance).also {
             it.initUI()
         }
         settingsForm = form

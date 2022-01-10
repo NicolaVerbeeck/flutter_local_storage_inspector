@@ -19,6 +19,8 @@ enum class Tr(val key: String) {
     PreferencesButtonTestConfiguration("storageinspector.preferences.button.test.configuration"), //Test configuration
     PreferencesOptionPathToAdb("storageinspector.preferences.option.path.to.adb"), //Path to adb:
     PreferencesOptionPathToIdevice("storageinspector.preferences.option.path.to.idevice"), //Path to idevice binaries:
+    PreferencesSendAnalytics("storageinspector.preferences.send.analytics"), //Send anonymous usage statistics
+    PreferencesSendAnalyticsInfo("storageinspector.preferences.send.analytics.info"), //More info
     PreferencesTestMessageAdbFoundAt("storageinspector.preferences.test.message.adb.found.at"), //ADB defined at path: %s
     PreferencesTestMessageAdbNotFound("storageinspector.preferences.test.message.adb.not.found"), //Path to ADB not found
     PreferencesTestMessageAdbOk("storageinspector.preferences.test.message.adb.ok"), //ADB path seems ok

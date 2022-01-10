@@ -1,203 +1,75 @@
 package com.chimerapps.storageinspector.ui.ide.settings
 
+import com.chimerapps.storageinspector.ui.util.localization.Tr
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
-import com.intellij.uiDesigner.core.GridConstraints
-import com.intellij.uiDesigner.core.GridLayoutManager
-import com.intellij.uiDesigner.core.Spacer
+import com.intellij.ui.components.labels.LinkLabel
+import java.awt.BorderLayout
 import java.awt.Dimension
-import java.awt.Insets
-import javax.swing.BorderFactory
+import javax.swing.Box
+import javax.swing.BoxLayout
 import javax.swing.JButton
+import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JTextPane
-import javax.swing.border.TitledBorder
 
 //Originally from UI designer
-class StorageInspectorSettingsForm {
-    private val root: JPanel = JPanel()
-    val adbField: TextFieldWithBrowseButton
-    val iDeviceField: TextFieldWithBrowseButton
-    val testConfigurationButton: JButton
-    val resultsPane: JTextPane
-    val pathToAdbLabel: JBLabel
-    val pathToiDeviceLabel: JBLabel
+class StorageInspectorSettingsForm(private val testConfigurationClicked: () -> Unit) {
+    private val root: JPanel = JPanel().also { it.layout = BoxLayout(it, BoxLayout.PAGE_AXIS) }
+    val adbField: TextFieldWithBrowseButton = TextFieldWithBrowseButton()
+    val iDeviceField: TextFieldWithBrowseButton = TextFieldWithBrowseButton()
+    val resultsPane: JTextPane = JTextPane()
+    val analyticsCheckbox = JCheckBox(Tr.PreferencesSendAnalytics.tr())
 
     init {
-        root.layout = GridLayoutManager(6, 1, Insets(0, 0, 0, 0), -1, -1)
-        pathToAdbLabel = JBLabel()
-        pathToAdbLabel.text = "Path to adb:"
-        root.add(
-            pathToAdbLabel,
-            GridConstraints(
-                0,
-                0,
-                1,
-                1,
-                GridConstraints.ANCHOR_WEST,
-                GridConstraints.FILL_NONE,
-                GridConstraints.SIZEPOLICY_FIXED,
-                GridConstraints.SIZEPOLICY_FIXED,
-                null,
-                null,
-                null,
-                0,
-                false
-            )
-        )
-        val spacer1 = Spacer()
-        root.add(
-            spacer1,
-            GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false)
-        )
-        adbField = TextFieldWithBrowseButton()
-        root.add(
-            adbField,
-            GridConstraints(
-                1,
-                0,
-                1,
-                1,
-                GridConstraints.ANCHOR_WEST,
-                GridConstraints.FILL_HORIZONTAL,
-                GridConstraints.SIZEPOLICY_WANT_GROW,
-                GridConstraints.SIZEPOLICY_FIXED,
-                null,
-                Dimension(150, -1),
-                null,
-                0,
-                false
-            )
-        )
-        pathToiDeviceLabel = JBLabel()
-        pathToiDeviceLabel.text = "Path to idevice binaries:"
-        root.add(
-            pathToiDeviceLabel,
-            GridConstraints(
-                2,
-                0,
-                1,
-                1,
-                GridConstraints.ANCHOR_WEST,
-                GridConstraints.FILL_NONE,
-                GridConstraints.SIZEPOLICY_FIXED,
-                GridConstraints.SIZEPOLICY_FIXED,
-                null,
-                null,
-                null,
-                0,
-                false
-            )
-        )
-        iDeviceField = TextFieldWithBrowseButton()
-        root.add(
-            iDeviceField,
-            GridConstraints(
-                3,
-                0,
-                1,
-                1,
-                GridConstraints.ANCHOR_WEST,
-                GridConstraints.FILL_HORIZONTAL,
-                GridConstraints.SIZEPOLICY_WANT_GROW,
-                GridConstraints.SIZEPOLICY_FIXED,
-                null,
-                Dimension(150, -1),
-                null,
-                0,
-                false
-            )
-        )
-        val panel1 = JPanel()
-        panel1.layout = GridLayoutManager(2, 1, Insets(2, 2, 2, 2), -1, -1)
-        root.add(
-            panel1,
-            GridConstraints(
-                4,
-                0,
-                1,
-                1,
-                GridConstraints.ANCHOR_CENTER,
-                GridConstraints.FILL_BOTH,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW,
-                null,
-                null,
-                null,
-                0,
-                false
-            )
-        )
-        panel1.border =
-            BorderFactory.createTitledBorder(BorderFactory.createRaisedBevelBorder(), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null)
-        val panel2 = JPanel()
-        panel2.layout = GridLayoutManager(1, 2, Insets(0, 0, 0, 0), -1, -1)
-        panel1.add(
-            panel2,
-            GridConstraints(
-                0,
-                0,
-                1,
-                1,
-                GridConstraints.ANCHOR_CENTER,
-                GridConstraints.FILL_BOTH,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW,
-                null,
-                null,
-                null,
-                0,
-                false
-            )
-        )
-        testConfigurationButton = JButton()
-        testConfigurationButton.text = "Test configuration"
-        panel2.add(
-            testConfigurationButton,
-            GridConstraints(
-                0,
-                0,
-                1,
-                1,
-                GridConstraints.ANCHOR_CENTER,
-                GridConstraints.FILL_HORIZONTAL,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW,
-                GridConstraints.SIZEPOLICY_FIXED,
-                null,
-                null,
-                null,
-                0,
-                false
-            )
-        )
-        val spacer2 = Spacer()
-        panel2.add(
-            spacer2,
-            GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false)
-        )
-        val scrollPane1 = JBScrollPane()
-        panel1.add(
-            scrollPane1,
-            GridConstraints(
-                1,
-                0,
-                1,
-                1,
-                GridConstraints.ANCHOR_CENTER,
-                GridConstraints.FILL_BOTH,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_WANT_GROW,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_WANT_GROW,
-                null,
-                null,
-                null,
-                0,
-                false
-            )
-        )
-        resultsPane = JTextPane()
-        scrollPane1.setViewportView(resultsPane)
+
+        root.add(JBLabel(Tr.PreferencesOptionPathToAdb.tr()).also { it.alignmentX = 0.0f })
+        root.add(Box.createVerticalStrut(2))
+        root.add(adbField.also {
+            it.alignmentX = 0.0f
+            it.maximumSize = Dimension(Int.MAX_VALUE, it.preferredSize.height)
+        })
+        root.add(Box.createVerticalStrut(4))
+        root.add(JBLabel(Tr.PreferencesOptionPathToIdevice.tr()).also { it.alignmentX = 0.0f })
+        root.add(Box.createVerticalStrut(2))
+        root.add(iDeviceField.also {
+            it.alignmentX = 0.0f
+            it.maximumSize = Dimension(Int.MAX_VALUE, it.preferredSize.height)
+        })
+
+        val analyticsPanel = JPanel().also {
+            it.layout = BoxLayout(it, BoxLayout.LINE_AXIS)
+            it.alignmentX = 0.0f
+        }
+        analyticsPanel.add(analyticsCheckbox)
+        analyticsPanel.add(Box.createHorizontalStrut(8))
+        analyticsPanel.add(LinkLabel.create(Tr.PreferencesSendAnalyticsInfo.tr()) {
+            BrowserUtil.browse("https://github.com/NicolaVerbeeck/flutter_local_storage_inspector/plugin/analytics/PRIVACY.md")
+        })
+        root.add(Box.createVerticalStrut(6))
+        root.add(analyticsPanel.also {
+            it.maximumSize = Dimension(Int.MAX_VALUE, analyticsCheckbox.preferredSize.height)
+        })
+        root.add(Box.createVerticalStrut(6))
+        root.add(JButton(Tr.PreferencesButtonTestConfiguration.tr()).also {
+            it.alignmentX = 0.0f
+            it.addActionListener { testConfigurationClicked() }
+        })
+
+        root.add(Box.createVerticalStrut(4))
+        root.add(object : JPanel(BorderLayout()) {
+            override fun getPreferredSize(): Dimension {
+                return Dimension(root.width - 100, super.getPreferredSize().height)
+            }
+        }.also { child ->
+            child.alignmentX = 0.0f
+            child.add(JBScrollPane(resultsPane), BorderLayout.CENTER)
+        })
+
+        root.add(Box.createVerticalGlue())
     }
 
     /**

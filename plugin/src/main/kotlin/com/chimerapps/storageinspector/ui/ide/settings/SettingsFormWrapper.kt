@@ -14,33 +14,34 @@ import com.intellij.ui.components.JBTextField
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
-import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JTextPane
 import javax.swing.SwingWorker
 
-class SettingsFormWrapper(private val driftInspectorSettings: StorageInspectorSettings) {
+class SettingsFormWrapper(private val project: Project?, private val driftInspectorSettings: StorageInspectorSettings) {
 
-    private val settingsForm = StorageInspectorSettingsForm()
+    private val settingsForm = StorageInspectorSettingsForm() {
+        runTest(project = project)
+    }
 
     val component: JComponent
         get() = settingsForm.rootComponent()
 
     val isModified: Boolean
-        get() = ((settingsForm.iDeviceField.textOrNull != (driftInspectorSettings.state.iDeviceBinariesPath))
-                || (settingsForm.adbField.textOrNull != (driftInspectorSettings.state.adbPath)))
+        get() = ((settingsForm.iDeviceField.textOrNull != driftInspectorSettings.state.iDeviceBinariesPath)
+                || (settingsForm.adbField.textOrNull != driftInspectorSettings.state.adbPath)
+                || (settingsForm.analyticsCheckbox.isSelected != driftInspectorSettings.state.analyticsStatus))
 
     private var worker: VerifierWorker? = null
-
-    init {
-        settingsForm.pathToAdbLabel.text = Tr.PreferencesOptionPathToAdb.tr()
-        settingsForm.pathToiDeviceLabel.text = Tr.PreferencesOptionPathToIdevice.tr()
-        settingsForm.testConfigurationButton.text = Tr.PreferencesButtonTestConfiguration.tr()
-    }
+    private var runningTests = false
 
     fun save() {
         driftInspectorSettings.state.iDeviceBinariesPath = settingsForm.iDeviceField.textOrNull
         driftInspectorSettings.state.adbPath = settingsForm.adbField.textOrNull
+        driftInspectorSettings.state.analyticsStatus = settingsForm.analyticsCheckbox.isSelected
+        if (driftInspectorSettings.state.analyticsStatus != true){
+            driftInspectorSettings.state.analyticsUserId = null
+        }
 
         val project = ProjectManager.getInstance().openProjects.firstOrNull { project ->
             val window = WindowManager.getInstance().suggestParentWindow(project)
@@ -49,7 +50,7 @@ class SettingsFormWrapper(private val driftInspectorSettings: StorageInspectorSe
         InspectorToolWindow.get(project)?.first?.redoADBBootstrapBlocking()
     }
 
-    fun initUI(project: Project? = null) {
+    fun initUI() {
         settingsForm.adbField.addBrowseFolderListener(
             Tr.PreferencesBrowseAdbTitle.tr(),
             Tr.PreferencesBrowseAdbDescription.tr(),
@@ -69,28 +70,29 @@ class SettingsFormWrapper(private val driftInspectorSettings: StorageInspectorSe
         (settingsForm.adbField.textField as? JBTextField)?.emptyText?.text =
             ADBBootstrap(ADBUtils.guessPaths(project)).pathToAdb ?: ""
 
-        settingsForm.testConfigurationButton.addActionListener {
-            runTest(project)
-        }
-
         reset()
     }
 
     fun reset() {
         settingsForm.adbField.text = driftInspectorSettings.state.adbPath ?: ""
         settingsForm.iDeviceField.text = driftInspectorSettings.state.iDeviceBinariesPath ?: ""
+        settingsForm.analyticsCheckbox.isSelected = driftInspectorSettings.state.analyticsStatus ?: false
     }
 
     private fun runTest(project: Project?) {
+        if (runningTests) return
+
+        runningTests = true
         worker?.cancel(true)
         settingsForm.resultsPane.text = ""
-        settingsForm.testConfigurationButton.isEnabled = false
 
         worker = VerifierWorker(
             settingsForm.adbField.textOrNull ?: ADBBootstrap(ADBUtils.guessPaths(project)).pathToAdb,
             settingsForm.iDeviceField.textOrNull ?: InspectorSessionWindow.DEFAULT_IDEVICE_PATH,
-            settingsForm.resultsPane, settingsForm.testConfigurationButton
-        ).also {
+            settingsForm.resultsPane
+        ) {
+            runningTests = false
+        }.also {
             it.execute()
         }
     }
@@ -108,7 +110,7 @@ private class VerifierWorker(
     private val adbPath: String?,
     private val iDevicePath: String,
     private val textField: JTextPane,
-    private val button: JButton
+    private val onFinished: () -> Unit
 ) : SwingWorker<Boolean, String>() {
 
     private val builder = StringBuilder()
@@ -128,7 +130,7 @@ private class VerifierWorker(
 
     override fun done() {
         super.done()
-        button.isEnabled = true
+        onFinished()
     }
 
     private fun testADB(): Boolean {
@@ -185,12 +187,12 @@ private class VerifierWorker(
         publish(Tr.PreferencesTestMessageCheckingAdb.tr())
         val bootstrap = ADBBootstrap(emptyList()) { adbPath!! }
         publish(Tr.PreferencesTestMessageStartingAdb.tr())
-        try {
+        return try {
             val adbInterface = bootstrap.bootStrap()
             publish(Tr.PreferencesTestMessageListingAdbDevices.tr())
             val devices = adbInterface.devices
             publish(Tr.PreferencesTestMessageFoundDevicesCount.tr(devices.size))
-            return true
+            true
         } catch (e: Exception) {
             publish(Tr.PreferencesTestMessageErrorCommunicationFailed.tr())
             val writer = StringWriter()
@@ -198,7 +200,7 @@ private class VerifierWorker(
             e.printStackTrace(printer)
             printer.flush()
             publish(writer.toString())
-            return false
+            false
         }
     }
 
