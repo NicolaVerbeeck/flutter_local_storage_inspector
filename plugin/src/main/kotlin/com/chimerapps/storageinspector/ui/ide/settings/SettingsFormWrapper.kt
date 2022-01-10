@@ -5,6 +5,7 @@ import com.chimerapps.storageinspector.ui.ide.InspectorSessionWindow
 import com.chimerapps.storageinspector.ui.ide.InspectorToolWindow
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.chimerapps.storageinspector.util.adb.ADBUtils
+import com.chimerapps.storageinspector.util.analytics.batching.BatchingEventTracker
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
@@ -41,6 +42,7 @@ class SettingsFormWrapper(private val project: Project?, private val driftInspec
         driftInspectorSettings.state.analyticsStatus = settingsForm.analyticsCheckbox.isSelected
         if (driftInspectorSettings.state.analyticsStatus != true){
             driftInspectorSettings.state.analyticsUserId = null
+            BatchingEventTracker.instance.clear()
         }
 
         val project = ProjectManager.getInstance().openProjects.firstOrNull { project ->
