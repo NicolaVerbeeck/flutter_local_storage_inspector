@@ -27,6 +27,8 @@ import com.chimerapps.storageinspector.ui.util.ProjectSessionIconProvider
 import com.chimerapps.storageinspector.ui.util.dispatchMain
 import com.chimerapps.storageinspector.ui.util.ensureMain
 import com.chimerapps.storageinspector.ui.util.preferences.AppPreferences
+import com.chimerapps.storageinspector.util.analytics.AnalyticsEvent
+import com.chimerapps.storageinspector.util.analytics.EventTracker
 import com.chimerapps.storageinspector.util.classLogger
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionToolbar
@@ -190,6 +192,7 @@ class InspectorSessionWindow(
             }
         this.connection?.connect()
         lastConnection = connection
+        EventTracker.default.logEvent(AnalyticsEvent.CONNECT)
         connectionMode = ConnectionMode.MODE_CONNECTED
     }
 

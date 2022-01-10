@@ -20,17 +20,25 @@ class StorageInspectorSettings : PersistentStateComponent<StorageInspectorSettin
 
     private var settings: StorageInspectorSettingsData = StorageInspectorSettingsData()
 
-    override fun getState(): StorageInspectorSettingsData = settings
+    override fun getState(): StorageInspectorSettingsData = synchronized(this){settings}
 
     override fun loadState(state: StorageInspectorSettingsData) {
         settings = state
+    }
+
+    fun updateState(updater: StorageInspectorSettingsData.() -> StorageInspectorSettingsData) {
+        synchronized(this){
+            settings = settings.updater()
+        }
     }
 
 }
 
 data class StorageInspectorSettingsData(
     var adbPath: String? = null,
-    var iDeviceBinariesPath: String? = null
+    var iDeviceBinariesPath: String? = null,
+    var analyticsStatus: Boolean? = null,
+    var analyticsUserId: String? = null,
 )
 
 @State(name = "StorageInspectorState", storages = [Storage("storageinspector.xml")], reloadable = true)
