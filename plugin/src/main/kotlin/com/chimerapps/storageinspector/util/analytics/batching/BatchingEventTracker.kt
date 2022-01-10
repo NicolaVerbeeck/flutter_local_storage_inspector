@@ -19,6 +19,8 @@ class BatchingEventTracker : EventTracker {
 
     companion object {
         val instance: BatchingEventTracker by lazy { BatchingEventTracker() }
+        private const val maxNumEvents = 10
+        private const val maxAge = 86400000L
 
         private val batchFile = appSystemDir.resolve("caches").resolve("storage_plugin_analytics.dat").toFile()
     }
@@ -41,7 +43,7 @@ class BatchingEventTracker : EventTracker {
             val openFile = RandomAccessFile(batchFile, "rw")
             val numItems: Int
             val lastWrite: Long
-            if (openFile.length() == 0L || openFile.length() <= 5) {
+            if (openFile.length() == 0L || openFile.length() <= (1L + Long.SIZE_BYTES)) {
                 openFile.write(1)
                 lastWrite = System.currentTimeMillis()
                 openFile.write(lastWrite.toByteArray())
@@ -57,18 +59,19 @@ class BatchingEventTracker : EventTracker {
             openFile.seek(openFile.length())
             openFile.write("${event.name}:${count ?: ""}\n".toByteArray(charset = Charsets.UTF_8))
 
-            if (numItems < 10 && ((System.currentTimeMillis() - lastWrite) < 86400000L)) {
+            if (numItems < maxNumEvents && ((System.currentTimeMillis() - lastWrite) < maxAge)) {
                 openFile.close()
                 return@synchronized null
             }
-            openFile.seek(5)
-            val buffer = ByteArray((openFile.length() - 5).toInt())
+            openFile.seek(1L + Long.SIZE_BYTES)
+            val buffer = ByteArray((openFile.length() - openFile.filePointer).toInt())
             openFile.readFully(buffer)
             openFile.close()
 
             batchFile.delete()
             String(buffer).split("\n")
         }?.forEach { line ->
+            if (line.isEmpty()) return@forEach
             val (name, countStr) = line.split(':')
             val resolvedCount = countStr.toIntOrNull()
 
