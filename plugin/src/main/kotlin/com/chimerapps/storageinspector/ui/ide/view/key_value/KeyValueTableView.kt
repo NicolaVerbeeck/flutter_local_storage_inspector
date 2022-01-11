@@ -87,7 +87,7 @@ class KeyValueTableView(
             }
         })
 
-        internalModel = ListTableModel(
+        internalModel = object: ListTableModel<KeyValueServerValue>(
             arrayOf(
                 TableViewColumnInfo(
                     project = project,
@@ -109,7 +109,19 @@ class KeyValueTableView(
             ),
             listOf(),
             0
-        )
+        ) {
+            var ignore = false
+            override fun setItems(items: MutableList<KeyValueServerValue>) {
+                ignore = true
+                super.setItems(items)
+                ignore = false
+            }
+
+            override fun fireTableDataChanged() {
+                if (ignore) return
+                super.fireTableDataChanged()
+            }
+        }
         model = internalModel
         columnModel.addColumnModelListener(columnObserver)
 

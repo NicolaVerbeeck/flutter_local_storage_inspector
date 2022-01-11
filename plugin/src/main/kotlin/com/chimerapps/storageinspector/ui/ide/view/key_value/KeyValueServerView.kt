@@ -11,6 +11,8 @@ import com.chimerapps.storageinspector.ui.util.list.DiffUtilComparator
 import com.chimerapps.storageinspector.ui.util.list.ListUpdateHelper
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.chimerapps.storageinspector.ui.util.notification.NotificationUtil
+import com.chimerapps.storageinspector.util.analytics.AnalyticsEvent
+import com.chimerapps.storageinspector.util.analytics.EventTracker
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -82,6 +84,7 @@ class KeyValueServerView(private val project: Project) : JPanel(BorderLayout()) 
         val filter = object : FilterComponent("key-value-filter", 20, true) {
             override fun filter() {
                 table.setFilter(filter)
+                EventTracker.default.logEvent(AnalyticsEvent.KEY_VALUE_SEARCH, 1)
             }
         }
 

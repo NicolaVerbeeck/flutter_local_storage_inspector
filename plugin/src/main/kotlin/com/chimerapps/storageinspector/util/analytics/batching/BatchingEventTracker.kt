@@ -1,9 +1,11 @@
 package com.chimerapps.storageinspector.util.analytics.batching
 
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings
+import com.chimerapps.storageinspector.ui.util.ensureMain
 import com.chimerapps.storageinspector.util.analytics.AnalyticsEvent
 import com.chimerapps.storageinspector.util.analytics.EventTracker
 import com.chimerapps.storageinspector.util.analytics.ga.GAEventTarget
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.appSystemDir
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -35,6 +37,14 @@ class BatchingEventTracker : EventTracker {
     }
 
     override fun logEvent(event: AnalyticsEvent, count: Int?) {
+        ensureMain {
+            ApplicationManager.getApplication().runWriteAction {
+                doLogEvent(event, count)
+            }
+        }
+    }
+
+    private fun doLogEvent(event: AnalyticsEvent, count: Int?) {
         val state = StorageInspectorSettings.instance.state
         if (state.analyticsStatus != true) return
 

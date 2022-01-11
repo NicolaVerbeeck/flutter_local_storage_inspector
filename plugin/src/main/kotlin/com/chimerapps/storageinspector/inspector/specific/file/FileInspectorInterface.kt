@@ -7,6 +7,8 @@ import com.chimerapps.storageinspector.api.protocol.specific.file.FileProtocolLi
 import com.chimerapps.storageinspector.api.protocol.specific.file.FileStorageInterface
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
+import com.chimerapps.storageinspector.util.analytics.AnalyticsEvent
+import com.chimerapps.storageinspector.util.analytics.EventTracker
 import java.io.File
 
 /**
@@ -71,15 +73,20 @@ class FileInspectorInterfaceImpl(
     override suspend fun reloadData(server: StorageServer): FileServerValues {
         val serverData = fileProtocol.listFiles(server.id)
         cachedData[server.id] = serverData
+        EventTracker.default.logEvent(AnalyticsEvent.LIST_FILES, serverData.data.size)
         return serverData
     }
 
     override suspend fun getContents(server: StorageServer, path: String): ByteArray {
-        return fileProtocol.getFile(server.id, path)
+        val result = fileProtocol.getFile(server.id, path)
+        EventTracker.default.logEvent(AnalyticsEvent.GET_FILE_CONTENT, 1)
+        return result
     }
 
     override suspend fun putContents(server: StorageServer, path: String, bytes: ByteArray): Boolean {
         if (fileProtocol.writeFile(server.id, path, bytes)) {
+            EventTracker.default.logEvent(AnalyticsEvent.WRITE_FILE_CONTENT, 1)
+
             val cache = cachedData[server.id] ?: return true
             val searchPath = cleanPath(path)
             val old = cache.data.indexOfFirst { info -> info.path == searchPath }
@@ -109,7 +116,9 @@ class FileInspectorInterfaceImpl(
     }
 
     override suspend fun remove(server: StorageServer, path: String): Boolean {
-        return fileProtocol.remove(server.id, path)
+        val result = fileProtocol.remove(server.id, path)
+        EventTracker.default.logEvent(AnalyticsEvent.REMOVE_FILE, 1)
+        return result
     }
 
     private fun cleanPath(path: String): String {

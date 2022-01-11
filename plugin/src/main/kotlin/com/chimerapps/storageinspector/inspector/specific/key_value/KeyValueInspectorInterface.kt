@@ -11,6 +11,8 @@ import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueP
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueServerInterface
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
+import com.chimerapps.storageinspector.util.analytics.AnalyticsEvent
+import com.chimerapps.storageinspector.util.analytics.EventTracker
 
 interface KeyValueInspectorInterface {
 
@@ -73,21 +75,20 @@ class KeyValueInspectorInterfaceImpl(
     }
 
     override suspend fun getData(server: StorageServer): KeyValueServerValues {
-        println("Request to get data. Cached? ${cachedData[server.id]}")
         cachedData[server.id]?.let { return it }
         return reloadData(server)
     }
 
     override suspend fun reloadData(server: StorageServer): KeyValueServerValues {
-        println("Request reload")
         val serverData = keyValueProtocol.get(server.id)
-        println("Updating cache: $serverData")
         cachedData[server.id] = serverData
+        EventTracker.default.logEvent(AnalyticsEvent.LIST_KEY_VALUES, serverData.values.size)
         return serverData
     }
 
     override suspend fun clear(server: StorageServer): Boolean {
         if (keyValueProtocol.clear(server.id)) {
+            EventTracker.default.logEvent(AnalyticsEvent.CLEAR_KEY_VALUES, 1)
             cachedData.remove(server.id)
             return true
         }
@@ -96,6 +97,7 @@ class KeyValueInspectorInterfaceImpl(
 
     override suspend fun remove(server: StorageServer, key: ValueWithType): Boolean {
         if (keyValueProtocol.remove(server.id, key)) {
+            EventTracker.default.logEvent(AnalyticsEvent.REMOVE_KEY_VALUES, 1)
             val newData = cachedData[server.id]?.let { data -> data.copy(values = data.values.filterNot { it.key == key }) }
             newData?.let { cachedData[server.id] = it }
             return true
@@ -105,6 +107,7 @@ class KeyValueInspectorInterfaceImpl(
 
     override suspend fun set(server: StorageServer, key: ValueWithType, value: ValueWithType): Boolean {
         if (keyValueProtocol.set(server.id, key, value)) {
+            EventTracker.default.logEvent(AnalyticsEvent.WRITE_KEY_VALUES, 1)
 
             val cleanedData = if (value.type == StorageType.binary) value.copy(value = null) else value
             val newData = cachedData[server.id]?.let { data ->
@@ -123,6 +126,7 @@ class KeyValueInspectorInterfaceImpl(
     override suspend fun get(server: StorageServer, key: ValueWithType): ValueWithType {
         val data = keyValueProtocol.get(server.id, key)
         val newData = cachedData[server.id]?.let { cachedValues ->
+            EventTracker.default.logEvent(AnalyticsEvent.READ_KEY_VALUES, 1)
             val index = cachedValues.values.indexOfFirst { it.key == key }
             val cleanedData = if (data.type == StorageType.binary) data.copy(value = null) else data
             if (index == -1)
