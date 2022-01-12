@@ -40,14 +40,14 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) : KeyValu
 
     private val gson = GsonCreator.newGsonInstance()
     private val listeners = mutableListOf<KeyValueProtocolListener>()
-    private var serverId: KeyValueServerIdentification? = null
+    private var serverIds = mutableListOf<KeyValueServerIdentification>()
 
     private val waitingFutures = mutableMapOf<String, Pair<CompletableDeferred<*>, (JsonObject, CompletableDeferred<*>) -> Unit>>()
 
     override fun addListener(listener: KeyValueProtocolListener) {
         synchronized(listeners) {
             listeners.add(listener)
-            serverId?.let { listener.onServerIdentification(it) }
+            serverIds.forEach(listener::onServerIdentification)
         }
     }
 
@@ -184,7 +184,7 @@ class KeyValueProtocol(private val protocol: StorageInspectorProtocol) : KeyValu
     private fun handleServerIdentification(asJsonObject: JsonObject) {
         val serverId = gson.fromJson(asJsonObject, KeyValueServerIdentification::class.java)
         synchronized(listeners) {
-            this.serverId = serverId
+            serverIds += serverId
             listeners.forEach { it.onServerIdentification(serverId) }
         }
     }

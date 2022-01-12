@@ -5,8 +5,6 @@ enum class Tr(val key: String) {
     ActionConnectDescription("storageinspector.action.connect.description"), //Connect to storage inspector server
     ActionDisconnect("storageinspector.action.disconnect"), //Disconnect
     ActionDisconnectDescription("storageinspector.action.disconnect.description"), //Disconnect from storage inspector server
-    ActionExportCompleteBody("storageinspector.action.export.complete.body"), //<html>Export completed to <a href="file://%s">%s</a></html>
-    ActionExportCompleteTitle("storageinspector.action.export.complete.title"), //Export completed
     ActionNewSession("storageinspector.action.new.session"), //New session
     ActionNewSessionDescription("storageinspector.action.new.session.description"), //Start a new session
     GenericRefresh("storageinspector.generic.refresh"), //Refresh
@@ -26,7 +24,6 @@ enum class Tr(val key: String) {
     PreferencesTestMessageAdbOk("storageinspector.preferences.test.message.adb.ok"), //ADB path seems ok
     PreferencesTestMessageCheckingAdb("storageinspector.preferences.test.message.checking.adb"), //Checking adb command
     PreferencesTestMessageErrorAdbNotExecutable("storageinspector.preferences.test.message.error.adb.not.executable"), //ERROR - ADB file not executable
-    PreferencesTestMessageErrorAdbNotFound("storageinspector.preferences.test.message.error.adb.not.found"), //ERROR - ADB file not found
     PreferencesTestMessageErrorCommunicationFailed("storageinspector.preferences.test.message.error.communication.failed"), //ERROR - Failed to communicate with adb
     PreferencesTestMessageErrorFileNotExecutable("storageinspector.preferences.test.message.error.file.not.executable"), //ERROR - %s file not executable
     PreferencesTestMessageErrorFileNotFound("storageinspector.preferences.test.message.error.file.not.found"), //ERROR - %s file not found
@@ -43,6 +40,7 @@ enum class Tr(val key: String) {
     StatusConnected("storageinspector.status.connected"), //Connected
     StatusConnectedTo("storageinspector.status.connected.to"), //to
     StatusDisconnected("storageinspector.status.disconnected"), //Disconnected
+    StatusPaused("storageinspector.status.paused"), //(paused)
     TypeBinary("storageinspector.type.binary"), //binary
     TypeBooleanFalse("storageinspector.type.boolean.false"), //false
     TypeBooleanTrue("storageinspector.type.boolean.true"), //true

@@ -7,6 +7,8 @@ import com.chimerapps.storageinspector.api.protocol.specific.file.FileInspectorP
 import com.chimerapps.storageinspector.api.protocol.specific.file.FileStorageInterface
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueProtocol
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueServerInterface
+import com.chimerapps.storageinspector.api.protocol.specific.sql.SQLDatabaseProtocol
+import com.chimerapps.storageinspector.api.protocol.specific.sql.SQLDatabaseServerInterface
 import com.chimerapps.storageinspector.ui.util.json.GsonCreator
 import com.chimerapps.storageinspector.util.classLogger
 import com.google.gsonpackaged.JsonObject
@@ -24,6 +26,7 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
         const val SERVER_TYPE_ID = "id"
         const val SERVER_TYPE_KEY_VALUE = "key_value"
         const val SERVER_TYPE_FILE = "file"
+        const val SERVER_TYPE_SQL = "sql"
         private const val SERVER_TYPE_INSPECTOR = "inspector"
         private const val COMMAND_UNPAUSE = "resume"
     }
@@ -35,12 +38,16 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
 
     private val keyValueProtocol = KeyValueProtocol(this)
     private val fileProtocol = FileInspectorProtocol(this)
+    private val sqlProtocol = SQLDatabaseProtocol(this)
 
     val keyValueServerInterface: KeyValueServerInterface
         get() = keyValueProtocol
 
     val fileServerInterface: FileStorageInterface
         get() = fileProtocol
+
+    val sqlServerInterface: SQLDatabaseServerInterface
+        get() = sqlProtocol
 
     fun addListener(listener: StorageInspectorProtocolListener) {
         synchronized(listeners) {
@@ -83,6 +90,7 @@ class StorageInspectorProtocol(private val onConnection: StorageInspectorProtoco
                 SERVER_TYPE_KEY_VALUE -> keyValueProtocol.handleMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
                 SERVER_TYPE_FILE -> fileProtocol.handleMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
                 SERVER_TYPE_INSPECTOR -> handleInspectorMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
+                SERVER_TYPE_SQL -> sqlProtocol.handleMessage(requestId, root.get("data")?.asJsonObject, root.get("error")?.asString)
             }
         } catch (e: Throwable) {
             e.printStackTrace()
