@@ -17,11 +17,13 @@ class DriftSQLDatabaseServer implements SQLDatabaseServer {
   @override
   final Future<List<SQLTableDefinition>> tables;
 
-  DriftSQLDatabaseServer(this._database) : tables = SynchronousFuture(_buildTables(_database));
+  DriftSQLDatabaseServer(this._database)
+      : tables = SynchronousFuture(_buildTables(_database));
 
   @override
   Future<QueryResult> query(String query, List<ValueWithType> variables) async {
-    final select = _database.customSelect(query, variables: variables.map(_mapVariable).toList());
+    final select = _database.customSelect(query,
+        variables: variables.map(_mapVariable).toList());
     final data = await select.get();
 
     final columns = <String>{};

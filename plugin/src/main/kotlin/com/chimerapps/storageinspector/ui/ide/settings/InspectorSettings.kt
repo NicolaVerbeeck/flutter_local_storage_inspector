@@ -78,10 +78,29 @@ data class StorageInspectorProjectState(
 }
 
 data class StorageInspectorConfiguration(
-    val keyValueTableConfiguration: KeyValueTableConfiguration? = null
+    val keyValueTableConfiguration: KeyValueTableConfiguration? = null,
+    val databases: List<SingleDatabaseConfiguration>?=null
 ) {
-    fun updateKeyValueTableConfiguration(oldStateModifier: KeyValueTableConfiguration.() -> KeyValueTableConfiguration): KeyValueTableConfiguration {
+    fun updateKeyValueTableConfiguration(
+        oldStateModifier: KeyValueTableConfiguration.() -> KeyValueTableConfiguration,
+    ): KeyValueTableConfiguration {
         return (keyValueTableConfiguration ?: KeyValueTableConfiguration(-1, -1)).oldStateModifier()
+    }
+
+    fun updateDatabase(
+        databaseName: String,
+        modifier: SingleDatabaseConfiguration.() -> SingleDatabaseConfiguration,
+    ): StorageInspectorConfiguration {
+        val index = databases?.indexOfFirst { it.databaseName == databaseName } ?: -1
+
+        val mutable = databases?.toMutableList() ?: mutableListOf()
+        if (index >= 0) {
+            mutable[index] = mutable[index].modifier()
+        } else {
+            mutable += SingleDatabaseConfiguration(databaseName, emptyList()).modifier()
+        }
+
+        return copy(databases = mutable)
     }
 }
 
@@ -102,3 +121,52 @@ class ConfigurationConverter : Converter<StorageInspectorConfiguration>() {
     }
 
 }
+
+data class SingleDatabaseConfiguration(
+    val databaseName: String,
+    val configuration: List<TableConfiguration>
+) {
+
+    fun updateTable(
+        tableName: String,
+        modifier: TableConfiguration.() -> TableConfiguration
+    ): SingleDatabaseConfiguration {
+        val index = configuration.indexOfFirst { it.tableName == tableName }
+
+        val mutable = configuration.toMutableList()
+        if (index >= 0) {
+            mutable[index] = mutable[index].modifier()
+        } else {
+            mutable += TableConfiguration(tableName, emptyList()).modifier()
+        }
+
+        return SingleDatabaseConfiguration(databaseName, mutable)
+    }
+
+}
+
+data class TableConfiguration(
+    val tableName: String,
+    val columns: List<ColumnConfiguration>
+) {
+
+    fun updateColumn(name: String, modifier: ColumnConfiguration.() -> ColumnConfiguration): TableConfiguration {
+        val index = columns.indexOfFirst { it.columnName == name }
+
+        val mutable = columns.toMutableList()
+        if (index >= 0) {
+            mutable[index] = mutable[index].modifier()
+        } else {
+            mutable += ColumnConfiguration(name, visible = true, width = -1).modifier()
+        }
+
+        return TableConfiguration(tableName, mutable)
+    }
+
+}
+
+data class ColumnConfiguration(
+    val columnName: String,
+    val visible: Boolean,
+    val width: Int
+)

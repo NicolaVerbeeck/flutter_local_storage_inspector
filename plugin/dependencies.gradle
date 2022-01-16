@@ -5,6 +5,7 @@ def versions = [
         discoveryPluginLib: '4.1.3',
         commonText        : '1.9',
         okHttp            : '4.9.3',
+        commonCollections : '4.4',
 ]
 
 ext.versions = versions
@@ -13,12 +14,13 @@ def gradlePlugins = [
 ]
 
 def pluginCompile = [
-        kotlin      : "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${versions.kotlin}",
-        discoveryLib: "com.chimerapps:discovery-plugin-ui:${versions.discoveryPluginLib}",
-        websocket   : "org.java-websocket:Java-WebSocket:${versions.websocket}",
-        coroutines  : "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2",
-        commonText  : "org.apache.commons:commons-text:${versions.commonText}",
-        okHttp      : "com.squareup.okhttp3:okhttp:${versions.okHttp}"
+        kotlin           : "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${versions.kotlin}",
+        discoveryLib     : "com.chimerapps:discovery-plugin-ui:${versions.discoveryPluginLib}",
+        websocket        : "org.java-websocket:Java-WebSocket:${versions.websocket}",
+        coroutines       : "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2",
+        commonText       : "org.apache.commons:commons-text:${versions.commonText}",
+        okHttp           : "com.squareup.okhttp3:okhttp:${versions.okHttp}",
+        commonCollections: "org.apache.commons:commons-collections4:${versions.commonCollections}",
 ]
 
 def libTestCompile = [

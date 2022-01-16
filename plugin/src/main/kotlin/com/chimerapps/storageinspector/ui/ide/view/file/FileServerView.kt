@@ -51,8 +51,8 @@ class FileServerView(private val project: Project) : JPanel(BorderLayout()) {
         val decorator = ToolbarDecorator.createDecorator(filesTree)
         decorator.disableUpDownActions()
         decorator.setAddAction {
-            val serverInterface = serverInterface ?: return@setAddAction
-            val server = server ?: return@setAddAction
+            serverInterface ?: return@setAddAction
+            server ?: return@setAddAction
 
             val file = chooseOpenFile("New file") ?: return@setAddAction
             ApplicationManager.getApplication().runReadAction {

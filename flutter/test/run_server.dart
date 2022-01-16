@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,7 +53,15 @@ void main() async {
   driver.addFileServer(DefaultFileServer('.', 'Test folder'));
 
   final db = NativeDatabase.memory();
-  driver.addSQLServer(DriftSQLDatabaseServer(MyDatabase(db)));
+  final driftDb = MyDatabase(db);
+  driver.addSQLServer(DriftSQLDatabaseServer(driftDb));
+  await driftDb.into(driftDb.todos).insert(
+        TodosCompanion.insert(
+          textWithRestrictions: 'Hello world',
+          booleanTest: true,
+          dateTimeTest: DateTime.now(),
+        ),
+      );
 
   try {
     print('Starting driver');

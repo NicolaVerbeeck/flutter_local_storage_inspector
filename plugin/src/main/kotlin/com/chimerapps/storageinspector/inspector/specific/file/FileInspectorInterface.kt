@@ -7,6 +7,8 @@ import com.chimerapps.storageinspector.api.protocol.specific.file.FileProtocolLi
 import com.chimerapps.storageinspector.api.protocol.specific.file.FileStorageInterface
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
+import com.chimerapps.storageinspector.inspector.specific.BaseInspectorInterface
+import com.chimerapps.storageinspector.inspector.specific.BaseInspectorInterfaceImpl
 import com.chimerapps.storageinspector.util.analytics.AnalyticsEvent
 import com.chimerapps.storageinspector.util.analytics.EventTracker
 import java.io.File
@@ -14,13 +16,7 @@ import java.io.File
 /**
  * @author Nicola Verbeeck
  */
-interface FileInspectorInterface {
-
-    val servers: List<FileStorageServer>
-
-    fun addListener(listener: FileInspectorListener)
-
-    fun removeListener(listener: FileInspectorListener)
+interface FileInspectorInterface : BaseInspectorInterface<FileStorageServer> {
 
     suspend fun getData(server: StorageServer): FileServerValues
 
@@ -33,10 +29,6 @@ interface FileInspectorInterface {
     suspend fun remove(server: StorageServer, path: String): Boolean
 }
 
-interface FileInspectorListener {
-    fun onServerAdded(server: FileStorageServer)
-}
-
 data class FileStorageServer(
     override val name: String,
     override val icon: String?,
@@ -46,10 +38,7 @@ data class FileStorageServer(
 
 class FileInspectorInterfaceImpl(
     private val fileProtocol: FileStorageInterface,
-) : FileInspectorInterface, FileProtocolListener {
-
-    override val servers = mutableListOf<FileStorageServer>()
-    private val listeners = mutableListOf<FileInspectorListener>()
+) : BaseInspectorInterfaceImpl<FileStorageServer>(), FileInspectorInterface, FileProtocolListener {
 
     private var cachedData = mutableMapOf<String, FileServerValues>()
 
@@ -57,22 +46,18 @@ class FileInspectorInterfaceImpl(
         fileProtocol.addListener(this)
     }
 
-    override fun addListener(listener: FileInspectorListener) {
-        synchronized(listeners) { listeners += listener }
-    }
-
-    override fun removeListener(listener: FileInspectorListener) {
-        synchronized(listeners) { listeners -= listener }
-    }
-
     override suspend fun getData(server: StorageServer): FileServerValues {
-        cachedData[server.id]?.let { return it }
+        synchronized(cachedData) {
+            cachedData[server.id]?.let { return it }
+        }
         return reloadData(server)
     }
 
     override suspend fun reloadData(server: StorageServer): FileServerValues {
         val serverData = fileProtocol.listFiles(server.id)
-        cachedData[server.id] = serverData
+        synchronized(cachedData) {
+            cachedData[server.id] = serverData
+        }
         EventTracker.default.logEvent(AnalyticsEvent.LIST_FILES, serverData.data.size)
         return serverData
     }
@@ -87,29 +72,31 @@ class FileInspectorInterfaceImpl(
         if (fileProtocol.writeFile(server.id, path, bytes)) {
             EventTracker.default.logEvent(AnalyticsEvent.WRITE_FILE_CONTENT, 1)
 
-            val cache = cachedData[server.id] ?: return true
-            val searchPath = cleanPath(path)
-            val old = cache.data.indexOfFirst { info -> info.path == searchPath }
-            val newFileInfo = FileInfo(searchPath, bytes.size.toLong(), false)
-            val mutableList = cache.data.toMutableList()
-            if (old == -1) {
-                mutableList += newFileInfo
-                //Find the first parent that has the isDir property true and remove it
+            synchronized(cachedData) {
+                val cache = cachedData[server.id] ?: return true
+                val searchPath = cleanPath(path)
+                val old = cache.data.indexOfFirst { info -> info.path == searchPath }
+                val newFileInfo = FileInfo(searchPath, bytes.size.toLong(), false)
+                val mutableList = cache.data.toMutableList()
+                if (old == -1) {
+                    mutableList += newFileInfo
+                    //Find the first parent that has the isDir property true and remove it
 
-                var parent = File(searchPath).parentFile
-                while (parent != null) {
-                    val parentNodeIndex = cache.data.indexOfFirst { info -> info.path == parent.path }
-                    if (parentNodeIndex == -1) break
-                    val parentNode = mutableList[parentNodeIndex]
-                    if (parentNode.isDir) {
-                        mutableList.removeAt(parentNodeIndex)
-                        break
+                    var parent = File(searchPath).parentFile
+                    while (parent != null) {
+                        val parentNodeIndex = cache.data.indexOfFirst { info -> info.path == parent.path }
+                        if (parentNodeIndex == -1) break
+                        val parentNode = mutableList[parentNodeIndex]
+                        if (parentNode.isDir) {
+                            mutableList.removeAt(parentNodeIndex)
+                            break
+                        }
+                        parent = parent.parentFile
                     }
-                    parent = parent.parentFile
-                }
 
-            } else mutableList[old] = newFileInfo
-            cachedData[server.id] = cache.copy(data = mutableList)
+                } else mutableList[old] = newFileInfo
+                cachedData[server.id] = cache.copy(data = mutableList)
+            }
             return true
         }
         return false
@@ -134,12 +121,7 @@ class FileInspectorInterfaceImpl(
             name = identification.name,
             type = StorageServerType.FILE,
         )
-        synchronized(servers) {
-            servers.add(server)
-        }
-        synchronized(listeners) {
-            listeners.forEach { it.onServerAdded(server) }
-        }
+        onNewServer(server)
     }
 
 }

@@ -131,8 +131,7 @@ class StorageProtocol {
           data: await _fileProtocol.identify(server));
 
   Future<List<int>> sqlServerIdentification(SQLDatabaseServer server) async =>
-      encodeWithBody(serverTypeSql,
-          data: await _dbProtocol.identify(server));
+      encodeWithBody(serverTypeSql, data: await _dbProtocol.identify(server));
 
   List<int> encodeWithBody(String serverType,
       {dynamic data, String? requestId, String? error}) {

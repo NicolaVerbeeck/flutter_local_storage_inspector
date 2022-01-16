@@ -11,16 +11,12 @@ import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueP
 import com.chimerapps.storageinspector.api.protocol.specific.key_value.KeyValueServerInterface
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
+import com.chimerapps.storageinspector.inspector.specific.BaseInspectorInterface
+import com.chimerapps.storageinspector.inspector.specific.BaseInspectorInterfaceImpl
 import com.chimerapps.storageinspector.util.analytics.AnalyticsEvent
 import com.chimerapps.storageinspector.util.analytics.EventTracker
 
-interface KeyValueInspectorInterface {
-
-    val servers: List<KeyValueStorageServer>
-
-    fun addListener(listener: KeyValueInspectorListener)
-
-    fun removeListener(listener: KeyValueInspectorListener)
+interface KeyValueInspectorInterface : BaseInspectorInterface<KeyValueStorageServer> {
 
     suspend fun getData(server: StorageServer): KeyValueServerValues
 
@@ -33,10 +29,6 @@ interface KeyValueInspectorInterface {
     suspend fun set(server: StorageServer, key: ValueWithType, value: ValueWithType): Boolean
 
     suspend fun get(server: StorageServer, key: ValueWithType): ValueWithType
-}
-
-interface KeyValueInspectorListener {
-    fun onServerAdded(server: KeyValueStorageServer)
 }
 
 data class KeyValueStorageServer(
@@ -54,11 +46,9 @@ data class KeyValueStorageServer(
 
 class KeyValueInspectorInterfaceImpl(
     private val keyValueProtocol: KeyValueServerInterface,
-) : KeyValueInspectorInterface, KeyValueProtocolListener {
+) : BaseInspectorInterfaceImpl<KeyValueStorageServer>(), KeyValueInspectorInterface, KeyValueProtocolListener {
 
     override val servers = mutableListOf<KeyValueStorageServer>()
-
-    private val listeners = mutableListOf<KeyValueInspectorListener>()
 
     private var cachedData = mutableMapOf<String, KeyValueServerValues>()
 
@@ -66,22 +56,18 @@ class KeyValueInspectorInterfaceImpl(
         keyValueProtocol.addListener(this)
     }
 
-    override fun addListener(listener: KeyValueInspectorListener) {
-        synchronized(listeners) { listeners.add(listener) }
-    }
-
-    override fun removeListener(listener: KeyValueInspectorListener) {
-        synchronized(listeners) { listeners.remove(listener) }
-    }
-
     override suspend fun getData(server: StorageServer): KeyValueServerValues {
-        cachedData[server.id]?.let { return it }
+        synchronized(cachedData) {
+            cachedData[server.id]?.let { return it }
+        }
         return reloadData(server)
     }
 
     override suspend fun reloadData(server: StorageServer): KeyValueServerValues {
         val serverData = keyValueProtocol.get(server.id)
-        cachedData[server.id] = serverData
+        synchronized(cachedData) {
+            cachedData[server.id] = serverData
+        }
         EventTracker.default.logEvent(AnalyticsEvent.LIST_KEY_VALUES, serverData.values.size)
         return serverData
     }
@@ -89,7 +75,9 @@ class KeyValueInspectorInterfaceImpl(
     override suspend fun clear(server: StorageServer): Boolean {
         if (keyValueProtocol.clear(server.id)) {
             EventTracker.default.logEvent(AnalyticsEvent.CLEAR_KEY_VALUES, 1)
-            cachedData.remove(server.id)
+            synchronized(cachedData) {
+                cachedData.remove(server.id)
+            }
             return true
         }
         return false
@@ -98,8 +86,10 @@ class KeyValueInspectorInterfaceImpl(
     override suspend fun remove(server: StorageServer, key: ValueWithType): Boolean {
         if (keyValueProtocol.remove(server.id, key)) {
             EventTracker.default.logEvent(AnalyticsEvent.REMOVE_KEY_VALUES, 1)
-            val newData = cachedData[server.id]?.let { data -> data.copy(values = data.values.filterNot { it.key == key }) }
-            newData?.let { cachedData[server.id] = it }
+            synchronized(cachedData) {
+                val newData = cachedData[server.id]?.let { data -> data.copy(values = data.values.filterNot { it.key == key }) }
+                newData?.let { cachedData[server.id] = it }
+            }
             return true
         }
         return false
@@ -109,15 +99,17 @@ class KeyValueInspectorInterfaceImpl(
         if (keyValueProtocol.set(server.id, key, value)) {
             EventTracker.default.logEvent(AnalyticsEvent.WRITE_KEY_VALUES, 1)
 
-            val cleanedData = if (value.type == StorageType.binary) value.copy(value = null) else value
-            val newData = cachedData[server.id]?.let { data ->
-                val index = data.values.indexOfFirst { it.key == key }
-                if (index == -1)
-                    data.copy(values = data.values + KeyValueServerValue(key = key, value = cleanedData))
-                else
-                    data.copy(values = data.values.withReplacementAt(index, KeyValueServerValue(key = key, value = cleanedData)))
+            synchronized(cachedData) {
+                val cleanedData = if (value.type == StorageType.binary) value.copy(value = null) else value
+                val newData = cachedData[server.id]?.let { data ->
+                    val index = data.values.indexOfFirst { it.key == key }
+                    if (index == -1)
+                        data.copy(values = data.values + KeyValueServerValue(key = key, value = cleanedData))
+                    else
+                        data.copy(values = data.values.withReplacementAt(index, KeyValueServerValue(key = key, value = cleanedData)))
+                }
+                newData?.let { cachedData[server.id] = it }
             }
-            newData?.let { cachedData[server.id] = it }
             return true
         }
         return false
@@ -125,16 +117,18 @@ class KeyValueInspectorInterfaceImpl(
 
     override suspend fun get(server: StorageServer, key: ValueWithType): ValueWithType {
         val data = keyValueProtocol.get(server.id, key)
-        val newData = cachedData[server.id]?.let { cachedValues ->
-            EventTracker.default.logEvent(AnalyticsEvent.READ_KEY_VALUES, 1)
-            val index = cachedValues.values.indexOfFirst { it.key == key }
-            val cleanedData = if (data.type == StorageType.binary) data.copy(value = null) else data
-            if (index == -1)
-                cachedValues.copy(values = cachedValues.values + KeyValueServerValue(key = key, value = cleanedData))
-            else
-                cachedValues.copy(values = cachedValues.values.withReplacementAt(index, KeyValueServerValue(key = key, value = cleanedData)))
+        synchronized(cachedData) {
+            val newData = cachedData[server.id]?.let { cachedValues ->
+                EventTracker.default.logEvent(AnalyticsEvent.READ_KEY_VALUES, 1)
+                val index = cachedValues.values.indexOfFirst { it.key == key }
+                val cleanedData = if (data.type == StorageType.binary) data.copy(value = null) else data
+                if (index == -1)
+                    cachedValues.copy(values = cachedValues.values + KeyValueServerValue(key = key, value = cleanedData))
+                else
+                    cachedValues.copy(values = cachedValues.values.withReplacementAt(index, KeyValueServerValue(key = key, value = cleanedData)))
+            }
+            newData?.let { cachedData[server.id] = it }
         }
-        newData?.let { cachedData[server.id] = it }
 
         return data
     }
@@ -152,12 +146,7 @@ class KeyValueInspectorInterfaceImpl(
             keyTypeHints = identification.keyTypeHints,
             keyIcons = identification.keyIcons,
         )
-        synchronized(servers) {
-            servers.add(server)
-        }
-        synchronized(listeners) {
-            listeners.forEach { it.onServerAdded(server) }
-        }
+        onNewServer(server)
     }
 
 }

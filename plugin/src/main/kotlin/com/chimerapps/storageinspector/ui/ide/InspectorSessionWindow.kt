@@ -12,8 +12,13 @@ import com.chimerapps.storageinspector.api.StorageInspectorConnectionListener
 import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocolListener
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
+import com.chimerapps.storageinspector.api.protocol.model.sql.SQLTableDefinition
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
+import com.chimerapps.storageinspector.inspector.specific.InspectorInterfaceListener
+import com.chimerapps.storageinspector.inspector.specific.file.FileStorageServer
+import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueStorageServer
+import com.chimerapps.storageinspector.inspector.specific.sql.SQLStorageServer
 import com.chimerapps.storageinspector.ui.ide.actions.ConnectAction
 import com.chimerapps.storageinspector.ui.ide.actions.DisconnectAction
 import com.chimerapps.storageinspector.ui.ide.actions.ResumeAction
@@ -23,6 +28,7 @@ import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorServersView
 import com.chimerapps.storageinspector.ui.ide.view.StorageInspectorStatusBar
 import com.chimerapps.storageinspector.ui.ide.view.file.FileServerView
 import com.chimerapps.storageinspector.ui.ide.view.key_value.KeyValueServerView
+import com.chimerapps.storageinspector.ui.ide.view.sql.SQLServerView
 import com.chimerapps.storageinspector.ui.util.ProjectSessionIconProvider
 import com.chimerapps.storageinspector.ui.util.dispatchMain
 import com.chimerapps.storageinspector.ui.util.ensureMain
@@ -64,7 +70,10 @@ class InspectorSessionWindow(
     private val statusBar = StorageInspectorStatusBar()
     var connection: StorageInspectorProtocolConnection? = null
         private set
-    private val serversView = StorageInspectorServersView(ProjectSessionIconProvider.instance(project, requestedWidth = 16, requestedHeight = 16), ::onServerSelectionChanged)
+    private val serversView = StorageInspectorServersView(
+        ProjectSessionIconProvider.instance(project, requestedWidth = 16, requestedHeight = 16),
+        ::onServerSelectionChanged,
+    )
     private var currentDetailView: Any? = null
     private val splitter: JBSplitter
     private val scope = CoroutineScope(SupervisorJob())
@@ -187,8 +196,15 @@ class InspectorSessionWindow(
                 it.protocol.addListener(serversView)
                 serversView.inspectorInterface = it.storageInterface
                 it.protocol.addListener(it.storageInterface)
-                it.storageInterface.keyValueInterface.addListener(serversView)
-                it.storageInterface.fileInterface.addListener(serversView)
+                it.storageInterface.keyValueInterface.addListener(object : InspectorInterfaceListener<KeyValueStorageServer> {
+                    override fun onServerAdded(server: KeyValueStorageServer) = serversView.onServerAdded(server)
+                })
+                it.storageInterface.fileInterface.addListener(object : InspectorInterfaceListener<FileStorageServer> {
+                    override fun onServerAdded(server: FileStorageServer) = serversView.onServerAdded(server)
+                })
+                it.storageInterface.sqlInterface.addListener(object : InspectorInterfaceListener<SQLStorageServer> {
+                    override fun onServerAdded(server: SQLStorageServer) = serversView.onServerAdded(server)
+                })
             }
         this.connection?.connect()
         lastConnection = connection
@@ -200,7 +216,7 @@ class InspectorSessionWindow(
         disconnect()
     }
 
-    private fun onServerSelectionChanged(storageServer: StorageServer) {
+    private fun onServerSelectionChanged(storageServer: StorageServer, child: Any?) {
         val connection = connection?.storageInterface ?: return
         when (storageServer.type) {
             StorageServerType.KEY_VALUE -> {
@@ -213,6 +229,13 @@ class InspectorSessionWindow(
             StorageServerType.FILE -> {
                 val detail = currentDetailView as? FileServerView ?: FileServerView(project)
                 detail.setServer(connection.fileInterface, storageServer)
+
+                currentDetailView = detail
+                splitter.secondComponent = detail
+            }
+            StorageServerType.SQL -> {
+                val detail = currentDetailView as? SQLServerView ?: SQLServerView(project)
+                detail.setServer(connection.sqlInterface, storageServer, child as SQLTableDefinition?)
 
                 currentDetailView = detail
                 splitter.secondComponent = detail

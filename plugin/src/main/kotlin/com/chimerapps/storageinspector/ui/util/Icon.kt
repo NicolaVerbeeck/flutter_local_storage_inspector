@@ -14,4 +14,8 @@ object IncludedIcons {
         val disconnected = loadIcon("/ic_disconnected.svg")
     }
 
+    object Type {
+        val Database = loadIcon("/ic_db.svg")
+    }
+
 }

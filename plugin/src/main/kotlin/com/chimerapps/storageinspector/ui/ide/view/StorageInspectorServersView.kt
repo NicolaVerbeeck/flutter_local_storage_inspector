@@ -2,18 +2,20 @@ package com.chimerapps.storageinspector.ui.ide.view
 
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocolListener
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
+import com.chimerapps.storageinspector.api.protocol.model.sql.SQLTableDefinition
 import com.chimerapps.storageinspector.inspector.StorageInspectorInterface
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
-import com.chimerapps.storageinspector.inspector.specific.file.FileInspectorListener
 import com.chimerapps.storageinspector.inspector.specific.file.FileStorageServer
-import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueInspectorListener
 import com.chimerapps.storageinspector.inspector.specific.key_value.KeyValueStorageServer
+import com.chimerapps.storageinspector.inspector.specific.sql.SQLStorageServer
+import com.chimerapps.storageinspector.ui.util.IncludedIcons
 import com.chimerapps.storageinspector.ui.util.ProjectSessionIconProvider
 import com.chimerapps.storageinspector.ui.util.enumerate
 import com.chimerapps.storageinspector.ui.util.list.DiffUtilComparator
 import com.chimerapps.storageinspector.ui.util.list.DiffUtilDispatchModel
 import com.chimerapps.storageinspector.ui.util.list.ListUpdateHelper
+import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.intellij.icons.AllIcons
 import com.intellij.ui.ColoredTreeCellRenderer
 import com.intellij.ui.treeStructure.Tree
@@ -32,11 +34,9 @@ import javax.swing.tree.TreeSelectionModel
  */
 class StorageInspectorServersView(
     iconProvider: ProjectSessionIconProvider,
-    onTableSelectionChanged: (server: StorageServer) -> Unit,
+    onTableSelectionChanged: (server: StorageServer, child: Any?) -> Unit,
 ) : JPanel(BorderLayout()),
-    StorageInspectorProtocolListener,
-    KeyValueInspectorListener,
-    FileInspectorListener {
+    StorageInspectorProtocolListener {
 
     private val model = StorageInspectorTreeModel()
     private val storageRoot = StorageRootNode()
@@ -48,6 +48,10 @@ class StorageInspectorServersView(
         comparator = StorageServerComparator(),
         model = TreeModelDiffUtilDispatchModel(model, storageRoot.fileServersRoot),
     )
+    private val sqlListUpdateHelper = ListUpdateHelper(
+        comparator = StorageServerComparator(),
+        model = TreeModelDiffUtilDispatchModel(model, storageRoot.sqlServersRoot),
+    )
 
     lateinit var inspectorInterface: StorageInspectorInterface
 
@@ -57,8 +61,9 @@ class StorageInspectorServersView(
         it.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
         it.cellRenderer = TreeCellRenderer(iconProvider)
         it.selectionModel.addTreeSelectionListener { _ ->
-            (it.lastSelectedPathComponent as? ServerNode)?.let { node ->
-                onTableSelectionChanged(node.server)
+            when (val node = it.lastSelectedPathComponent) {
+                is ServerNode -> onTableSelectionChanged(node.server, null)
+                is SQLTableNode -> onTableSelectionChanged(node.parentNode.server, node.table)
             }
         }
     }
@@ -71,12 +76,16 @@ class StorageInspectorServersView(
         model.setRoot(storageRoot)
     }
 
-    override fun onServerAdded(server: KeyValueStorageServer) {
+    fun onServerAdded(server: KeyValueStorageServer) {
         keyValueListUpdateHelper.onListUpdated(inspectorInterface.keyValueInterface.servers)
     }
 
-    override fun onServerAdded(server: FileStorageServer) {
+    fun onServerAdded(server: FileStorageServer) {
         fileServerListUpdateHelper.onListUpdated(inspectorInterface.fileInterface.servers)
+    }
+
+    fun onServerAdded(server: SQLStorageServer) {
+        sqlListUpdateHelper.onListUpdated(inspectorInterface.sqlInterface.servers)
     }
 
 }
@@ -85,8 +94,9 @@ private class StorageRootNode : TreeNode {
 
     val keyValueServersRoot = StorageServerRootNode<KeyValueStorageServer>(this, StorageServerType.KEY_VALUE)
     val fileServersRoot = StorageServerRootNode<FileStorageServer>(this, StorageServerType.FILE)
+    val sqlServersRoot = StorageServerRootNode<SQLStorageServer>(this, StorageServerType.SQL)
 
-    val serverTypeNodes = listOf(keyValueServersRoot, fileServersRoot)
+    val serverTypeNodes = listOf(keyValueServersRoot, fileServersRoot, sqlServersRoot)
 
     override fun getChildAt(childIndex: Int): TreeNode = serverTypeNodes[childIndex]
 
@@ -114,12 +124,15 @@ private class StorageServerRootNode<T : StorageServer>(
             field = value
             makeNodes()
         }
-    private var childNodes = mutableListOf<ServerNode>()
+    private var childNodes = mutableListOf<TreeNode>()
 
     private fun makeNodes() {
         childNodes.clear()
         servers.mapTo(childNodes) {
-            ServerNode(it, this)
+            if (it is SQLStorageServer)
+                SQLServerNode(it, this, it.tables)
+            else
+                ServerNode(it, this)
         }
     }
 
@@ -139,12 +152,17 @@ private class StorageServerRootNode<T : StorageServer>(
 
 }
 
-private class ServerNode(val server: StorageServer, private val parentNode: TreeNode) : TreeNode {
-
+private interface DefaultIconProvider {
     val defaultIcon: Icon
+}
+
+private class ServerNode(val server: StorageServer, private val parentNode: TreeNode) : TreeNode, DefaultIconProvider {
+
+    override val defaultIcon: Icon
         get() = when (server.type) {
             StorageServerType.KEY_VALUE -> AllIcons.General.ActualZoom
             StorageServerType.FILE -> AllIcons.Actions.Annotate
+            StorageServerType.SQL -> throw IllegalStateException("SQL server nodes should be represented as SQLServerNode")
         }
 
     override fun getChildAt(childIndex: Int): TreeNode = throw IllegalStateException("No children")
@@ -164,6 +182,49 @@ private class ServerNode(val server: StorageServer, private val parentNode: Tree
     override fun toString(): String = server.name
 }
 
+private class SQLServerNode(
+    val server: StorageServer,
+    private val parentNode: TreeNode,
+    tables: List<SQLTableDefinition>,
+) : TreeNode, DefaultIconProvider {
+
+    override val defaultIcon: Icon = IncludedIcons.Type.Database
+    val childNodes = tables.map { SQLTableNode(this, it) }
+
+    override fun getChildAt(childIndex: Int): TreeNode = childNodes[childIndex]
+
+    override fun getChildCount(): Int = childNodes.size
+
+    override fun getParent(): TreeNode = parentNode
+
+    override fun getIndex(node: TreeNode?): Int = childNodes.indexOf(node)
+
+    override fun getAllowsChildren(): Boolean = true
+
+    override fun isLeaf(): Boolean = childNodes.isEmpty()
+
+    override fun children(): Enumeration<out TreeNode> = childNodes.enumerate()
+
+    override fun toString(): String = server.name
+}
+
+private class SQLTableNode(val parentNode: SQLServerNode, val table: SQLTableDefinition) : TreeNode {
+    override fun getChildAt(childIndex: Int): TreeNode = throw IllegalStateException("No children")
+
+    override fun getChildCount(): Int = 0
+
+    override fun getParent(): TreeNode = parentNode
+
+    override fun getIndex(node: TreeNode?): Int = -1
+
+    override fun getAllowsChildren(): Boolean = false
+
+    override fun isLeaf(): Boolean = true
+
+    override fun children(): Enumeration<out TreeNode> = throw IllegalStateException("No children")
+
+    override fun toString(): String = table.name
+}
 
 private class TreeCellRenderer(private val iconProvider: ProjectSessionIconProvider) : ColoredTreeCellRenderer() {
     override fun customizeCellRenderer(
@@ -180,17 +241,29 @@ private class TreeCellRenderer(private val iconProvider: ProjectSessionIconProvi
                 when (value.storageType) {
                     StorageServerType.KEY_VALUE -> {
                         icon = AllIcons.General.ActualZoom
-                        append("Key Value Servers")
+                        append(Tr.ServersKeyValue.tr())
                     }
                     StorageServerType.FILE -> {
                         icon = AllIcons.Actions.Annotate
-                        append("File Servers")
+                        append(Tr.ServersFile.tr())
+                    }
+                    StorageServerType.SQL -> {
+                        icon = IncludedIcons.Type.Database
+                        append(Tr.ServersSql.tr())
                     }
                 }
             }
             is ServerNode -> {
                 icon = value.server.icon?.let(iconProvider::iconForString) ?: value.defaultIcon
                 append(value.server.name)
+            }
+            is SQLServerNode -> {
+                icon = value.server.icon?.let(iconProvider::iconForString) ?: value.defaultIcon
+                append(value.server.name)
+            }
+            is SQLTableNode -> {
+                icon = value.parentNode.server.icon?.let(iconProvider::iconForString) ?: value.parentNode.defaultIcon
+                append(value.table.name)
             }
         }
     }

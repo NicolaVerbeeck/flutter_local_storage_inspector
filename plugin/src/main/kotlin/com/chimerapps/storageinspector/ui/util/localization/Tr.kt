@@ -37,6 +37,9 @@ enum class Tr(val key: String) {
     PreferencesTestMessageStartingAdb("storageinspector.preferences.test.message.starting.adb"), //Starting adb server
     PreferencesTestMessageTestingAdbTitle("storageinspector.preferences.test.message.testing.adb.title"), //Testing ADB\n=======================================
     PreferencesTestMessageTestingIdeviceTitle("storageinspector.preferences.test.message.testing.idevice.title"), //\nTesting iDevice\n=======================================
+    ServersFile("storageinspector.servers.file"), //File Servers
+    ServersKeyValue("storageinspector.servers.key.value"), //Key Value Servers
+    ServersSql("storageinspector.servers.sql"), //SQL Servers
     StatusConnected("storageinspector.status.connected"), //Connected
     StatusConnectedTo("storageinspector.status.connected.to"), //to
     StatusDisconnected("storageinspector.status.disconnected"), //Disconnected
