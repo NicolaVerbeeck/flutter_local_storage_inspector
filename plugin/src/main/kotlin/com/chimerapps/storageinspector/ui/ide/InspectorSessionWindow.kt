@@ -234,7 +234,7 @@ class InspectorSessionWindow(
                 splitter.secondComponent = detail
             }
             StorageServerType.SQL -> {
-                val detail = currentDetailView as? SQLServerView ?: SQLServerView(project)
+                val detail = currentDetailView as? SQLServerView ?: SQLServerView(project,)
                 detail.setServer(connection.sqlInterface, storageServer, child as SQLTableDefinition?)
 
                 currentDetailView = detail

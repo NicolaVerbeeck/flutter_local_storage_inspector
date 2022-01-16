@@ -40,6 +40,8 @@ enum class Tr(val key: String) {
     ServersFile("storageinspector.servers.file"), //File Servers
     ServersKeyValue("storageinspector.servers.key.value"), //Key Value Servers
     ServersSql("storageinspector.servers.sql"), //SQL Servers
+    SqlCurrentQuery("storageinspector.sql.current.query"), //Showing results of %s
+    SqlSelectDatabase("storageinspector.sql.select.database"), //Select a table
     StatusConnected("storageinspector.status.connected"), //Connected
     StatusConnectedTo("storageinspector.status.connected.to"), //to
     StatusDisconnected("storageinspector.status.disconnected"), //Disconnected

@@ -63,6 +63,7 @@ class StorageInspectorServersView(
         it.selectionModel.addTreeSelectionListener { _ ->
             when (val node = it.lastSelectedPathComponent) {
                 is ServerNode -> onTableSelectionChanged(node.server, null)
+                is SQLServerNode -> onTableSelectionChanged(node.server, null)
                 is SQLTableNode -> onTableSelectionChanged(node.parentNode.server, node.table)
             }
         }

@@ -106,7 +106,7 @@ class CustomDataTableView(
                     SQLColumnDefinition(
                         name = it,
                         optional = true,
-                        type = SQLDataType.TEXT,
+                        type = if (it.startsWith("count")) SQLDataType.INTEGER else SQLDataType.TEXT,
                         autoIncrement = false,
                         nullable = true,
                     )
@@ -142,12 +142,14 @@ class CustomDataTableView(
         setModelAndUpdateColumns(model)
 
         if (tableConfiguration != null) {
-            table!!.columns.forEachIndexed { index, col ->
+            activeColumns.forEachIndexed { index, col ->
                 tableConfiguration.columns.find { it.columnName == col.name }?.let { columnConfig ->
-                    val column = columnModel.getColumn(index)
-                    column.minWidth = 15
-                    column.maxWidth = Integer.MAX_VALUE
-                    column.preferredWidth = columnConfig.width
+                    if (index < columnModel.columnCount) {
+                        val column = columnModel.getColumn(index)
+                        column.minWidth = 15
+                        column.maxWidth = Integer.MAX_VALUE
+                        column.preferredWidth = columnConfig.width
+                    }
                 }
             }
         }

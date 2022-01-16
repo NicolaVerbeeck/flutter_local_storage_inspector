@@ -62,6 +62,13 @@ void main() async {
           dateTimeTest: DateTime.now(),
         ),
       );
+  await driftDb.into(driftDb.todos).insert(
+    TodosCompanion.insert(
+      textWithRestrictions: 'no text',
+      booleanTest: true,
+      dateTimeTest: DateTime.now(),
+    ),
+  );
 
   try {
     print('Starting driver');
