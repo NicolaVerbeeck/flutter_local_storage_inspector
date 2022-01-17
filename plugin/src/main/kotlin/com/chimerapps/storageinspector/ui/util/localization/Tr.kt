@@ -41,6 +41,9 @@ enum class Tr(val key: String) {
     ServersKeyValue("storageinspector.servers.key.value"), //Key Value Servers
     ServersSql("storageinspector.servers.sql"), //SQL Servers
     SqlCurrentQuery("storageinspector.sql.current.query"), //Showing results of %s
+    SqlHistoryDescription("storageinspector.sql.history.description"), //List of previous queries
+    SqlHistoryPopupTitle("storageinspector.sql.history.popup.title"), //Query history
+    SqlHistoryText("storageinspector.sql.history.text"), //Query history
     SqlSelectDatabase("storageinspector.sql.select.database"), //Select a table
     StatusConnected("storageinspector.status.connected"), //Connected
     StatusConnectedTo("storageinspector.status.connected.to"), //to

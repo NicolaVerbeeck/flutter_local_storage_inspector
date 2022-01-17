@@ -22,3 +22,18 @@ fun <T> List<T>.enumerate(): Enumeration<T> {
         override fun nextElement(): T = it.next()
     }
 }
+
+fun safeRunWriteAction(writeAction: () -> Unit) {
+    val application = ApplicationManager.getApplication()
+    if (application.isDispatchThread) {
+        application.runWriteAction {
+            writeAction()
+        }
+    } else {
+        application.invokeLater {
+            application.runWriteAction {
+                writeAction()
+            }
+        }
+    }
+}

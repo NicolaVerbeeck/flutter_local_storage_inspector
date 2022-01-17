@@ -6,6 +6,7 @@ def versions = [
         commonText        : '1.9',
         okHttp            : '4.9.3',
         commonCollections : '4.4',
+        sqlPsi            : '0.3.15',
 ]
 
 ext.versions = versions
@@ -21,6 +22,7 @@ def pluginCompile = [
         commonText       : "org.apache.commons:commons-text:${versions.commonText}",
         okHttp           : "com.squareup.okhttp3:okhttp:${versions.okHttp}",
         commonCollections: "org.apache.commons:commons-collections4:${versions.commonCollections}",
+        sqlPsi           : "com.alecstrong:sqlite-psi-core:${versions.sqlPsi}",
 ]
 
 def libTestCompile = [

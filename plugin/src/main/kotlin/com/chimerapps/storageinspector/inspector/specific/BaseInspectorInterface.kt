@@ -1,6 +1,5 @@
 package com.chimerapps.storageinspector.inspector.specific
 
-import com.intellij.remoteServer.ServerType
 
 /**
  * @author Nicola Verbeeck

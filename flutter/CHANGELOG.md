@@ -1,3 +1,7 @@
+## 0.1.3
+
+* Base SQL protocol
+
 ## 0.1.2
 
 * Use more strict analysis options

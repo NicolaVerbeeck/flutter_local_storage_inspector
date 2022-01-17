@@ -3,19 +3,14 @@ package com.chimerapps.storageinspector.ui.ide.actions
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.ui.AnimatedIcon
+import javax.swing.Icon
 
-class RefreshAction(title: String, description: String, actionListener: () -> Unit) :
-    SimpleAction(title, description, AllIcons.Actions.Refresh, actionListener) {
+class RefreshAction(title: String, description: String, private val icon: Icon = AllIcons.Actions.Refresh, actionListener: () -> Unit) :
+    SimpleAction(title, description, icon, actionListener) {
 
     var refreshing: Boolean = false
-        set(value) {
-            if (field != value) {
-                field = value
-
-            }
-        }
 
     override fun update(e: AnActionEvent) {
-        e.presentation.icon = if (refreshing) AnimatedIcon.Default() else AllIcons.Actions.Refresh
+        e.presentation.icon = if (refreshing) AnimatedIcon.Default() else icon
     }
 }

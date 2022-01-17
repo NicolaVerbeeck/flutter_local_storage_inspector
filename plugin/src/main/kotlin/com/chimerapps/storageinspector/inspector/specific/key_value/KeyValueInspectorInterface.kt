@@ -47,9 +47,7 @@ data class KeyValueStorageServer(
 class KeyValueInspectorInterfaceImpl(
     private val keyValueProtocol: KeyValueServerInterface,
 ) : BaseInspectorInterfaceImpl<KeyValueStorageServer>(), KeyValueInspectorInterface, KeyValueProtocolListener {
-
-    override val servers = mutableListOf<KeyValueStorageServer>()
-
+    
     private var cachedData = mutableMapOf<String, KeyValueServerValues>()
 
     init {
