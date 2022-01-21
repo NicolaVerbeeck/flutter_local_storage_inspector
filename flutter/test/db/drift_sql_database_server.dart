@@ -17,8 +17,12 @@ class DriftSQLDatabaseServer implements SQLDatabaseServer {
   @override
   final Future<List<SQLTableDefinition>> tables;
 
+  @override
+  final Future<String> schema;
+
   DriftSQLDatabaseServer(this._database)
-      : tables = SynchronousFuture(_buildTables(_database));
+      : tables = SynchronousFuture(_buildTables(_database)),
+        schema = _buildSchema(_database);
 
   @override
   Future<QueryResult> query(String query, List<ValueWithType> variables) async {
@@ -43,6 +47,20 @@ class DriftSQLDatabaseServer implements SQLDatabaseServer {
 
   @override
   Future<int?> get schemaVersion => SynchronousFuture(_database.schemaVersion);
+}
+
+Future<String> _buildSchema(GeneratedDatabase database) async {
+  return database.customSelect('SELECT sql from sqlite_schema').get().then(
+    (rows) {
+      final buffer = StringBuffer();
+      for (final row in rows) {
+        if (buffer.isNotEmpty) buffer.write('\n');
+        buffer..write(row.data['sql'].toString())
+              ..write(';');
+      }
+      return buffer.toString();
+    },
+  );
 }
 
 List<SQLTableDefinition> _buildTables(GeneratedDatabase database) {

@@ -10,6 +10,9 @@ abstract class SQLDatabaseServer implements StorageServerInfo {
   /// The tables contained in this database
   Future<List<SQLTableDefinition>> get tables;
 
+  /// The full schema of the database
+  Future<String> get schema;
+
   /// Query the database using the provided
   /// [query] and return the result
   /// [variables] are used to provide safe

@@ -13,6 +13,7 @@ class SQLDatabaseProtocol {
   ) async {
     final tables = await server.tables;
     final version = await server.schemaVersion;
+    final schema = await server.schema;
 
     return <String, dynamic>{
       'type': 'identify',
@@ -22,6 +23,7 @@ class SQLDatabaseProtocol {
         'icon': server.icon,
         'schemaVersion': version,
         'tables': tables.map(_tableToJson).toList(),
+        'schema': schema,
       },
     };
   }
@@ -64,7 +66,7 @@ Map<String, dynamic> _tableToJson(SQLTableDefinition e) {
     'name': e.name,
     'primaryKey': e.primaryKey,
     'extensions': e.extensions.map(_extensionToJson).toList(),
-    'columns': e.columns.map(_columnToJson).toList()
+    'columns': e.columns.map(_columnToJson).toList(),
   };
 }
 
