@@ -3,6 +3,7 @@ import 'package:storage_inspector/src/driver/storage_server.dart';
 import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart'
     if (dart.library.html) 'package:storage_inspector/src/protocol/web/web_storage_protocol_server.dart';
 import 'package:storage_inspector/src/protocol/storage_protocol.dart';
+import 'package:storage_inspector/src/servers/sql_database_server.dart';
 import 'package:storage_inspector/src/servers/file_server.dart';
 import 'package:storage_inspector/src/servers/key_value_server.dart';
 import 'package:uuid/uuid.dart';
@@ -100,6 +101,11 @@ class StorageServerDriver extends ToolingServer {
   /// Register a file server for inspection
   void addFileServer(FileServer server) {
     _server.addFileServer(server);
+  }
+
+  /// Register an sql server for inspection
+  void addSQLServer(SQLDatabaseServer server) {
+    _server.addSQLServer(server);
   }
 }
 

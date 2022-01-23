@@ -35,6 +35,7 @@ class StorageProtocolServer implements StorageProtocolListener {
   late final StorageProtocol _protocol;
   final _keyValueServers = ObservableList<KeyValueServer>();
   final _fileServers = ObservableList<FileServer>();
+  final _sqlServers = ObservableList<SQLDatabaseServer>();
   var _paused = false;
   late Completer<void> _resumeFuture;
 
@@ -43,6 +44,8 @@ class StorageProtocolServer implements StorageProtocolListener {
   List<KeyValueServer> get keyValueServers => _keyValueServers.servers;
 
   List<FileServer> get fileServers => _fileServers.servers;
+
+  List<SQLDatabaseServer> get sqlServers => _sqlServers.servers;
 
   StorageProtocolServer({
     String? icon,
@@ -103,6 +106,9 @@ class StorageProtocolServer implements StorageProtocolListener {
       for (final server in _fileServers.servers) {
         value.send(await _protocol.fileServerIdentification(server));
       }
+      for (final server in _sqlServers.servers) {
+        value.send(await _protocol.sqlServerIdentification(server));
+      }
     } catch (e, trace) {
       storageInspectorLogger('Failed to send message: $e\n $trace');
       try {
@@ -136,6 +142,10 @@ class StorageProtocolServer implements StorageProtocolListener {
 
   void addFileServer(FileServer server) {
     _fileServers.add(server);
+  }
+
+  void addSQLServer(SQLDatabaseServer server) {
+    _sqlServers.add(server);
   }
 
   @override

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:storage_inspector/src/driver/storage_server.dart';
 import 'package:storage_inspector/src/protocol/specific/file/file_protocol.dart';
 import 'package:storage_inspector/src/protocol/specific/key_value/key_value_protocol.dart';
+import 'package:storage_inspector/src/protocol/specific/sql/sql_database_protocol.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 import 'package:uuid/uuid.dart';
 
@@ -11,12 +12,14 @@ class StorageProtocol {
   static const int version = 1;
   static const serverTypeKeyValue = 'key_value';
   static const serverTypeFile = 'file';
+  static const serverTypeSql = 'sql';
   static const serverTypeInspector = 'inspector';
   static const _inspectorCommandUnpause = 'resume';
 
   final Set<StorageProtocolExtension> extensions;
   final KeyValueProtocol _keyValueProtocol;
   final FileProtocol _fileProtocol;
+  final SQLDatabaseProtocol _dbProtocol;
   final String bundleId;
   final String? icon;
   final StorageProtocolListener listener;
@@ -28,7 +31,8 @@ class StorageProtocol {
     required this.listener,
     this.icon,
   })  : _keyValueProtocol = KeyValueProtocol(server),
-        _fileProtocol = FileProtocol(server);
+        _fileProtocol = FileProtocol(server),
+        _dbProtocol = SQLDatabaseProtocol(server);
 
   List<int> serverIdentificationMessage({required bool paused}) => utf8.encode(
         json.encode(
@@ -83,6 +87,20 @@ class StorageProtocol {
               requestId: requestId, error: e, stackTrace: trace));
         }
         break;
+      case serverTypeSql:
+        try {
+          onConnection.send(encodeWithBody(
+            serverType,
+            data: await _dbProtocol
+                .onMessage(envelope['data'] as Map<String, dynamic>),
+            requestId: requestId,
+          ));
+        } catch (e, trace) {
+          storageInspectorLogger('Failed to handle sql message: $e\n $trace');
+          onConnection.send(_reportError(serverType,
+              requestId: requestId, error: e, stackTrace: trace));
+        }
+        break;
       case serverTypeInspector:
         try {
           onConnection.send(encodeWithBody(
@@ -111,6 +129,9 @@ class StorageProtocol {
   Future<List<int>> fileServerIdentification(FileServer server) async =>
       encodeWithBody(serverTypeFile,
           data: await _fileProtocol.identify(server));
+
+  Future<List<int>> sqlServerIdentification(SQLDatabaseServer server) async =>
+      encodeWithBody(serverTypeSql, data: await _dbProtocol.identify(server));
 
   List<int> encodeWithBody(String serverType,
       {dynamic data, String? requestId, String? error}) {

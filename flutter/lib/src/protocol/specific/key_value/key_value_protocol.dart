@@ -53,21 +53,35 @@ class KeyValueProtocol {
       case _commandGetAll:
         return _handleGetAll();
       case _commandGet:
-        return _handleGet(jsonData['data']['id'] as String);
+        return _handleGet(
+          jsonData['data']['id'] as String,
+        );
       case _commandGetValue:
         return _handleGetValue(
-            jsonData['data']['id'] as String, jsonData['data']['key']);
+          jsonData['data']['id'] as String,
+          jsonData['data']['key'],
+        );
       case _commandClear:
-        return _handleClear(jsonData['data']['id'] as String);
+        return _handleClear(
+          jsonData['data']['id'] as String,
+        );
       case _commandSet:
-        return _handleSet(jsonData['data']['id'] as String,
-            jsonData['data']['key'], jsonData['data']['value']);
+        return _handleSet(
+          jsonData['data']['id'] as String,
+          jsonData['data']['key'],
+          jsonData['data']['value'],
+        );
       case _commandRemove:
         return _handleRemove(
-            jsonData['data']['id'] as String, jsonData['data']['key']);
+          jsonData['data']['id'] as String,
+          jsonData['data']['key'],
+        );
       default:
-        return Future.error(ArgumentError(
-            'Unknown key-value protocol command: ${jsonData['type']}'));
+        return Future.error(
+          ArgumentError(
+            'Unknown key-value protocol command: ${jsonData['type']}',
+          ),
+        );
     }
   }
 
