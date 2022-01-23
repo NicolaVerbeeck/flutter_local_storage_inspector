@@ -21,6 +21,19 @@ abstract class SQLDatabaseServer implements StorageServerInfo {
     String query,
     List<ValueWithType> variables,
   );
+
+  /// Update the database using the provided [query]
+  /// and return the number of affected rows if known.
+  /// [variables] are used to provide safe way to bind
+  /// variables to the [query] statement.
+  /// [affectedTables] is a hint describing which tables
+  /// are affected by this update, can be used to notify
+  /// table listeners
+  Future<int> update(
+    String query, {
+    required List<String> affectedTables,
+    required List<ValueWithType> variables,
+  });
 }
 
 /// Definition of a table in an SQL database

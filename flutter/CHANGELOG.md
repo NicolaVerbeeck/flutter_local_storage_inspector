@@ -1,3 +1,8 @@
+## 0.1.4
+
+* Updated SQL protocol to include updating
+* Updated SQL support to include schema
+
 ## 0.1.3
 
 * Base SQL protocol

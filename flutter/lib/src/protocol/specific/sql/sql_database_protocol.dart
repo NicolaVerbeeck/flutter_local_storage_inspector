@@ -1,8 +1,10 @@
 import 'package:storage_inspector/src/driver/storage_server.dart';
+import 'package:storage_inspector/src/protocol/specific/generic.dart';
 import 'package:storage_inspector/src/servers/sql_database_server.dart';
 
 class SQLDatabaseProtocol {
   static const _commandQuery = 'query';
+  static const _commandUpdate = 'update';
 
   final StorageProtocolServer _server;
 
@@ -35,6 +37,13 @@ class SQLDatabaseProtocol {
           jsonData['data']['id'] as String,
           jsonData['data']['query'] as String,
         );
+      case _commandUpdate:
+        return _handleUpdate(
+          jsonData['data']['id'] as String,
+          jsonData['data']['query'] as String,
+          jsonData['data']['affectedTables'],
+          jsonData['data']['variables'],
+        );
       default:
         return Future.error(
           ArgumentError(
@@ -57,6 +66,33 @@ class SQLDatabaseProtocol {
       'id': id,
       'columns': result.columns,
       'rows': result.rows,
+    };
+  }
+
+  Future<Map<String, dynamic>> _handleUpdate(
+    String id,
+    String query,
+    dynamic affectedTables,
+    dynamic variables,
+  ) async {
+    final sqlServer = _server.sqlServers.firstWhere(
+      (element) => element.id == id,
+      orElse: () => throw ArgumentError('No server with id $id found'),
+    );
+
+    final tables = (affectedTables as List<dynamic>).cast<String>();
+    final queryVariables =
+        (variables as List<dynamic>).map(decodeValueWithType).toList();
+
+    final numUpdated = await sqlServer.update(
+      query,
+      affectedTables: tables,
+      variables: queryVariables,
+    );
+
+    return <String, dynamic>{
+      'id': id,
+      'affectedRows': numUpdated,
     };
   }
 }

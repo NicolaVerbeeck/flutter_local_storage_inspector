@@ -47,6 +47,22 @@ class DriftSQLDatabaseServer implements SQLDatabaseServer {
 
   @override
   Future<int?> get schemaVersion => SynchronousFuture(_database.schemaVersion);
+
+  @override
+  Future<int> update(
+    String query, {
+    required List<String> affectedTables,
+    required List<ValueWithType> variables,
+  }) async {
+    final numUpdated = await _database.customUpdate(
+      query,
+      updates: _database.allTables
+          .where((element) => affectedTables.contains(element.actualTableName))
+          .toSet(),
+      variables: variables.map(_mapVariable).toList(),
+    );
+    return numUpdated;
+  }
 }
 
 Future<String> _buildSchema(GeneratedDatabase database) async {
@@ -55,8 +71,9 @@ Future<String> _buildSchema(GeneratedDatabase database) async {
       final buffer = StringBuffer();
       for (final row in rows) {
         if (buffer.isNotEmpty) buffer.write('\n');
-        buffer..write(row.data['sql'].toString())
-              ..write(';');
+        buffer
+          ..write(row.data['sql'].toString())
+          ..write(';');
       }
       return buffer.toString();
     },
