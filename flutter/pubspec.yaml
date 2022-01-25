@@ -25,6 +25,6 @@ dev_dependencies:
   flutter_lints: ^1.0.0
   drift: ^1.2.0
   drift_dev: ^1.2.1
-  drift_local_storage_inspector: ^0.1.2
+  drift_local_storage_inspector: ^0.1.4
 
 flutter:

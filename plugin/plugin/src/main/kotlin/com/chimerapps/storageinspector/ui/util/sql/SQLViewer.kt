@@ -5,7 +5,6 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.UndoConfirmationPolicy
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.impl.DocumentImpl
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.fileTypes.FileType
@@ -24,13 +23,13 @@ import javax.swing.JPanel
 /**
  * @author Nicola Verbeeck
  */
-class SQLTextEditor private constructor(val project: Project) : JPanel(BorderLayout()) {
+class SQLViewer private constructor(val project: Project) : JPanel(BorderLayout()) {
 
     companion object {
-        private val projectEditors = WeakHashMap<Project, SQLTextEditor>()
+        private val projectEditors = WeakHashMap<Project, SQLViewer>()
 
-        operator fun invoke(project: Project): SQLTextEditor {
-            return projectEditors.getOrPut(project) { SQLTextEditor(project) }
+        operator fun invoke(project: Project): SQLViewer {
+            return projectEditors.getOrPut(project) { SQLViewer(project) }
         }
     }
 
@@ -41,16 +40,17 @@ class SQLTextEditor private constructor(val project: Project) : JPanel(BorderLay
 
         val stamp = LocalTimeCounter.currentTime()
         val psiFile = factory.createFileFromText("Dummy.sql", SQLFileType, "", stamp, true, false)
+        psiFile.putUserData(SQLFile.preventInjectSchema, true)
         document = PsiDocumentManager.getInstance(project).getDocument(psiFile)!!
     }
 
-    private val editor = (EditorFactory.getInstance().createEditor(document, project, SQLFileType, false) as EditorEx).also {
+    private val editor = (EditorFactory.getInstance().createEditor(document, project, SQLFileType, true)).also {
         Disposer.register(project) {
             safeRunWriteAction {
                 EditorFactory.getInstance().releaseEditor(it)
             }
         }
-        TextCompletionUtil.installCompletionHint(it)
+        
     }
 
     var text: String
@@ -65,9 +65,7 @@ class SQLTextEditor private constructor(val project: Project) : JPanel(BorderLay
     init {
         (document as? DocumentImpl)?.setAcceptSlashR(true)
 
-        add(JBScrollPane(editor.component).also {
-            it.preferredSize = Dimension(it.preferredSize.width, editor.lineHeight * 3)
-        }, BorderLayout.CENTER)
+        add(JBScrollPane(editor.component), BorderLayout.CENTER)
     }
 
 }

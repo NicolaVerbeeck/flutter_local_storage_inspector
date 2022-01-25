@@ -56,11 +56,15 @@ void main() async {
   final driftDb = MyDatabase(db);
   driver.addSQLServer(
       DriftSQLDatabaseServer(id: '12345', database: driftDb, name: 'TODOs DB'));
+
+  final now = DateTime.now();
+  print('Now: $now. Is UTC? ${now.isUtc}. In msec: ${now.millisecondsSinceEpoch}');
+
   await driftDb.into(driftDb.todos).insert(
         TodosCompanion.insert(
           textWithRestrictions: 'Hello world',
           booleanTest: true,
-          dateTimeTest: DateTime.now(),
+          dateTimeTest: now,
         ),
       );
   await driftDb.into(driftDb.todos).insert(

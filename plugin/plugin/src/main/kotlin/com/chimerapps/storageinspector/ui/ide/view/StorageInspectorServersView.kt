@@ -18,6 +18,7 @@ import com.chimerapps.storageinspector.ui.util.list.ListUpdateHelper
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.intellij.icons.AllIcons
 import com.intellij.ui.ColoredTreeCellRenderer
+import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import java.awt.BorderLayout
 import java.util.Enumeration
@@ -70,7 +71,7 @@ class StorageInspectorServersView(
     }
 
     init {
-        add(tree, BorderLayout.CENTER)
+        add(JBScrollPane(tree), BorderLayout.CENTER)
     }
 
     override fun onServerIdentification(serverId: ServerId) {

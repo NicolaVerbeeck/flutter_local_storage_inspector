@@ -2,6 +2,7 @@ package com.chimerapps.storageinspector.ui.util.sql
 
 import com.alecstrong.sql.psi.core.SqlFileBase
 import com.chimerapps.storageinspector.ui.ide.InspectorToolWindow
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.VirtualFileSystem
@@ -17,6 +18,10 @@ import com.intellij.util.LocalTimeCounter
  */
 class SQLFile(viewProvider: FileViewProvider, private var isRoot: Boolean) : SqlFileBase(viewProvider, SQLLanguage) {
 
+    companion object {
+        val preventInjectSchema = Key<Boolean>("preventInjectSchema")
+    }
+
     private var lastSchemaFile: SqlFileBase? = null
     private var lastSchema: String? = null
 
@@ -29,6 +34,7 @@ class SQLFile(viewProvider: FileViewProvider, private var isRoot: Boolean) : Sql
 
     override fun baseContributorFile(): SqlFileBase? {
         if (!isRoot) return null
+        if (getUserData(preventInjectSchema) == true) return null
 
         val window = InspectorToolWindow.get(project)?.first?.focussedSessionWindow
         val schema = window?.selectedDatabaseSchema ?: return null

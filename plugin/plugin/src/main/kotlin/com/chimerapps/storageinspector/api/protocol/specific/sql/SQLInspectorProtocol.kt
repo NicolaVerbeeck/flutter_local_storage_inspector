@@ -2,11 +2,13 @@ package com.chimerapps.storageinspector.api.protocol.specific.sql
 
 import com.chimerapps.storageinspector.api.RemoteError
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocol
+import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLQueryResult
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLRequest
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLRequestData
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLRequestType
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLServerIdentification
+import com.chimerapps.storageinspector.api.protocol.model.sql.SQLUpdateResult
 import com.chimerapps.storageinspector.ui.util.json.GsonCreator
 import com.chimerapps.storageinspector.util.classLogger
 import com.google.gsonpackaged.JsonObject
@@ -22,6 +24,13 @@ interface SQLDatabaseServerInterface {
     fun removeListener(listener: SQLDatabaseProtocolListener)
 
     suspend fun query(serverId: String, queryString: String): SQLQueryResult
+
+    suspend fun update(
+        serverId: String,
+        query: String,
+        variables: List<ValueWithType>,
+        affectedTables: List<String>,
+    ): SQLUpdateResult
 }
 
 class SQLDatabaseProtocol(private val protocol: StorageInspectorProtocol) : SQLDatabaseServerInterface {
@@ -75,6 +84,35 @@ class SQLDatabaseProtocol(private val protocol: StorageInspectorProtocol) : SQLD
             requestId = requestId,
             data = gson.toJsonTree(
                 SQLRequest(SQLRequestType.QUERY, SQLRequestData(serverId, query = queryString))
+            ).asJsonObject
+        )
+
+        return future.await()
+    }
+
+    override suspend fun update(
+        serverId: String,
+        query: String,
+        variables: List<ValueWithType>,
+        affectedTables: List<String>
+    ): SQLUpdateResult {
+        val requestId = UUID.randomUUID().toString()
+
+        val future = CompletableDeferred<SQLUpdateResult>()
+        waitingFutures[requestId] = Pair(future) { data, _ ->
+            future.complete(gson.fromJson(data, SQLUpdateResult::class.java))
+        }
+
+        protocol.sendRequest(
+            serverType = StorageInspectorProtocol.SERVER_TYPE_SQL,
+            requestId = requestId,
+            data = gson.toJsonTree(
+                SQLRequest(SQLRequestType.UPDATE, SQLRequestData(
+                    serverId,
+                    query = query,
+                    variables = variables,
+                    affectedTables = affectedTables,
+                ))
             ).asJsonObject
         )
 

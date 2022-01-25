@@ -1,4 +1,10 @@
 <p>
+   <b>0.1.6</b>
+   <ul>
+        <li>Initial inline editing of SQL data support</li>
+   </ul>
+</p>
+<p>
    <b>0.1.5</b>
    <ul>
         <li>Added SQL query editor with auto-completion</li>

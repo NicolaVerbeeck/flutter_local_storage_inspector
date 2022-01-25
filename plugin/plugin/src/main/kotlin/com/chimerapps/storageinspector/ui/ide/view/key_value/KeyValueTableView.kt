@@ -254,7 +254,7 @@ private class TableViewColumnInfo(
             }
             StorageType.stringlist -> return StringListCellEditor(project)
             StorageType.binary -> return BinaryCellEditor(onSaveBinaryTapped)
-            StorageType.datetime -> return DateTimeCellEditor(project)
+            StorageType.datetime -> return DateTimeCellEditor(project) { it }
             else -> null
         }
     }

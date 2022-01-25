@@ -1,17 +1,29 @@
 package com.chimerapps.storageinspector.ui.ide.view.sql
 
+import com.chimerapps.storageinspector.api.protocol.model.StorageType
+import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLColumnDefinition
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLDataType
+import com.chimerapps.storageinspector.api.protocol.model.sql.SQLDateTimeFormat
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLTableDefinition
+import com.chimerapps.storageinspector.api.protocol.model.sql.SQLTableExtension
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorProjectSettings
 import com.chimerapps.storageinspector.ui.ide.settings.TableConfiguration
+import com.chimerapps.storageinspector.ui.ide.view.key_value.BinaryCellEditor
+import com.chimerapps.storageinspector.ui.ide.view.key_value.BinaryTableCellRenderer
+import com.chimerapps.storageinspector.ui.ide.view.key_value.DateTimeCellEditor
+import com.chimerapps.storageinspector.ui.ide.view.key_value.DateTimeTableCellRenderer
+import com.chimerapps.storageinspector.ui.util.file.chooseSaveFile
 import com.chimerapps.storageinspector.ui.util.list.DiffUtilComparator
 import com.chimerapps.storageinspector.ui.util.list.ListUpdateHelper
 import com.chimerapps.storageinspector.ui.util.list.TableModelDiffUtilDispatchModel
+import com.chimerapps.storageinspector.ui.util.localization.Tr
+import com.chimerapps.storageinspector.ui.util.notification.NotificationUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.table.TableView
 import com.intellij.util.PlatformIcons
 import com.intellij.util.ui.ColumnInfo
+import com.intellij.util.ui.ComboBoxCellEditor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.ListTableModel
 import java.awt.Component
@@ -19,8 +31,10 @@ import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.swing.DefaultCellEditor
 import javax.swing.ListSelectionModel
 import javax.swing.event.ChangeEvent
@@ -28,13 +42,16 @@ import javax.swing.event.ListSelectionEvent
 import javax.swing.event.TableColumnModelEvent
 import javax.swing.event.TableColumnModelListener
 import javax.swing.table.TableCellEditor
+import javax.swing.table.TableCellRenderer
 import javax.swing.table.TableColumnModel
 
 typealias TableRow = Map<String, Any?>
 
 class CustomDataTableView(
     private val project: Project,
-    private val doRemoveSelectedRows: () -> Unit,
+    private val doRemoveSelectedRows: (queries: List<Pair<String, List<ValueWithType>>>) -> Unit,
+    private val editValue: (query: Pair<String, List<ValueWithType>>) -> Unit,
+    private val saveBinaryValue: (row: TableRow, column: SQLColumnDefinition, file: File) -> Unit,
 ) : TableView<TableRow>() {
 
     init {
@@ -65,6 +82,7 @@ class CustomDataTableView(
     private lateinit var internalModel: ListTableModel<TableRow>
     private var databaseName: String? = null
     private var table: SQLTableDefinition? = null
+    private var dateTimeFormat: SQLDateTimeFormat? = null
     private var activeColumns: List<SQLColumnDefinition> = emptyList()
     private val columnObserver = object : TableColumnModelListener {
         override fun columnAdded(e: TableColumnModelEvent?) {}
@@ -88,9 +106,10 @@ class CustomDataTableView(
         helper.onListUpdated(newRows)
     }
 
-    fun updateModel(databaseName: String, table: SQLTableDefinition) {
+    fun updateModel(databaseName: String, table: SQLTableDefinition, dateTimeFormat: SQLDateTimeFormat) {
         this.databaseName = databaseName
         this.table = table
+        this.dateTimeFormat = dateTimeFormat
 
         activeColumns = this.table?.columns.orEmpty()
         createTableColumnModel()
@@ -131,7 +150,7 @@ class CustomDataTableView(
 
         val model = ListTableModel(
             activeColumns.map {
-                TableViewColumnInfo(project, it, this.table!!)
+                TableViewColumnInfo(project, it, ::doEditValue, ::saveBinary, dateTimeFormat!!)
             }.toTypedArray(),
             listOf(emptyMap<String, Any?>()),
             0
@@ -155,10 +174,19 @@ class CustomDataTableView(
         }
     }
 
-    override fun setColumnModel(columnModel: TableColumnModel?) {
+    override fun setColumnModel(columnModel: TableColumnModel) {
         this.columnModel?.removeColumnModelListener(columnObserver)
         super.setColumnModel(columnModel)
-        columnModel?.addColumnModelListener(columnObserver)
+        columnModel.addColumnModelListener(columnObserver)
+    }
+
+    private fun saveBinary(column: SQLColumnDefinition) {
+        val row = selectedRow
+        if (row == -1) return
+
+        val file = chooseSaveFile("Save binary data to", "") ?: return
+        val item = internalModel.getItem(row)
+        saveBinaryValue(item, column, file)
     }
 
     private fun commitResize() {
@@ -201,83 +229,150 @@ class CustomDataTableView(
         return super.prepareEditor(editor, row, column)
     }
 
+    fun doRemoveSelectedRows() {
+        table?.let { currentTable ->
+            val queriesToExecute = selectedRows.mapNotNull { row ->
+                val data = internalModel.getRowValue(row) ?: return@mapNotNull null
+                val variables = mutableListOf<ValueWithType>()
+                val query = buildString {
+                    append("DELETE FROM ${currentTable.name} ")
+                    append(createMatch(data, currentTable, variables))
+                }
+                query to variables
+            }
+            doRemoveSelectedRows(queriesToExecute)
+        }
+    }
+
+    private fun doEditValue(row: TableRow, column: SQLColumnDefinition, newValue: Any?) {
+        val table = table ?: return
+
+        val variables = mutableListOf<ValueWithType>()
+        val query = buildString {
+            append("UPDATE ${table.name} SET ")
+
+            val name = column.name
+            append(name)
+            append("=? ")
+
+            variables += makeVariable(column, newValue)
+
+            append(createMatch(row, table, variables))
+        }
+        editValue(query to variables)
+    }
+}
+
+private fun <R> IntArray.mapNotNull(transform: (Int) -> R?): List<R> {
+    val list = mutableListOf<R>()
+    forEach { transform(it)?.let { transformed -> list += transformed } }
+    return list
 }
 
 private class TableViewColumnInfo(
     private val project: Project,
     val column: SQLColumnDefinition,
-    private val table: SQLTableDefinition,
-) :
-    ColumnInfo<TableRow, String>(column.name) {
+    private val editValue: (row: TableRow, column: SQLColumnDefinition, newValue: Any?) -> Unit,
+    private val onSaveBinaryTapped: (SQLColumnDefinition) -> Unit,
+    private val dateTimeFormat: SQLDateTimeFormat,
+) : ColumnInfo<TableRow, Any>(column.name) {
 
-    override fun valueOf(item: TableRow?): String? {
-        val raw = item?.get(column.name) ?: return null
-        @Suppress("UNCHECKED_CAST")
+    private val binaryRenderer = BinaryTableCellRenderer()
+    private val datetimeRenderer = DateTimeTableCellRenderer()
+
+    override fun valueOf(item: TableRow): Any? {
+        val raw = item[column.name] ?: return null
         return when (column.type) {
             SQLDataType.TEXT -> raw.toString()
             SQLDataType.BLOB -> "<binary>"
             SQLDataType.REAL -> (raw as Number).toDouble().toString()
             SQLDataType.INTEGER -> (raw as Number).toLong().toString()
             SQLDataType.BOOLEAN -> if ((raw as Number).toInt() != 0) {
-                "true"
+                Tr.TypeBooleanTrue.tr()
             } else {
-                "false"
+                Tr.TypeBooleanFalse.tr()
             }
-            SQLDataType.DATETIME -> DateTimeFormatter.ISO_INSTANT.format(
-                Instant.ofEpochMilli(
-                    (raw as Number).toLong()
-                )
-            )
+            SQLDataType.DATETIME -> applyDateTimeFix((raw as Number).toLong(), dateTimeFormat)
         }
     }
 
+    private fun applyDateTimeFix(raw: Long, dateTimeFormat: SQLDateTimeFormat): Long {
+        val inMilliseconds = (raw * dateTimeFormat.accuracyInMicroSeconds) / 1000
+        return inMilliseconds - dateTimeFormat.timezoneOffsetMilliseconds
+    }
+
     override fun isCellEditable(item: TableRow): Boolean {
-        //return column.name.lowercase(Locale.getDefault()) != "rowid"
-        return false
+        return column.name.lowercase(Locale.getDefault()) != "rowid"
     }
 
-    override fun setValue(item: TableRow, value: String?) {
-//        try {
-//            if (!isSame(item.data[column.name], value)) {
-//                if (column.isBoolean)
-//                    sendUpdateQuery(table, column, item, value?.let { if (it == "true") 1 else 0 }?.toString())
-//                else
-//                    sendUpdateQuery(table, column, item, value)
-//            }
-//        } catch (e: Throwable) {
-//            NotificationUtil.error("Update failed", "Failed to update: ${e.message}", project)
-//        }
+    override fun getEditor(item: TableRow): TableCellEditor? {
+        return when (column.type) {
+            SQLDataType.TEXT,
+            SQLDataType.REAL,
+            SQLDataType.INTEGER -> null
+            SQLDataType.BLOB -> return BinaryCellEditor { onSaveBinaryTapped(column) }
+            SQLDataType.BOOLEAN -> object : ComboBoxCellEditor() {
+                override fun getComboBoxItems(): List<String> {
+                    return listOf(Tr.TypeBooleanTrue.tr(), Tr.TypeBooleanFalse.tr())
+                }
+            }
+            SQLDataType.DATETIME -> return DateTimeCellEditor(project) { it }
+        }
     }
 
-//    private fun isSame(original: Any?, value: String?): Boolean {
-//        if (original == null && value == null) return true
-//        else if (original != null && value == null) return false
-//        else if (original == null && value != null) return false
-//
-//        @Suppress("UNCHECKED_CAST")
-//        when (column.type.lowercase(Locale.getDefault())) {
-//            "bit", "tinyint", "smallint", "int", "bigint", "integer" -> {
-//                val number = original as? Number
-//                if (column.isBoolean) {
-//                    return number?.toInt() == value?.equals("true")?.let { if (it) 1 else 0 }
-//                }
-//                return number?.toLong() == value?.toLong()
-//            }
-//            "float", "real", "double" -> return (original as? Number)?.toDouble() == value?.toDouble()
-//            "char", "varchar", "text", "nchar", "nvarchar", "ntext" -> return original == value
-//            "date", "time", "datetime", "timestamp", "year" -> {
-//                val newInstant = if (value != null) {
-//                    value.toLongOrNull()
-//                        ?: (DateTimeFormatter.ISO_INSTANT.parse(value) as? Instant)?.toEpochMilli()
-//                } else null
-//                val old = (original as? Number)?.toLong()
-//
-//                return newInstant == old
-//            }
-//            "blob" -> return (original as? List<Int>) == value?.split(',')?.map { it.trim().toInt() }
-//        }
-//        throw IllegalStateException("Could create statement for column, type not supported: ${column.type}")
-//    }
+    override fun getRenderer(item: TableRow): TableCellRenderer? {
+        return when (column.type) {
+            SQLDataType.BLOB -> binaryRenderer
+            SQLDataType.DATETIME -> datetimeRenderer
+            else -> super.getRenderer(item)
+        }
+    }
+
+    override fun setValue(item: TableRow, value: Any?) {
+        try {
+            if (!isSame(item[column.name], value)) {
+                if (value == null && column.nullable) {
+                    editValue(item, column, null)
+                } else if (value != null) {
+                    editValue(item, column, value)
+                }
+            }
+        } catch (e: Throwable) {
+            NotificationUtil.error("Update failed", "Failed to update: ${e.message}", project)
+        }
+    }
+
+    private fun isSame(original: Any?, value: Any?): Boolean {
+        if (original == null && value == null) return true
+        else if (original != null && value == null) return false
+        else if (original == null && (value as? String)?.isEmpty() == true) return true
+        else if (original == null) return false
+        if (value == null) return false
+
+        return when (column.type) {
+            SQLDataType.TEXT -> {
+                val new = value.toString()
+                (original == new)
+            }
+            SQLDataType.BLOB -> false
+            SQLDataType.REAL -> {
+                val new = if (value is Number) value.toDouble() else (value.toString().toDouble())
+                (original == new)
+            }
+            SQLDataType.INTEGER -> {
+                val new = if (value is Number) value.toLong() else (value.toString().toLong())
+                (original == new)
+            }
+            SQLDataType.BOOLEAN -> {
+                val new = if (value is Boolean) value else (value.toString() == Tr.TypeBooleanTrue.tr() || value.toString() == "true")
+                (original == new)
+            }
+            SQLDataType.DATETIME -> {
+                val new = if (value is Long) value else (value.toString().toLong())
+                (original == new)
+            }
+        }
+    }
 
     override fun getPreferredStringValue(): String {
         return column.name
@@ -300,4 +395,89 @@ private class TableRowComparator(table: SQLTableDefinition) : DiffUtilComparator
         return left.filter { it.key in primaryKeys } == right.filter { it.key in primaryKeys }
     }
 
+}
+
+private fun createMatch(
+    data: TableRow,
+    table: SQLTableDefinition,
+    variables: MutableList<ValueWithType>
+): String {
+    val primaryKeys = table.primaryKey
+    return buildString {
+        if (primaryKeys.isNotEmpty()) {
+            append("WHERE ")
+            primaryKeys.forEachIndexed { index, column ->
+                if (index > 0)
+                    append(" AND ")
+                val keyData = data[column]
+                append(column)
+                append(" ")
+                append(equalsForKey(keyData, table, column, variables))
+            }
+        } else if (!table.extensions.contains(SQLTableExtension.WITHOUT_ROW_ID) && data.entries.any {
+                it.key.equals(
+                    "rowid",
+                    ignoreCase = true
+                )
+            }) {
+            append(
+                "WHERE rowid = ${
+                    data.entries.find {
+                        it.key.equals(
+                            "rowid",
+                            ignoreCase = true
+                        )
+                    }?.value
+                }"
+            )
+        } else {
+            append("WHERE ")
+            data.entries.forEachIndexed { index, (column, data) ->
+                if (index > 0)
+                    append(" AND ")
+                append(column)
+                append(equalsForKey(data, table, column, variables))
+            }
+        }
+    }
+}
+
+private fun equalsForKey(
+    keyData: Any?,
+    table: SQLTableDefinition,
+    column: String,
+    variables: MutableList<ValueWithType>
+): String {
+    if (keyData == null) return " IS NULL"
+    val tableColumn = table.columns.find { it.name == column }
+        ?: throw IllegalStateException("Could create statement for column, column not found")
+
+    variables += makeVariable(tableColumn, rawValue = keyData)
+
+    return "=?"
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun makeVariable(
+    column: SQLColumnDefinition,
+    rawValue: Any? = null
+): ValueWithType {
+    if (rawValue == null) {
+        return ValueWithType(StorageType.int, null)
+    }
+
+    return when (column.type) {
+        SQLDataType.TEXT -> ValueWithType(StorageType.string, rawValue.toString())
+        SQLDataType.BLOB -> ValueWithType(StorageType.binary, rawValue as? ByteArray ?: asByteArray(rawValue as List<Int>))
+        SQLDataType.REAL -> ValueWithType(StorageType.double, (rawValue as? Number)?.toDouble() ?: rawValue.toString().toDouble())
+        SQLDataType.INTEGER -> ValueWithType(StorageType.int, (rawValue as? Number)?.toLong() ?: rawValue.toString().toLong())
+        SQLDataType.BOOLEAN -> ValueWithType(StorageType.bool, (rawValue as? Boolean) ?: (rawValue.toString() == "true" || rawValue.toString() == Tr.TypeBooleanTrue.tr()))
+        SQLDataType.DATETIME -> ValueWithType(StorageType.datetime, (rawValue as? Number)?.toLong() ?: rawValue.toString().toLong())
+    }
+}
+
+fun asByteArray(ints: List<Int>): ByteArray {
+    val bytes = ByteArray(ints.size)
+    ints.forEachIndexed { index, i -> bytes[index] = (i and 0xFF).toByte() }
+    return bytes
 }

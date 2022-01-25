@@ -160,18 +160,22 @@ class DateTimeTableCellRenderer : DefaultTableCellRenderer() {
         val default = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
         default.font = Font(default.font.fontName, Font.ITALIC, default.font.size)
 
-        val time = value as Long
+        val time = value as? Long ?: return default
+
         (default as JLabel).text = renderTime(time)
         return default
     }
 }
 
-class DateTimeCellEditor(private val project: Project) : AbstractCellEditor(), TableCellEditor {
+class DateTimeCellEditor(
+    private val project: Project,
+    private val modifyDateTime: (Long) -> Long,
+) : AbstractCellEditor(), TableCellEditor {
 
     private var dateTime: Long? = null
 
     override fun getCellEditorValue(): Any? {
-        return dateTime
+        return dateTime?.let { modifyDateTime(it) }
     }
 
     override fun getTableCellEditorComponent(table: JTable?, value: Any?, isSelected: Boolean, row: Int, column: Int): Component {
