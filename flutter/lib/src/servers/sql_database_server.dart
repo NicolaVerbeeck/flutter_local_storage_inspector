@@ -13,6 +13,9 @@ abstract class SQLDatabaseServer implements StorageServerInfo {
   /// The full schema of the database
   Future<String> get schema;
 
+  /// The format in which datetime items are reported
+  Future<DateTimeFormat> get dateTimeFormat;
+
   /// Query the database using the provided
   /// [query] and return the result
   /// [variables] are used to provide safe
@@ -127,5 +130,22 @@ class QueryResult {
   const QueryResult({
     required this.columns,
     required this.rows,
+  });
+}
+
+/// The format in which datetime items are reported
+@immutable
+class DateTimeFormat {
+  /// The number of microseconds that elapse every unit change
+  /// eg: for millisecond data, this value would be 1000
+  final int accuracyInMicroSeconds;
+
+  /// The time zone offset that is applied to the value
+  /// in milliseconds difference from UTC
+  final int timezoneOffsetMilliseconds;
+
+  const DateTimeFormat({
+    required this.accuracyInMicroSeconds,
+    required this.timezoneOffsetMilliseconds,
   });
 }

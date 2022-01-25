@@ -5,12 +5,12 @@ import 'dart:typed_data';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:drift_local_storage_inspector/drift_local_storage_inspector.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 import 'package:tuple/tuple.dart';
 
-import 'db/drift_sql_database_server.dart';
 import 'db/driftdb.dart';
 
 void main() async {
@@ -54,7 +54,8 @@ void main() async {
 
   final db = NativeDatabase.memory();
   final driftDb = MyDatabase(db);
-  driver.addSQLServer(DriftSQLDatabaseServer(driftDb));
+  driver.addSQLServer(
+      DriftSQLDatabaseServer(id: '12345', database: driftDb, name: 'TODOs DB'));
   await driftDb.into(driftDb.todos).insert(
         TodosCompanion.insert(
           textWithRestrictions: 'Hello world',

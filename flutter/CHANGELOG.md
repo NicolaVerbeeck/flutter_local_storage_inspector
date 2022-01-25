@@ -1,3 +1,7 @@
+## 0.1.5
+
+* Update SQL support to also report date time format
+
 ## 0.1.4
 
 * Updated SQL protocol to include updating
