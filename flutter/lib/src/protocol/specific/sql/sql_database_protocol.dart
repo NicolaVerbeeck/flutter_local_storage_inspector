@@ -16,6 +16,7 @@ class SQLDatabaseProtocol {
     final tables = await server.tables;
     final version = await server.schemaVersion;
     final schema = await server.schema;
+    final dateTimeFormat = await server.dateTimeFormat;
 
     return <String, dynamic>{
       'type': 'identify',
@@ -26,6 +27,7 @@ class SQLDatabaseProtocol {
         'schemaVersion': version,
         'tables': tables.map(_tableToJson).toList(),
         'schema': schema,
+        'dateTimeFormat': _dateTimeFormatToJson(dateTimeFormat),
       },
     };
   }
@@ -103,6 +105,13 @@ Map<String, dynamic> _tableToJson(SQLTableDefinition e) {
     'primaryKey': e.primaryKey,
     'extensions': e.extensions.map(_extensionToJson).toList(),
     'columns': e.columns.map(_columnToJson).toList(),
+  };
+}
+
+Map<String, dynamic> _dateTimeFormatToJson(DateTimeFormat format) {
+  return <String, dynamic>{
+    'accuracyInMicroSeconds': format.accuracyInMicroSeconds,
+    'timezoneOffsetMilliseconds': format.timezoneOffsetMilliseconds,
   };
 }
 
