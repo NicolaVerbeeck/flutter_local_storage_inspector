@@ -1,4 +1,10 @@
 <p>
+   <b>0.1.8</b>
+   <ul>
+        <li>Removed supported for intellij versions 2022.* since the SQL PSI library is incompatible for now</li>
+   </ul>
+</p>
+<p>
    <b>0.1.7</b>
    <ul>
         <li>Fixed name conflict for installed SQL plugin on some IntellIJ installations</li>
