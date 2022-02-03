@@ -7,8 +7,6 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.impl.DocumentImpl
-import com.intellij.openapi.editor.impl.EditorImpl
-import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.psi.PsiDocumentManager
@@ -40,11 +38,11 @@ class SQLTextEditor private constructor(val project: Project) : JPanel(BorderLay
         val factory = PsiFileFactory.getInstance(project)
 
         val stamp = LocalTimeCounter.currentTime()
-        val psiFile = factory.createFileFromText("Dummy.sql", SQLFileType, "", stamp, true, false)
+        val psiFile = factory.createFileFromText("Dummy.sql", LocalStorageInspectorSQLFileType, "", stamp, true, false)
         document = PsiDocumentManager.getInstance(project).getDocument(psiFile)!!
     }
 
-    private val editor = (EditorFactory.getInstance().createEditor(document, project, SQLFileType, false) as EditorEx).also {
+    private val editor = (EditorFactory.getInstance().createEditor(document, project, LocalStorageInspectorSQLFileType, false) as EditorEx).also {
         Disposer.register(project) {
             safeRunWriteAction {
                 EditorFactory.getInstance().releaseEditor(it)

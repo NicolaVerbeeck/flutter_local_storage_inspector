@@ -6,17 +6,13 @@ import com.intellij.openapi.command.UndoConfirmationPolicy
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.impl.DocumentImpl
-import com.intellij.openapi.editor.impl.EditorImpl
-import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFileFactory
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.LocalTimeCounter
-import com.intellij.util.textCompletion.TextCompletionUtil
 import java.awt.BorderLayout
-import java.awt.Dimension
 import java.util.WeakHashMap
 import javax.swing.JPanel
 
@@ -39,12 +35,12 @@ class SQLViewer private constructor(val project: Project) : JPanel(BorderLayout(
         val factory = PsiFileFactory.getInstance(project)
 
         val stamp = LocalTimeCounter.currentTime()
-        val psiFile = factory.createFileFromText("Dummy.sql", SQLFileType, "", stamp, true, false)
-        psiFile.putUserData(SQLFile.preventInjectSchema, true)
+        val psiFile = factory.createFileFromText("Dummy.sql", LocalStorageInspectorSQLFileType, "", stamp, true, false)
+        psiFile.putUserData(LocalStorageInspectorSQLFile.preventInjectSchema, true)
         document = PsiDocumentManager.getInstance(project).getDocument(psiFile)!!
     }
 
-    private val editor = (EditorFactory.getInstance().createEditor(document, project, SQLFileType, true)).also {
+    private val editor = (EditorFactory.getInstance().createEditor(document, project, LocalStorageInspectorSQLFileType, true)).also {
         Disposer.register(project) {
             safeRunWriteAction {
                 EditorFactory.getInstance().releaseEditor(it)

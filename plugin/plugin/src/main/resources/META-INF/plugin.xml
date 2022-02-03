@@ -26,14 +26,14 @@
 
         <notificationGroup displayType="BALLOON" id="local-storage-inspector" isLogByDefault="true" />
 
-        <lang.parserDefinition language="SQL" implementationClass="com.chimerapps.storageinspector.ui.util.sql.SQLParserDefinition" />
-        <annotator language="SQL" implementationClass="com.alecstrong.sql.psi.core.SqlAnnotator"/>
-        <fileType name="SQL File" implementationClass="com.chimerapps.storageinspector.ui.util.sql.SQLFileType" language="SQL"/>
+        <lang.parserDefinition language="LocalStorageInspectorSQL" implementationClass="com.chimerapps.storageinspector.ui.util.sql.SQLParserDefinition" />
+        <annotator language="LocalStorageInspectorSQL" implementationClass="com.alecstrong.sql.psi.core.SqlAnnotator"/>
+        <fileType name="Local Storage Inspector SQL File" implementationClass="com.chimerapps.storageinspector.ui.util.sql.LocalStorageInspectorSQLFileType" language="LocalStorageInspectorSQL"/>
         <stubIndex implementation="com.alecstrong.sql.psi.core.psi.SchemaContributorIndexImpl"/>
         <stubElementTypeHolder class="com.alecstrong.sql.psi.core.psi.SqlTypes"/>
-        <lang.syntaxHighlighterFactory language="SQL" implementationClass="com.chimerapps.storageinspector.ui.util.sql.SQLHighlighterFactory"/>
-        <completion.contributor language="SQL" implementationClass="com.chimerapps.storageinspector.ui.util.sql.completion.SQLKeywordCompletionContributor"/>
-        <lang.braceMatcher language="SQL"
+        <lang.syntaxHighlighterFactory language="LocalStorageInspectorSQL" implementationClass="com.chimerapps.storageinspector.ui.util.sql.SQLHighlighterFactory"/>
+        <completion.contributor language="LocalStorageInspectorSQL" implementationClass="com.chimerapps.storageinspector.ui.util.sql.completion.SQLKeywordCompletionContributor"/>
+        <lang.braceMatcher language="LocalStorageInspectorSQL"
                            implementationClass="com.chimerapps.storageinspector.ui.util.sql.completion.SQLPairedBraceMatcher"/>
 
     </extensions>

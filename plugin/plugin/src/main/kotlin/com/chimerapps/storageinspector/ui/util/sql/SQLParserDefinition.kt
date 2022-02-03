@@ -10,14 +10,14 @@ import com.intellij.psi.tree.ILightStubFileElementType
  */
 class SQLParserDefinition : SqlParserDefinition() {
 
-    override fun createFile(viewProvider: FileViewProvider): SQLFile {
-        return SQLFile(viewProvider, isRoot = true)
+    override fun createFile(viewProvider: FileViewProvider): LocalStorageInspectorSQLFile {
+        return LocalStorageInspectorSQLFile(viewProvider, isRoot = true)
     }
 
     override fun getFileNodeType() = FILE
-    override fun getLanguage() = SQLLanguage
+    override fun getLanguage() = LocalStorageInspectorSQLLanguage
 
     companion object {
-        val FILE = ILightStubFileElementType<PsiFileStub<SQLFile>>(SQLLanguage)
+        val FILE = ILightStubFileElementType<PsiFileStub<LocalStorageInspectorSQLFile>>(LocalStorageInspectorSQLLanguage)
     }
 }

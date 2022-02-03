@@ -3,7 +3,7 @@ package com.chimerapps.storageinspector.ui.util.sql.completion
 import com.alecstrong.sql.psi.core.DialectPreset
 import com.alecstrong.sql.psi.core.psi.SqlStmtList
 import com.alecstrong.sql.psi.core.psi.SqlTypes
-import com.chimerapps.storageinspector.ui.util.sql.SQLLanguage
+import com.chimerapps.storageinspector.ui.util.sql.LocalStorageInspectorSQLLanguage
 import com.intellij.codeInsight.completion.AddSpaceInsertHandler
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionInitializationContext.DUMMY_IDENTIFIER
@@ -64,7 +64,7 @@ class SQLKeywordCompletionContributor : CompletionContributor() {
       val range = TextRange(stmtList?.textRange?.startOffset ?: 0, positionStartOffset)
       val text = if (range.isEmpty) DUMMY_IDENTIFIER else range.substring(originalFile.text)
       val tempFile = PsiFileFactory.getInstance(project)
-        .createFileFromText("temp.sql", SQLLanguage, text, true, false)
+        .createFileFromText("temp.sql", LocalStorageInspectorSQLLanguage, text, true, false)
       val completionOffset = positionStartOffset - range.startOffset
       val state = CompletionState(completionOffset)
 

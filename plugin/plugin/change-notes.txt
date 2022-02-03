@@ -1,4 +1,10 @@
 <p>
+   <b>0.1.7</b>
+   <ul>
+        <li>Fixed name conflict for installed SQL plugin on some IntellIJ installations</li>
+   </ul>
+</p>
+<p>
    <b>0.1.6</b>
    <ul>
         <li>Initial inline editing of SQL data support</li>
