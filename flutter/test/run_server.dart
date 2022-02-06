@@ -58,7 +58,8 @@ void main() async {
       DriftSQLDatabaseServer(id: '12345', database: driftDb, name: 'TODOs DB'));
 
   final now = DateTime.now();
-  print('Now: $now. Is UTC? ${now.isUtc}. In msec: ${now.millisecondsSinceEpoch}');
+  print(
+      'Now: $now. Is UTC? ${now.isUtc}. In msec: ${now.millisecondsSinceEpoch}');
 
   await driftDb.into(driftDb.todos).insert(
         TodosCompanion.insert(
