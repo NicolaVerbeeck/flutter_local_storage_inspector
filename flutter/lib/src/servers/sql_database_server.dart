@@ -82,12 +82,17 @@ class SQLColumnDefinition {
   /// Flag indicating that this column auto-increments
   final bool autoIncrement;
 
+  /// If the column has a default SQL defined value,
+  /// this holds the expression that creates it
+  final String? defaultValueExpression;
+
   const SQLColumnDefinition({
     required this.name,
     required this.optional,
     required this.type,
     required this.nullable,
     required this.autoIncrement,
+    required this.defaultValueExpression,
   });
 }
 

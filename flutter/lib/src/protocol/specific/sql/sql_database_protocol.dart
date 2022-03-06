@@ -129,6 +129,7 @@ Map<String, dynamic> _columnToJson(SQLColumnDefinition e) {
     'nullable': e.nullable,
     'autoIncrement': e.autoIncrement,
     'type': _typeToJson(e.type),
+    'defaultValueExpression': e.defaultValueExpression,
   };
 }
 

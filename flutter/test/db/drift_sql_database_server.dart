@@ -20,9 +20,16 @@ class DriftSQLDatabaseServer implements SQLDatabaseServer {
   @override
   final Future<String> schema;
 
+  @override
+  final Future<DateTimeFormat> dateTimeFormat;
+
   DriftSQLDatabaseServer(this._database)
       : tables = SynchronousFuture(_buildTables(_database)),
-        schema = _buildSchema(_database);
+        schema = _buildSchema(_database),
+        dateTimeFormat = SynchronousFuture(const DateTimeFormat(
+          accuracyInMicroSeconds: 1000000,
+          timezoneOffsetMilliseconds: 0,
+        ));
 
   @override
   Future<QueryResult> query(String query, List<ValueWithType> variables) async {
@@ -93,6 +100,7 @@ List<SQLTableDefinition> _buildTables(GeneratedDatabase database) {
         type: _makeType(column),
         nullable: column.$nullable,
         autoIncrement: column.hasAutoIncrement,
+        defaultValueExpression: column.defaultValue?.writeAsString(database),
       );
     }).toList();
     return SQLTableDefinition(
@@ -134,5 +142,13 @@ Variable<dynamic> _mapVariable(ValueWithType e) {
       return Variable.withBool(e.value as bool);
     case StorageType.stringList:
       throw ArgumentError('String lists are not supported by SQL');
+  }
+}
+
+extension _ExpressionExtension on Expression {
+  String writeAsString(DatabaseConnectionUser db) {
+    final context = GenerationContext.fromDb(db);
+    writeInto(context);
+    return context.buffer.toString();
   }
 }

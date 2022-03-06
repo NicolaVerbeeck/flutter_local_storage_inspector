@@ -262,9 +262,10 @@ class TodosCompanion extends UpdateCompanion<Todo> {
 }
 
 class $TodosTable extends Todos with TableInfo<$TodosTable, Todo> {
-  final GeneratedDatabase _db;
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $TodosTable(this._db, [this._alias]);
+  $TodosTable(this.attachedDatabase, [this._alias]);
   final VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
@@ -383,7 +384,7 @@ class $TodosTable extends Todos with TableInfo<$TodosTable, Todo> {
 
   @override
   $TodosTable createAlias(String alias) {
-    return $TodosTable(_db, alias);
+    return $TodosTable(attachedDatabase, alias);
   }
 }
 
