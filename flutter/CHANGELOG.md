@@ -1,3 +1,7 @@
+## 0.1.6
+
+* Update SQL support to allow default values to be reported
+
 ## 0.1.5
 
 * Update SQL support to also report date time format
