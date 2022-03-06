@@ -13,9 +13,15 @@ data class SQLQueryResult(
     val rows: List<Map<String, Any?>>,
 )
 
+data class SQLUpdateResult(
+    val affectedRows: Int
+)
+
 enum class SQLRequestType {
     @SerializedName("query")
     QUERY,
+    @SerializedName("update")
+    UPDATE,
 }
 
 data class SQLRequest(
@@ -26,4 +32,6 @@ data class SQLRequest(
 data class SQLRequestData(
     val id: String,
     val query: String? = null,
+    val affectedTables: List<String>? = null,
+    val variables: List<ValueWithType>? = null,
 )

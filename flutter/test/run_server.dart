@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storage_inspector/storage_inspector.dart';
 import 'package:tuple/tuple.dart';
 
+import 'db/drift_sql_database_server.dart';
 import 'db/driftdb.dart';
 
 void main() async {
@@ -56,11 +57,15 @@ void main() async {
   final driftDb = MyDatabase(db);
   driver.addSQLServer(
       DriftSQLDatabaseServer(id: '12345', database: driftDb, name: 'TODOs DB'));
+
+  final now = DateTime.now();
+  print('Now: $now. Is UTC? ${now.isUtc}. In msec: ${now.millisecondsSinceEpoch}');
+
   await driftDb.into(driftDb.todos).insert(
         TodosCompanion.insert(
           textWithRestrictions: 'Hello world',
           booleanTest: true,
-          dateTimeTest: DateTime.now(),
+          dateTimeTest: now,
         ),
       );
   await driftDb.into(driftDb.todos).insert(

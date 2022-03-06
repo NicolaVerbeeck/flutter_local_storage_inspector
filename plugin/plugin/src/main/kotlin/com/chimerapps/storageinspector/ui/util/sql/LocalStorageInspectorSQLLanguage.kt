@@ -5,4 +5,4 @@ import com.intellij.lang.Language
 /**
  * @author Nicola Verbeeck
  */
-object SQLLanguage : Language("SQL")
+object LocalStorageInspectorSQLLanguage : Language("LocalStorageInspectorSQL")

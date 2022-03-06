@@ -12,6 +12,7 @@ data class SQLServerIdentification(
     val schemaVersion: Int?,
     val tables: List<SQLTableDefinition>,
     val schema: String?,
+    val dateTimeFormat: SQLDateTimeFormat,
 )
 
 data class SQLTableDefinition(
@@ -27,6 +28,11 @@ data class SQLColumnDefinition(
     val type: SQLDataType,
     val nullable: Boolean,
     val autoIncrement: Boolean,
+)
+
+data class SQLDateTimeFormat(
+    val timezoneOffsetMilliseconds: Long,
+    val accuracyInMicroSeconds: Long,
 )
 
 enum class SQLTableExtension {

@@ -144,11 +144,3 @@ Variable<dynamic> _mapVariable(ValueWithType e) {
       throw ArgumentError('String lists are not supported by SQL');
   }
 }
-
-extension _ExpressionExtension on Expression {
-  String writeAsString(DatabaseConnectionUser db) {
-    final context = GenerationContext.fromDb(db);
-    writeInto(context);
-    return context.buffer.toString();
-  }
-}

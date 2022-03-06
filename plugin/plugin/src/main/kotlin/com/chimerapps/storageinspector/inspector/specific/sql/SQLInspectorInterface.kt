@@ -1,20 +1,29 @@
 package com.chimerapps.storageinspector.inspector.specific.sql
 
+import com.chimerapps.storageinspector.api.protocol.model.ValueWithType
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLDataType
+import com.chimerapps.storageinspector.api.protocol.model.sql.SQLDateTimeFormat
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLQueryResult
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLServerIdentification
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLTableDefinition
+import com.chimerapps.storageinspector.api.protocol.model.sql.SQLUpdateResult
 import com.chimerapps.storageinspector.api.protocol.specific.sql.SQLDatabaseProtocolListener
 import com.chimerapps.storageinspector.api.protocol.specific.sql.SQLDatabaseServerInterface
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
 import com.chimerapps.storageinspector.inspector.specific.BaseInspectorInterface
 import com.chimerapps.storageinspector.inspector.specific.BaseInspectorInterfaceImpl
-import org.apache.commons.collections4.map.LRUMap
 
 interface SQLInspectorInterface : BaseInspectorInterface<SQLStorageServer> {
 
     suspend fun query(query: String, server: StorageServer, forceReload: Boolean = false): SQLQueryResult
+
+    suspend fun update(
+        query: String,
+        server: StorageServer,
+        variables: List<ValueWithType>,
+        affectedTables: List<String>,
+    ): SQLUpdateResult
 
 }
 
@@ -27,31 +36,28 @@ data class SQLStorageServer(
     val tables: List<SQLTableDefinition>,
     val schema: String?,
     val createdSchema: String,
+    val dateTimeFormat: SQLDateTimeFormat,
 ) : StorageServer
 
 class SQLInspectorInterfaceImpl(
     private val sqlProtocol: SQLDatabaseServerInterface,
 ) : BaseInspectorInterfaceImpl<SQLStorageServer>(), SQLInspectorInterface, SQLDatabaseProtocolListener {
 
-    private var cachedData = mutableMapOf<String, LRUMap<String, SQLQueryResult>>()
-
     init {
         sqlProtocol.addListener(this)
     }
 
     override suspend fun query(query: String, server: StorageServer, forceReload: Boolean): SQLQueryResult {
-        if (!forceReload) {
-            synchronized(cachedData) {
-                cachedData[server.id]?.get(query)?.let { return it }
-            }
-        }
+        return sqlProtocol.query(server.id, query)
+    }
 
-        val data = sqlProtocol.query(server.id, query)
-        synchronized(cachedData) {
-            cachedData.getOrPut(server.id) { LRUMap(5) }[query] = data
-        }
-
-        return data
+    override suspend fun update(
+        query: String,
+        server: StorageServer,
+        variables: List<ValueWithType>,
+        affectedTables: List<String>,
+    ): SQLUpdateResult {
+        return sqlProtocol.update(server.id, query, variables, affectedTables)
     }
 
     override fun onServerIdentification(identification: SQLServerIdentification) {
@@ -63,7 +69,8 @@ class SQLInspectorInterfaceImpl(
             schemaVersion = identification.schemaVersion,
             tables = identification.tables,
             schema = identification.schema,
-            createdSchema = createSchema(identification.tables)
+            createdSchema = createSchema(identification.tables),
+            dateTimeFormat = identification.dateTimeFormat,
         )
         onNewServer(server)
     }
@@ -91,11 +98,4 @@ class SQLInspectorInterfaceImpl(
             }
         }
     }
-
-}
-
-private fun <E> List<E>.withReplacementAt(index: Int, value: E): List<E> {
-    val mutable = ArrayList(this)
-    mutable[index] = value
-    return mutable
 }
