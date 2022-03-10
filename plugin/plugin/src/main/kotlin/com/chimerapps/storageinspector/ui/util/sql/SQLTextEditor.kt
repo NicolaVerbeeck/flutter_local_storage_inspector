@@ -9,6 +9,7 @@ import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.impl.DocumentImpl
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.wm.IdeFocusManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFileFactory
 import com.intellij.ui.components.JBScrollPane
@@ -68,4 +69,8 @@ class SQLTextEditor private constructor(val project: Project) : JPanel(BorderLay
         }, BorderLayout.CENTER)
     }
 
+    fun setCaretPosition(position: Int) {
+        editor.caretModel.moveToOffset(position)
+        IdeFocusManager.getInstance(editor.project).requestFocus(editor.contentComponent, true)
+    }
 }

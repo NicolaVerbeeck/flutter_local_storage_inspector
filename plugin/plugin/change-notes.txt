@@ -1,4 +1,10 @@
 <p>
+   <b>0.2.0</b>
+   <ul>
+        <li>Initial support for adding data to SQL tables by generating insert statements</li>
+   </ul>
+</p>
+<p>
    <b>0.1.8</b>
    <ul>
         <li>Removed supported for intellij versions 2022.* since the SQL PSI library is incompatible for now</li>

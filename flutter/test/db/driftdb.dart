@@ -5,7 +5,7 @@ part 'driftdb.g.dart';
 class Todos extends Table {
   IntColumn get id => integer().autoIncrement()();
 
-  TextColumn get textWithRestrictions => text().withLength(min: 6, max: 32)();
+  TextColumn get textWithRestrictions => text().withLength(min: 6, max: 32).withDefault(const Constant('some body'))();
 
   RealColumn get realTest => real().withDefault(const Constant(3.14))();
 

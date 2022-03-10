@@ -91,6 +91,7 @@ class SQLServerView(private val project: Project) : JPanel(BorderLayout()) {
         toolbar = ActionManager.getInstance().createActionToolbar("SQL Storage Inspector", actionGroup, false)
         val decorator = ToolbarDecorator.createDecorator(tableView)
         decorator.disableUpDownActions()
+        decorator.setAddAction { createInsertStatement() }
         decorator.setRemoveAction { tableView.doRemoveSelectedRows() }
 
         val contentPanel = JPanel(BorderLayout())
@@ -106,9 +107,43 @@ class SQLServerView(private val project: Project) : JPanel(BorderLayout()) {
         databasePanel.add(sqlViewer, BorderLayout.CENTER)
     }
 
-    fun setServer(serverInterface: SQLInspectorInterface,
-                  server: SQLStorageServer,
-                  table: SQLTableDefinition?,
+    private fun createInsertStatement() {
+        val table = this.table ?: return //TODO disable add when no table is selected
+
+        val statement = buildString {
+            append("INSERT INTO ${table.name} (")
+            var c = 0
+            table.columns.forEach { column ->
+                if (column.optional && column.defaultValueExpression == null)
+                    return@forEach
+                if (c++ > 0)
+                    append(", ")
+                append(column.name)
+            }
+            append(") VALUES (")
+            c = 0
+            table.columns.forEach { column ->
+                if (column.optional && column.defaultValueExpression == null)
+                    return@forEach
+                if (c++ > 0)
+                    append(", ")
+                if (column.defaultValueExpression != null) {
+                    append(column.defaultValueExpression)
+                } else {
+                    append('?')
+                }
+            }
+            append(");")
+        }
+        queryField.text = statement
+        val index = statement.indexOf('?')
+        queryField.setCaretPosition(if (index < 0) 0 else index)
+    }
+
+    fun setServer(
+        serverInterface: SQLInspectorInterface,
+        server: SQLStorageServer,
+        table: SQLTableDefinition?,
     ) {
         this.serverInterface = serverInterface
         this.server = server

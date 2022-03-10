@@ -28,6 +28,7 @@ data class SQLColumnDefinition(
     val type: SQLDataType,
     val nullable: Boolean,
     val autoIncrement: Boolean,
+    val defaultValueExpression: String?,
 )
 
 data class SQLDateTimeFormat(

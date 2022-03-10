@@ -90,9 +90,14 @@ class SQLInspectorInterfaceImpl(
                         SQLDataType.REAL -> append("REAL")
                         SQLDataType.BOOLEAN,
                         SQLDataType.DATETIME,
-                        SQLDataType.INTEGER, -> append("INTEGER")
+                        SQLDataType.INTEGER,
+                        -> append("INTEGER")
                     }
-                    if (!column.nullable) append(" NOT NULL")
+                    if (table.primaryKey.size == 1 && table.primaryKey[0] == column.name) {
+                        append(" PRIMARY KEY")
+                    } else if (!column.nullable) append(" NOT NULL")
+
+                    if (column.defaultValueExpression != null) append(" DEFAULT ${column.defaultValueExpression}")
                 }
                 append(");\n")
             }

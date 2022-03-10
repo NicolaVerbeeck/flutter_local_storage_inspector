@@ -169,14 +169,13 @@ class TodosCompanion extends UpdateCompanion<Todo> {
   });
   TodosCompanion.insert({
     this.id = const Value.absent(),
-    required String textWithRestrictions,
+    this.textWithRestrictions = const Value.absent(),
     this.realTest = const Value.absent(),
     this.category = const Value.absent(),
     required bool booleanTest,
     required DateTime dateTimeTest,
     this.blobTest = const Value.absent(),
-  })  : textWithRestrictions = Value(textWithRestrictions),
-        booleanTest = Value(booleanTest),
+  })  : booleanTest = Value(booleanTest),
         dateTimeTest = Value(dateTimeTest);
   static Insertable<Todo> custom({
     Expression<int>? id,
@@ -281,7 +280,8 @@ class $TodosTable extends Todos with TableInfo<$TodosTable, Todo> {
           additionalChecks: GeneratedColumn.checkTextLength(
               minTextLength: 6, maxTextLength: 32),
           type: const StringType(),
-          requiredDuringInsert: true);
+          requiredDuringInsert: false,
+          defaultValue: const Constant('some body'));
   final VerificationMeta _realTestMeta = const VerificationMeta('realTest');
   @override
   late final GeneratedColumn<double?> realTest = GeneratedColumn<double?>(
@@ -340,8 +340,6 @@ class $TodosTable extends Todos with TableInfo<$TodosTable, Todo> {
           _textWithRestrictionsMeta,
           textWithRestrictions.isAcceptableOrUnknown(
               data['text_with_restrictions']!, _textWithRestrictionsMeta));
-    } else if (isInserting) {
-      context.missing(_textWithRestrictionsMeta);
     }
     if (data.containsKey('real_test')) {
       context.handle(_realTestMeta,

@@ -63,14 +63,14 @@ void main() async {
 
   await driftDb.into(driftDb.todos).insert(
         TodosCompanion.insert(
-          textWithRestrictions: 'Hello world',
+          textWithRestrictions: const Value('Hello world'),
           booleanTest: true,
           dateTimeTest: now,
         ),
       );
   await driftDb.into(driftDb.todos).insert(
         TodosCompanion.insert(
-          textWithRestrictions: 'no text',
+          textWithRestrictions: const Value('no text'),
           booleanTest: true,
           dateTimeTest: DateTime.now(),
         ),

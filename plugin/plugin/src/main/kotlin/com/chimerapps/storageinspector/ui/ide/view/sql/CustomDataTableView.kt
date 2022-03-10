@@ -32,8 +32,6 @@ import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io.File
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.swing.DefaultCellEditor
 import javax.swing.ListSelectionModel
@@ -128,6 +126,7 @@ class CustomDataTableView(
                         type = if (it.startsWith("count")) SQLDataType.INTEGER else SQLDataType.TEXT,
                         autoIncrement = false,
                         nullable = true,
+                        defaultValueExpression = null,
                     )
                 }
             } else {
