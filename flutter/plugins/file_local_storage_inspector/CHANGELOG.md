@@ -1,3 +1,7 @@
+## 0.2.2
+
+* Fixed readme pointing to wrong place
+
 ## 0.2.1
 
 * Update readme
