@@ -73,23 +73,21 @@ class StorageInspectorConnectFilter(private val project: Project) : Filter, Dumb
         val serviceUrl = serverStartEvent.extras["service"]?.let {
             if (it.value.isEmpty() || it.value == "null") null
             else it
-        }
+        } ?: return null
 
         val textStartOffset = entireLength - line.length
         return Filter.Result(
             listOfNotNull(
+//                Filter.ResultItem(
+//                    textStartOffset + tagGroupStart,
+//                    textStartOffset + tagGroupEnd,
+//                    StorageInspectorConnectHyperlinkInfo(port, tag)
+//                ),
                 Filter.ResultItem(
-                    textStartOffset + tagGroupStart,
-                    textStartOffset + tagGroupEnd,
-                    StorageInspectorConnectHyperlinkInfo(port, tag)
-                ),
-                serviceUrl?.let {
-                    Filter.ResultItem(
-                        textStartOffset + it.tagStart,
-                        textStartOffset + it.tagEnd,
-                        StorageInspectorConnectVMServiceHyperlinkInfo(it.value)
-                    )
-                }
+                    textStartOffset + serviceUrl.tagStart,
+                    textStartOffset + serviceUrl.tagEnd,
+                    StorageInspectorConnectVMServiceHyperlinkInfo(serviceUrl.value)
+                )
             ),
         )
     }

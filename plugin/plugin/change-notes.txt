@@ -1,4 +1,11 @@
 <p>
+   <b>0.3.0</b>
+   <ul>
+        <li>Initial support for connecting directly using the service URL. (For local storage library versions 0.2.x and up</li>
+        <li>In the flutter console there should now be a clickable link in the startup message that will auto-connect</li>
+   </ul>
+</p>
+<p>
    <b>0.2.0</b>
    <ul>
         <li>Initial support for adding data to SQL tables by generating insert statements</li>
