@@ -1,11 +1,16 @@
+import 'dart:developer';
+
 import 'package:dart_service_announcement/dart_service_announcement.dart';
+import 'package:flutter/foundation.dart';
 import 'package:storage_inspector/src/driver/storage_server.dart';
 import 'package:storage_inspector/src/protocol/io/storage_protocol_server.dart'
     if (dart.library.html) 'package:storage_inspector/src/protocol/web/web_storage_protocol_server.dart';
 import 'package:storage_inspector/src/protocol/storage_protocol.dart';
-import 'package:storage_inspector/src/servers/sql_database_server.dart';
+import 'package:storage_inspector/src/protocol/vm/vm_storage_protocol_server.dart';
 import 'package:storage_inspector/src/servers/file_server.dart';
 import 'package:storage_inspector/src/servers/key_value_server.dart';
+import 'package:storage_inspector/src/servers/sql_database_server.dart';
+import 'package:uri/uri.dart';
 import 'package:uuid/uuid.dart';
 
 const _announcementPort = 6396;
@@ -43,7 +48,10 @@ class StorageServerDriver extends ToolingServer {
     required String bundleId,
     int port = 0,
   }) : _server = StorageProtocolServer(
-          server: createRawProtocolServer(port),
+          servers: [
+            createRawProtocolServer(port),
+            VmServiceRawProtocolServer()
+          ],
           icon: icon,
           bundleId: bundleId,
         ) {
@@ -63,6 +71,8 @@ class StorageServerDriver extends ToolingServer {
   /// you to pre-set (or un-set) some data that modifies your app's
   /// startup behaviour. Defaults to [false]
   Future<void> start({bool paused = false}) async {
+    if (!kDebugMode) return;
+
     _stopped = false;
     await _server.start(paused: paused);
 
@@ -73,8 +83,11 @@ class StorageServerDriver extends ToolingServer {
 
     await _announcementManager.start();
 
+    final webServiceUrl = await _getWebServiceUri();
+
     // ignore: avoid_print
-    print('Storage Inspector server running on $port [$tag][paused=$paused]');
+    print(
+        'Storage Inspector server running on $port [$tag][paused=$paused][service=$webServiceUrl]');
 
     if (paused) {
       await _server.waitForResume();
@@ -88,6 +101,7 @@ class StorageServerDriver extends ToolingServer {
 
   /// Shuts down the internal server and announcement system
   Future<void> stop() async {
+    if (!kDebugMode) return;
     _stopped = true;
     await _server.shutdown();
     await _announcementManager.stop();
@@ -107,6 +121,29 @@ class StorageServerDriver extends ToolingServer {
   void addSQLServer(SQLDatabaseServer server) {
     _server.addSQLServer(server);
   }
+}
+
+Future<String?> _getWebServiceUri() async {
+  String? webServiceUri;
+  if (kIsWeb) {
+    var count = 0;
+    while (connectedVmServiceUri == null && count++ < 125) {
+      // max 5 seconds
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+    }
+    webServiceUri = connectedVmServiceUri;
+    if (webServiceUri != null) {
+      final builder = UriBuilder.fromUri(Uri.parse(webServiceUri))
+        ..scheme = 'ws';
+      if (!builder.path.endsWith('/ws')) {
+        builder.path = '${builder.path}/ws';
+      }
+      webServiceUri = builder.build().toString();
+    }
+  } else {
+    webServiceUri = (await Service.getInfo()).serverWebSocketUri?.toString();
+  }
+  return webServiceUri;
 }
 
 const _pauseExtensionId = extensionUserStart + 1;

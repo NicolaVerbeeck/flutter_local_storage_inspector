@@ -13,10 +13,10 @@ import java.net.URI
  */
 class StorageInspectorProtocolConnection(
     uri: URI,
-) : WebSocketClient(uri) {
+) : WebSocketClient(uri), StorageInspectorProtocolConnectionInterface {
 
-    val protocol = StorageInspectorProtocol(this)
-    val storageInterface: StorageInspectorInterface = StorageInspectorInterfaceImpl(protocol)
+    override val protocol = StorageInspectorProtocol(this)
+    override val storageInterface: StorageInspectorInterface = StorageInspectorInterfaceImpl(protocol)
 
     private val listeners = mutableListOf<StorageInspectorConnectionListener>()
 
@@ -41,18 +41,10 @@ class StorageInspectorProtocolConnection(
         classLogger.info("Connection error:", ex)
     }
 
-    fun addListener(listener: StorageInspectorConnectionListener) {
+    override fun addListener(listener: StorageInspectorConnectionListener) {
         synchronized(listeners) {
             listeners.add(listener)
         }
     }
 
-}
-
-interface StorageInspectorConnectionListener {
-    fun onConnected() {}
-
-    fun onClosed() {}
-
-    fun onError() {}
 }

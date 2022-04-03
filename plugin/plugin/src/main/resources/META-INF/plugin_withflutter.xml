@@ -1,0 +1,5 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <consoleActionsPostProcessor implementation="com.chimerapps.storageinspector.ui.ide.util.ConsoleActionPostProcessingHelper" />
+    </extensions>
+</idea-plugin>

@@ -2,6 +2,7 @@ package com.chimerapps.storageinspector.api.protocol
 
 import com.chimerapps.storageinspector.api.RemoteError
 import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
+import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnectionInterface
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
 import com.chimerapps.storageinspector.api.protocol.specific.file.FileInspectorProtocol
 import com.chimerapps.storageinspector.api.protocol.specific.file.FileStorageInterface
@@ -20,7 +21,7 @@ import java.util.UUID
  * @author Nicola Verbeeck
  */
 @Suppress("unused")
-class StorageInspectorProtocol(private val onConnection: StorageInspectorProtocolConnection) {
+class StorageInspectorProtocol(private val onConnection: StorageInspectorProtocolConnectionInterface) {
 
     companion object {
         const val SERVER_TYPE_ID = "id"

@@ -1,3 +1,15 @@
+## 0.2.1
+
+* Updated readme
+
+## 0.2.0
+
+* *BREAKING*: Specific implementations have been moved to their own packages and are no longer included in this package
+  * files: [file_local_storage_inspector](https://pub.dev/packages/file_local_storage_inspector)
+  * preferences: [preferences_local_storage_inspector](https://pub.dev/packages/preferences_local_storage_inspector)
+  * secure storage: [secure_storage_local_storage_inspector](https://pub.dev/packages/secure_storage_local_storage_inspector)
+* Update with vm service protocol support
+
 ## 0.1.6
 
 * Update SQL support to allow default values to be reported

@@ -11,6 +11,7 @@
     <idea-version since-build="203" until-build="213.*" />
 
     <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="plugin_withflutter.xml">io.flutter</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Storage Inspector" anchor="bottom"

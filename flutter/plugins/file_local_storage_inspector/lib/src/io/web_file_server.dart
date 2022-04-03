@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:storage_inspector/src/servers/file_server.dart';
+import 'package:storage_inspector/storage_inspector.dart';
 import 'package:uuid/uuid.dart';
 
 /// Faked web file server that serves empty directory.

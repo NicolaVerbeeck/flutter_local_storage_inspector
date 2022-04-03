@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:file_local_storage_inspector/src/util/extensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
-import 'package:storage_inspector/src/servers/file_server.dart';
-import 'package:storage_inspector/src/util/extensions.dart';
+import 'package:storage_inspector/storage_inspector.dart';
 import 'package:uuid/uuid.dart';
 
 /// File server that serves files using dart:io framework. By default all files

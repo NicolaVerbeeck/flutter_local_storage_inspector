@@ -9,10 +9,10 @@ and modify the local files, databases, models, ... of your app
 
 ## Features
 
-* Bindings for shared preferences
-* Bindings for secure storage
-* Bindings for local files (based on dart:io)
-* Bindings for drift databases (WIP)
+* Plugin for shared preferences
+* Plugin for secure storage
+* Plugin for local files (based on dart:io)
+* Plugin for drift databases
 
 ## Getting started
 
@@ -29,7 +29,12 @@ final driver = StorageServerDriver(
 
 ### Adding servers
 
-Once the driver is created, you can register the individual servers you wish to expose:
+Once the driver is created, you can register the individual servers you wish to expose.
+These servers come as plugin packages to this package.
+Eg:
+* files: [file_local_storage_inspector](https://pub.dev/packages/file_local_storage_inspector)
+* preferences: [preferences_local_storage_inspector](https://pub.dev/packages/preferences_local_storage_inspector)
+* secure storage: [secure_storage_local_storage_inspector](https://pub.dev/packages/secure_storage_local_storage_inspector)
 
 ```dart
 final preferencesServer =
@@ -43,18 +48,6 @@ final fileServer = DefaultFileServer('<cache dir path>', "Cache files");
 driver.addKeyValueServer(preferencesServer);
 driver.addKeyValueServer(secureStorageServer);
 driver.addFileServer(fileServer);
-```
-
-### Built-in servers
-
-The following servers are built-in with this package:
-
-```dart
-class PreferencesKeyValueServer{} //Wraps Flutter's SharedPreferences
-
-class SecureStorageKeyValueServer{} //Wraps Flutter's FlutterSecureStorage package
-
-class DefaultFileServer{} //Uses dart:io to serve a specified directory
 ```
 
 ### Start inspector

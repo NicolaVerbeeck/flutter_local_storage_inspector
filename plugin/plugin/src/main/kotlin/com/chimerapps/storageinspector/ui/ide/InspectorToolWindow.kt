@@ -162,4 +162,12 @@ class InspectorToolWindow(private val project: Project, disposable: Disposable) 
         return sessionWindow
     }
 
+    fun newSessionForTag(tag: String) {
+//        TODO("Not yet implemented")
+    }
+
+    fun newSessionWithServiceUri(serviceUri: String) {
+        newSessionWindow().connectToService(serviceUri)
+    }
+
 }

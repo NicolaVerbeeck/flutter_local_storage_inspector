@@ -6,9 +6,10 @@ coverage/
 tool/
 analysis_options.yaml
 dump/
-example/assets
-example/ios
-example/macos
-example/android
-example/web
 plugins/
+assets
+ios
+macos
+android
+web
+windows

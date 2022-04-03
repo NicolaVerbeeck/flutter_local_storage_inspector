@@ -7,12 +7,12 @@ import 'package:storage_inspector/storage_inspector.dart';
 import 'package:synchronized/synchronized.dart';
 
 abstract class StorageProtocolConnection {
-  void init(ValueChanged<StorageProtocolConnection> onConnectionReady,
-      StorageProtocolServer server);
+  Future<void> init(
+    ValueChanged<StorageProtocolConnection> onConnectionReady,
+    StorageProtocolServer server,
+  );
 
   void start();
-
-  void onMessage(String data);
 
   void send(List<int> message);
 
@@ -28,7 +28,7 @@ abstract class RawStorageProtocolServer {
 }
 
 class StorageProtocolServer implements StorageProtocolListener {
-  final RawStorageProtocolServer _server;
+  final List<RawStorageProtocolServer> _servers;
 
   final _connections = <StorageProtocolConnection>[];
   final _lock = Lock();
@@ -39,7 +39,7 @@ class StorageProtocolServer implements StorageProtocolListener {
   var _paused = false;
   late Completer<void> _resumeFuture;
 
-  int get port => _server.port;
+  int get port => _servers[0].port;
 
   List<KeyValueServer> get keyValueServers => _keyValueServers.servers;
 
@@ -50,8 +50,8 @@ class StorageProtocolServer implements StorageProtocolListener {
   StorageProtocolServer({
     String? icon,
     required String bundleId,
-    required RawStorageProtocolServer server,
-  }) : _server = server {
+    required List<RawStorageProtocolServer> servers,
+  }) : _servers = servers {
     _protocol = StorageProtocol(
       extensions: {},
       bundleId: bundleId,
@@ -65,7 +65,7 @@ class StorageProtocolServer implements StorageProtocolListener {
   Future<void> start({bool paused = false}) async {
     _resumeFuture = Completer();
     _paused = paused;
-    await _server.start(_onNewConnection);
+    await Future.wait(_servers.map((e) => e.start(_onNewConnection)));
     if (!paused) {
       _resumeFuture.complete();
     }
@@ -76,7 +76,7 @@ class StorageProtocolServer implements StorageProtocolListener {
     if (!_resumeFuture.isCompleted) {
       _resumeFuture.complete();
     }
-    await _server.shutdown();
+    await Future.wait(_servers.map((e) => e.shutdown()));
     await _lock.synchronized(() async {
       for (final connection in _connections) {
         connection.close();
@@ -87,9 +87,9 @@ class StorageProtocolServer implements StorageProtocolListener {
 
   Future<void> waitForResume() => _resumeFuture.future;
 
-  void _onNewConnection(StorageProtocolConnection connection) {
-    connection.init(_onNewConnectionReady, this);
-    _lock.synchronized(() async {
+  Future<void> _onNewConnection(StorageProtocolConnection connection) async {
+    await connection.init(_onNewConnectionReady, this);
+    await _lock.synchronized(() async {
       _connections.add(connection);
     });
 
@@ -119,7 +119,9 @@ class StorageProtocolServer implements StorageProtocolListener {
   }
 
   Future<void> onMessage(
-      String data, StorageProtocolConnection connection) async {
+    String data,
+    StorageProtocolConnection connection,
+  ) async {
     try {
       await _protocol.onMessage(data, connection);
     } catch (e, trace) {

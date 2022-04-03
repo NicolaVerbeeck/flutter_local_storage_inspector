@@ -8,11 +8,14 @@ import com.chimerapps.discovery.ui.DiscoveredDeviceConnection
 import com.chimerapps.discovery.ui.LocalizationDelegate
 import com.chimerapps.discovery.ui.ManualConnection
 import com.chimerapps.discovery.utils.freePort
+import com.chimerapps.storageinspector.api.ReverseStorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.StorageInspectorConnectionListener
 import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnection
+import com.chimerapps.storageinspector.api.StorageInspectorProtocolConnectionInterface
 import com.chimerapps.storageinspector.api.protocol.StorageInspectorProtocolListener
 import com.chimerapps.storageinspector.api.protocol.model.ServerId
 import com.chimerapps.storageinspector.api.protocol.model.sql.SQLTableDefinition
+import com.chimerapps.storageinspector.api.protocol.vmservice.VMService
 import com.chimerapps.storageinspector.inspector.StorageServer
 import com.chimerapps.storageinspector.inspector.StorageServerType
 import com.chimerapps.storageinspector.inspector.specific.InspectorInterfaceListener
@@ -36,6 +39,7 @@ import com.chimerapps.storageinspector.ui.util.preferences.AppPreferences
 import com.chimerapps.storageinspector.util.analytics.AnalyticsEvent
 import com.chimerapps.storageinspector.util.analytics.EventTracker
 import com.chimerapps.storageinspector.util.classLogger
+import com.google.gsonpackaged.JsonObject
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -49,8 +53,13 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.awt.BorderLayout
 import java.io.File
+import java.net.InetAddress
+import java.net.NetworkInterface
+import java.net.URI
+import java.util.Enumeration
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
+
 
 class InspectorSessionWindow(
     private val project: Project,
@@ -68,7 +77,7 @@ class InspectorSessionWindow(
     private val connectToolbar = setupConnectToolbar()
     private var lastConnection: PreparedDeviceConnection? = null
     private val statusBar = StorageInspectorStatusBar()
-    var connection: StorageInspectorProtocolConnection? = null
+    var connection: StorageInspectorProtocolConnectionInterface? = null
         private set
     private val serversView = StorageInspectorServersView(
         ProjectSessionIconProvider.instance(project, requestedWidth = 16, requestedHeight = 16),
@@ -169,50 +178,58 @@ class InspectorSessionWindow(
 
     private fun connectOnConnection(connection: PreparedDeviceConnection) {
         this.connection =
-            StorageInspectorProtocolConnection(connection.uri).also {
-                it.addListener(statusBar)
-                it.addListener(object : StorageInspectorConnectionListener {
-                    override fun onClosed() {
-                        disconnect()
-                        ensureMain {
-                            connectionMode = ConnectionMode.MODE_DISCONNECTED
-                            content.icon?.let { icon ->
-                                content.icon = IconUtil.desaturate(icon)
-                            }
-                        }
-                    }
-                })
-                it.protocol.addListener(statusBar)
-                it.protocol.addListener(object : StorageInspectorProtocolListener {
-                    override fun onServerIdentification(serverId: ServerId) {
-                        ensureMain {
-                            val newIcon = serverId.icon?.let { iconString ->
-                                ProjectSessionIconProvider.instance(project, requestedHeight = 16, requestedWidth = 16).iconForString(iconString)
-                            }
-                            content.icon = newIcon
-                            dispatchMain {
-                                updateConnectActionGroup()
-                            }
-                        }
-                    }
-                })
-                it.protocol.addListener(serversView)
-                serversView.inspectorInterface = it.storageInterface
-                it.protocol.addListener(it.storageInterface)
-                it.storageInterface.keyValueInterface.addListener(object : InspectorInterfaceListener<KeyValueStorageServer> {
-                    override fun onServerAdded(server: KeyValueStorageServer) = serversView.onServerAdded(server)
-                })
-                it.storageInterface.fileInterface.addListener(object : InspectorInterfaceListener<FileStorageServer> {
-                    override fun onServerAdded(server: FileStorageServer) = serversView.onServerAdded(server)
-                })
-                it.storageInterface.sqlInterface.addListener(object : InspectorInterfaceListener<SQLStorageServer> {
-                    override fun onServerAdded(server: SQLStorageServer) = serversView.onServerAdded(server)
-                })
-            }
+            StorageInspectorProtocolConnection(connection.uri).also(::setupConnection)
         this.connection?.connect()
         lastConnection = connection
         EventTracker.default.logEvent(AnalyticsEvent.CONNECT)
         connectionMode = ConnectionMode.MODE_CONNECTED
+    }
+
+    private fun setupConnection(connection: StorageInspectorProtocolConnectionInterface) {
+        connection.addListener(statusBar)
+        connection.addListener(object : StorageInspectorConnectionListener {
+            override fun onClosed() {
+                disconnect()
+                ensureMain {
+                    connectionMode = ConnectionMode.MODE_DISCONNECTED
+                    content.icon?.let { icon ->
+                        content.icon = IconUtil.desaturate(icon)
+                    }
+                }
+            }
+
+            override fun onConnected() {
+                ensureMain {
+                    connectionMode = ConnectionMode.MODE_CONNECTED
+                }
+            }
+        })
+        connection.protocol.addListener(statusBar)
+        connection.protocol.addListener(object : StorageInspectorProtocolListener {
+            override fun onServerIdentification(serverId: ServerId) {
+                ensureMain {
+                    val newIcon = serverId.icon?.let { iconString ->
+                        ProjectSessionIconProvider.instance(project, requestedHeight = 16, requestedWidth = 16).iconForString(iconString)
+                    }
+                    content.icon = newIcon
+                    dispatchMain {
+                        updateConnectActionGroup()
+                    }
+                }
+            }
+        })
+        connection.protocol.addListener(serversView)
+        serversView.inspectorInterface = connection.storageInterface
+        connection.protocol.addListener(connection.storageInterface)
+        connection.storageInterface.keyValueInterface.addListener(object : InspectorInterfaceListener<KeyValueStorageServer> {
+            override fun onServerAdded(server: KeyValueStorageServer) = serversView.onServerAdded(server)
+        })
+        connection.storageInterface.fileInterface.addListener(object : InspectorInterfaceListener<FileStorageServer> {
+            override fun onServerAdded(server: FileStorageServer) = serversView.onServerAdded(server)
+        })
+        connection.storageInterface.sqlInterface.addListener(object : InspectorInterfaceListener<SQLStorageServer> {
+            override fun onServerAdded(server: SQLStorageServer) = serversView.onServerAdded(server)
+        })
     }
 
     fun onWindowClosed() {
@@ -237,7 +254,7 @@ class InspectorSessionWindow(
                 splitter.secondComponent = detail
             }
             StorageServerType.SQL -> {
-                val detail = currentDetailView as? SQLServerView ?: SQLServerView(project,)
+                val detail = currentDetailView as? SQLServerView ?: SQLServerView(project)
                 detail.setServer(connection.sqlInterface, storageServer as SQLStorageServer, child as SQLTableDefinition?)
 
                 currentDetailView = detail
@@ -277,9 +294,70 @@ class InspectorSessionWindow(
 
         connectToolbar.updateActionsImmediately()
     }
+
+    fun connectToService(serviceUri: String) {
+        lastConnection?.tearDown()
+        lastConnection = null
+        connection?.close()
+
+        this.connection =
+            ReverseStorageInspectorProtocolConnection { port ->
+                scope.launch {
+                    val ip = findLocalIP()
+                    VMService(URI(serviceUri)).use { service ->
+                        service.connect()
+                        val vm = service.getVM()
+                        val main = vm.isolates.filter { it.name == "main" || it.name == "main()" }
+                        val isolatesToTry = main.ifEmpty { vm.isolates }
+                        isolatesToTry.forEach { isolate ->
+                            service.callExtensionMethod("ext.storage_inspector.connect", isolate.id, JsonObject().also {
+                                it.addProperty("port", port)
+                                it.addProperty("ip", ip)
+                            })
+                        }
+                    }
+                }
+            }.also(::setupConnection)
+        this.connection?.connect()
+        EventTracker.default.logEvent(AnalyticsEvent.CONNECT)
+    }
 }
 
 enum class ConnectionMode {
     MODE_CONNECTED,
     MODE_DISCONNECTED
+}
+
+private fun findLocalIP(): String {
+    val raw = findLocalIPRaw()
+    if (raw.startsWith("/"))
+        return raw.substring(1)
+
+    return raw
+}
+
+private fun findLocalIPRaw() : String {
+    try {
+        var candidateAddress: InetAddress? = null
+        val ifaces: Enumeration<*> = NetworkInterface.getNetworkInterfaces()
+        while (ifaces.hasMoreElements()) {
+            val iface = ifaces.nextElement() as NetworkInterface
+            val inetAddrs: Enumeration<*> = iface.inetAddresses
+            while (inetAddrs.hasMoreElements()) {
+                val inetAddr = inetAddrs.nextElement() as InetAddress
+                if (!inetAddr.isLoopbackAddress) {
+                    if (inetAddr.isSiteLocalAddress) {
+                        return inetAddr.toString()
+                    } else if (candidateAddress == null) {
+                        candidateAddress = inetAddr
+                    }
+                }
+            }
+        }
+        if (candidateAddress != null) {
+            return candidateAddress.toString()
+        }
+    } catch (ignored: Exception) {
+    }
+    return InetAddress.getLocalHost().toString()
 }

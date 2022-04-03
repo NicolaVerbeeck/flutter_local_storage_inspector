@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -8,14 +9,16 @@ class IOStorageProtocolConnection implements StorageProtocolConnection {
   late final StorageProtocolServer _server;
   late final ValueChanged<StorageProtocolConnection> _connectionListener;
 
+  StreamSubscription? _subscription;
+
   IOStorageProtocolConnection(
     this._socket,
   );
 
   @override
   void start() {
-    _socket.listen(
-      (dynamic data) => onMessage(data as String),
+    _subscription = _socket.listen(
+      (dynamic data) => _onMessage(data as String),
       onDone: () => _server.onConnectionClosed(this),
       onError: (Object _) => _server.onConnectionClosed(this),
       cancelOnError: true,
@@ -23,19 +26,23 @@ class IOStorageProtocolConnection implements StorageProtocolConnection {
     _connectionListener(this);
   }
 
-  @override
-  void onMessage(String data) => _server.onMessage(data, this);
+  void _onMessage(String data) => _server.onMessage(data, this);
 
   @override
   void send(List<int> message) => _socket.addUtf8Text(message);
 
   @override
-  void close() => _socket.close();
+  void close() {
+    _subscription?.cancel();
+    _subscription = null;
+    _socket.close();
+  }
 
   @override
-  void init(ValueChanged<StorageProtocolConnection> onConnectionReady,
+  Future<void> init(ValueChanged<StorageProtocolConnection> onConnectionReady,
       StorageProtocolServer server) {
     _connectionListener = onConnectionReady;
     _server = server;
+    return Future.value();
   }
 }

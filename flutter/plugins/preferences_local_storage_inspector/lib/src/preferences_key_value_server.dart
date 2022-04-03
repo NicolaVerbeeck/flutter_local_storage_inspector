@@ -1,6 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:storage_inspector/src/servers/key_value_server.dart';
-import 'package:storage_inspector/src/servers/storage_type.dart';
+import 'package:storage_inspector/storage_inspector.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
