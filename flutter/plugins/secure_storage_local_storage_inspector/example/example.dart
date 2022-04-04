@@ -15,7 +15,8 @@ void main() async {
     bundleId: 'com.example.test',
     icon: '<some icon>',
   );
-  final keyValueServer = SecureStorageKeyValueServer(storage, 'Secure', keySuggestions: {
+  final keyValueServer =
+      SecureStorageKeyValueServer(storage, 'Secure', keySuggestions: {
     'testBool',
     'testInt',
     'testFloat',

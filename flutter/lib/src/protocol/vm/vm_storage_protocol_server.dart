@@ -7,7 +7,8 @@ import 'package:storage_inspector/src/protocol/vm/vm_storage_protocol_connection
 class VmServiceRawProtocolServer implements RawStorageProtocolServer {
   static VmServiceRawProtocolServer? _instance;
 
-  factory VmServiceRawProtocolServer() => _instance ??= VmServiceRawProtocolServer._();
+  factory VmServiceRawProtocolServer() =>
+      _instance ??= VmServiceRawProtocolServer._();
 
   var _started = false;
   ValueChanged<StorageProtocolConnection>? _onNewConnection;
@@ -18,13 +19,15 @@ class VmServiceRawProtocolServer implements RawStorageProtocolServer {
   VmServiceRawProtocolServer._() {
     registerExtension('ext.storage_inspector.connect', (method, params) async {
       if (!_started) {
-        return ServiceExtensionResponse.error(-1, 'Storage inspector is not started');
+        return ServiceExtensionResponse.error(
+            -1, 'Storage inspector is not started');
       }
       try {
         final targetPort = int.parse(params['port']!);
         final targetIp = params['ip']!;
 
-        _onNewConnection?.call(VMStorageProtocolConnection(targetIp, targetPort));
+        _onNewConnection
+            ?.call(VMStorageProtocolConnection(targetIp, targetPort));
 
         return ServiceExtensionResponse.result('{"ok":true}');
       } catch (e) {
