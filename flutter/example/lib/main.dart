@@ -20,21 +20,25 @@ void main() async {
     bundleId: 'com.example.test',
     icon: '<some icon>',
   );
-  final keyValueServer = PreferencesKeyValueServer(preferences, 'Preferences', keySuggestions: {
+  final keyValueServer =
+      PreferencesKeyValueServer(preferences, 'Preferences', keySuggestions: {
     const ValueWithType(StorageType.string, 'testBool'),
     const ValueWithType(StorageType.string, 'testInt'),
     const ValueWithType(StorageType.string, 'testFloat'),
   });
   driver.addKeyValueServer(keyValueServer);
 
-  final secureKeyValueServer = SecureStorageKeyValueServer(const FlutterSecureStorage(), 'Preferences', keySuggestions: {
-    'testBool',
-    'testInt',
-    'testFloat',
-  });
+  final secureKeyValueServer = SecureStorageKeyValueServer(
+      const FlutterSecureStorage(), 'Preferences',
+      keySuggestions: {
+        'testBool',
+        'testInt',
+        'testFloat',
+      });
   driver.addKeyValueServer(secureKeyValueServer);
 
-  final fileServer = DefaultFileServer(await _documentsDirectory(), 'App Documents');
+  final fileServer =
+      DefaultFileServer(await _documentsDirectory(), 'App Documents');
   driver.addFileServer(fileServer);
 
   // Don't wait for a connection from the instrumentation driver

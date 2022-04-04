@@ -1,3 +1,7 @@
+## 0.2.3
+
+* Align version numbers
+
 ## 0.2.2
 
 * Fixed readme pointing to wrong place

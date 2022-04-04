@@ -1,3 +1,7 @@
+## 0.2.3
+
+* Align version numbers
+
 ## 0.2.1
 
 * Updated readme
