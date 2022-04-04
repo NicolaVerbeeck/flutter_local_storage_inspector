@@ -1,14 +1,13 @@
 plugins {
-    id 'org.jetbrains.intellij' version '1.3.0'
-    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+    id 'org.jetbrains.intellij' version '1.5.2'
+    id 'org.jetbrains.kotlin.jvm' version '1.6.20'
     id "dev.bmac.intellij.plugin-uploader" version "1.2.2"
-    id "com.github.ben-manes.versions" version "0.39.0"
 }
 
 apply from: '../dependencies.gradle'
 
 group 'com.chimerapps.tools'
-version '0.3.0'
+version '0.3.1'
 
 repositories {
     mavenCentral()
@@ -32,9 +31,9 @@ configurations {
 }
 
 dependencies {
-    implementation project.files("lib/gson-2.8.9.patched.jar")
+    implementation project.files("lib/gson-2.9.0.patched.jar")
 
-    patch('com.google.code.gson:gson:2.8.9')
+    patch('com.google.code.gson:gson:2.9.0')
     patch('com.googlecode.jarjar:jarjar:1.3')
 
     deps.pluginCompile.each { name, dep ->
@@ -42,16 +41,19 @@ dependencies {
             exclude group: 'org.slf4j', module: 'slf4j-api'
         }
     }
+
+    implementation("com.github.NicolaVerbeeck.sqldelight:dialect-api:2.1.0-SNAPSHOT")
+    implementation("com.github.NicolaVerbeeck.sqldelight:sqlite-3-35-dialect:2.1.0-SNAPSHOT")
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version = versions.minIntelliJ
     updateSinceUntilBuild = false
-    plugins = ["dart:203.6912", "io.flutter:65.2.1"]
+    plugins = ["dart:211.7811", "io.flutter:65.2.2"]
 }
 runPluginVerifier {
-    ideVersions = ["213.7172.25","212.5712.43","211.7628.21","203.6682.168"]
+    ideVersions = ["212.5457.46"]
 }
 patchPluginXml {
     changeNotes = file('change-notes.txt').text
@@ -75,8 +77,8 @@ task applyPatch(dependsOn: 'downloadPatchLibs') {
     doLast {
         project.ant {
             taskdef name: "jarjar", classname: "com.tonicsystems.jarjar.JarJarTask", classpath: configurations.patch.asPath
-            jarjar(jarfile: 'lib/gson-2.8.9.patched.jar', filesetmanifest: "merge") {
-                zipfileset(src: 'lib/gson-2.8.9.jar')
+            jarjar(jarfile: 'lib/gson-2.9.0.patched.jar', filesetmanifest: "merge") {
+                zipfileset(src: 'lib/gson-2.9.0.jar')
                 rule pattern: "com.google.gson.**", result: "com.google.gsonpackaged.@1"
             }
         }
@@ -84,11 +86,11 @@ task applyPatch(dependsOn: 'downloadPatchLibs') {
 }
 
 task cleanupDownloadPatchLibs(type: Delete, dependsOn: 'applyPatch') {
-    delete 'lib/gson-2.8.9.jar'
+    delete 'lib/gson-2.9.0.jar'
 }
 
 task maybePatch {
-    if (new File('lib/gson-2.8.9.patched.jar').exists()) return
+    if (new File('lib/gson-2.9.0.patched.jar').exists()) return
     dependsOn applyPatch
     dependsOn cleanupDownloadPatchLibs
 }

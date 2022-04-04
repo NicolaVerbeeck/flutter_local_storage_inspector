@@ -1,6 +1,5 @@
 package com.chimerapps.storageinspector.ui.util.sql.completion
 
-import com.alecstrong.sql.psi.core.DialectPreset
 import com.alecstrong.sql.psi.core.psi.SqlStmtList
 import com.alecstrong.sql.psi.core.psi.SqlTypes
 import com.chimerapps.storageinspector.ui.util.sql.LocalStorageInspectorSQLLanguage
@@ -23,6 +22,7 @@ import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.impl.source.tree.TreeUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
+import com.alecstrong.sql.psi.core.Dia
 
 class SQLKeywordCompletionContributor : CompletionContributor() {
 
@@ -31,8 +31,6 @@ class SQLKeywordCompletionContributor : CompletionContributor() {
   }
 
   class SqliteCompletionProvider : CompletionProvider<CompletionParameters>() {
-
-    private val dialectKey = Key.create<DialectPreset>("dialect")
 
     override fun addCompletions(
       parameters: CompletionParameters,
