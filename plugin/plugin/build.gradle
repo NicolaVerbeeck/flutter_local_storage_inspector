@@ -41,9 +41,17 @@ dependencies {
             exclude group: 'org.slf4j', module: 'slf4j-api'
         }
     }
+}
 
-    implementation("com.github.NicolaVerbeeck.sqldelight:dialect-api:2.1.0-SNAPSHOT")
-    implementation("com.github.NicolaVerbeeck.sqldelight:sqlite-3-35-dialect:2.1.0-SNAPSHOT")
+configurations.each {
+    c ->
+        c.resolutionStrategy.dependencySubstitution {
+            all { DependencySubstitution dependency ->
+                if (dependency.requested.group == 'app.cash.sqldelight') {
+                    dependency.useTarget("com.github.NicolaVerbeeck.sqldelight:${dependency.requested.module}:${dependency.requested.version}")
+                }
+            }
+        }
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/

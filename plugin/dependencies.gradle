@@ -24,6 +24,7 @@ def pluginCompile = [
         okHttp           : "com.squareup.okhttp3:okhttp:${versions.okHttp}",
         commonCollections: "org.apache.commons:commons-collections4:${versions.commonCollections}",
         sqlParser        : "com.github.jsqlparser:jsqlparser:${versions.sqlParser}",
+        sqlPsi           : "com.alecstrong.sql.psi:core:${versions.sqlPsi}",
 ]
 
 def libTestCompile = [

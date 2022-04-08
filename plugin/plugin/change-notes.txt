@@ -1,4 +1,10 @@
 <p>
+   <b>0.3.1</b>
+   <ul>
+        <li>Support IntelliJ 2022.1 and up</li>
+   </ul>
+</p>
+<p>
    <b>0.3.0</b>
    <ul>
         <li>Initial support for connecting directly using the service URL. (For local storage library versions 0.2.x and up</li>
