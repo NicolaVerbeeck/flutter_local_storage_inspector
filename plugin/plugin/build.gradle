@@ -7,7 +7,7 @@ plugins {
 apply from: '../dependencies.gradle'
 
 group 'com.chimerapps.tools'
-version '0.3.1'
+version '0.3.2'
 
 repositories {
     mavenCentral()
@@ -61,7 +61,7 @@ intellij {
     plugins = ["dart:211.7811", "io.flutter:65.2.2"]
 }
 runPluginVerifier {
-    ideVersions = ["212.5457.46"]
+    ideVersions = ["212.5457.46", "221.5080.210"]
 }
 patchPluginXml {
     changeNotes = file('change-notes.txt').text

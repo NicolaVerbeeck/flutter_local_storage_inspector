@@ -6,7 +6,6 @@ def versions = [
         commonText        : '1.9',
         okHttp            : '4.9.3',
         commonCollections : '4.4',
-        sqlPsi            : '0.4.0',
         sqlParser         : '4.3',
 ]
 
@@ -24,7 +23,7 @@ def pluginCompile = [
         okHttp           : "com.squareup.okhttp3:okhttp:${versions.okHttp}",
         commonCollections: "org.apache.commons:commons-collections4:${versions.commonCollections}",
         sqlParser        : "com.github.jsqlparser:jsqlparser:${versions.sqlParser}",
-        sqlPsi           : "com.alecstrong.sql.psi:core:${versions.sqlPsi}",
+        sqlPsi           : "com.github.NicolaVerbeeck:sql-psi:feature~IntelliJ2022-SNAPSHOT",
 ]
 
 def libTestCompile = [
