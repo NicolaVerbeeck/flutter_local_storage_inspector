@@ -16,7 +16,7 @@ object NotificationUtil {
 
         group.createNotification(message, NotificationType.INFORMATION)
             .setTitle(title)
-            .setListener(RevealFileAction.FILE_SELECTING_LISTENER)
+            .addAction(RevealFileAction())
             .notify(project)
     }
 
@@ -25,7 +25,7 @@ object NotificationUtil {
 
         group.createNotification(message, NotificationType.ERROR)
             .setTitle(title)
-            .setListener(RevealFileAction.FILE_SELECTING_LISTENER)
+            .addAction(RevealFileAction())
             .notify(project)
     }
 }

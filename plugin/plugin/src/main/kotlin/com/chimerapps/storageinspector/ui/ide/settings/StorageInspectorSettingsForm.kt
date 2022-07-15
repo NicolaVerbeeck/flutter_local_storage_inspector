@@ -21,6 +21,7 @@ import javax.swing.JTextPane
 class StorageInspectorSettingsForm(private val testConfigurationClicked: () -> Unit) {
     private val root: JPanel = JPanel().also { it.layout = BoxLayout(it, BoxLayout.PAGE_AXIS) }
     val adbField: TextFieldWithBrowseButton = TextFieldWithBrowseButton()
+    val sdbField: TextFieldWithBrowseButton = TextFieldWithBrowseButton()
     val iDeviceField: TextFieldWithBrowseButton = TextFieldWithBrowseButton()
     val resultsPane: JTextPane = JTextPane()
     val analyticsCheckbox = JCheckBox(Tr.PreferencesSendAnalytics.tr())
@@ -34,6 +35,15 @@ class StorageInspectorSettingsForm(private val testConfigurationClicked: () -> U
             it.maximumSize = Dimension(Int.MAX_VALUE, it.preferredSize.height)
         })
         root.add(Box.createVerticalStrut(4))
+
+        root.add(JBLabel(Tr.PreferencesOptionPathToSdb.tr()).also { it.alignmentX = 0.0f })
+        root.add(Box.createVerticalStrut(2))
+        root.add(sdbField.also {
+            it.alignmentX = 0.0f
+            it.maximumSize = Dimension(Int.MAX_VALUE, it.preferredSize.height)
+        })
+        root.add(Box.createVerticalStrut(4))
+
         root.add(JBLabel(Tr.PreferencesOptionPathToIdevice.tr()).also { it.alignmentX = 0.0f })
         root.add(Box.createVerticalStrut(2))
         root.add(iDeviceField.also {

@@ -12,8 +12,8 @@ import com.chimerapps.storageinspector.api.protocol.model.file.FileServerValues
 import com.chimerapps.storageinspector.ui.util.json.GsonCreator
 import com.chimerapps.storageinspector.util.classLogger
 import com.google.gsonpackaged.JsonObject
-import com.intellij.util.Base64
 import kotlinx.coroutines.CompletableDeferred
+import java.util.Base64
 import java.util.UUID
 
 /**
@@ -97,7 +97,7 @@ class FileInspectorProtocol(private val protocol: StorageInspectorProtocol) : Fi
         val future = CompletableDeferred<ByteArray>()
         waitingFutures[requestId] = Pair(future) { data, _ ->
             val encoded = gson.fromJson(data, FileServerByteData::class.java).data
-            future.complete(Base64.decode(encoded))
+            future.complete(Base64.getDecoder().decode(encoded))
         }
 
         protocol.sendRequest(
@@ -123,7 +123,7 @@ class FileInspectorProtocol(private val protocol: StorageInspectorProtocol) : Fi
             serverType = StorageInspectorProtocol.SERVER_TYPE_FILE,
             requestId = requestId,
             data = gson.toJsonTree(
-                FileRequest(FileRequestType.WRITE, FileRequestData(serverId, path = path, data = Base64.encode(bytes)))
+                FileRequest(FileRequestType.WRITE, FileRequestData(serverId, path = path, data = Base64.getEncoder().encodeToString(bytes)))
             ).asJsonObject
         )
 

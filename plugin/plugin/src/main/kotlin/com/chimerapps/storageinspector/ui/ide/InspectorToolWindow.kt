@@ -1,12 +1,14 @@
 package com.chimerapps.storageinspector.ui.ide
 
 import com.chimerapps.discovery.device.adb.ADBBootstrap
-import com.chimerapps.discovery.device.adb.ADBInterface
+import com.chimerapps.discovery.device.debugbridge.DebugBridgeInterface
+import com.chimerapps.discovery.device.sdb.SDBBootstrap
 import com.chimerapps.storageinspector.ui.ide.actions.NewSessionAction
 import com.chimerapps.storageinspector.ui.ide.settings.StorageInspectorSettings
 import com.chimerapps.storageinspector.ui.util.dispatchMain
 import com.chimerapps.storageinspector.ui.util.localization.Tr
 import com.chimerapps.storageinspector.util.adb.ADBUtils
+import com.chimerapps.storageinspector.util.sdb.SDBUtils
 import com.intellij.execution.ui.RunnerLayoutUi
 import com.intellij.execution.ui.layout.PlaceInGrid
 import com.intellij.openapi.Disposable
@@ -60,7 +62,8 @@ class InspectorToolWindow(private val project: Project, disposable: Disposable) 
         }
 
     private var adbBootstrap: ADBBootstrap
-    var adbInterface: ADBInterface? = null
+    private var sdbBootstrap: SDBBootstrap
+    var adbInterface: DebugBridgeInterface? = null
         get() = synchronized(this@InspectorToolWindow) {
             val result = field ?: return null
             if (!result.isRealConnection) {
@@ -68,6 +71,23 @@ class InspectorToolWindow(private val project: Project, disposable: Disposable) 
                 if (path != null && File(path).let { it.exists() && it.canExecute() }) {
                     adbBootstrap = ADBBootstrap(ADBUtils.guessPaths(project)) { StorageInspectorSettings.instance.state.adbPath }
                     field = adbBootstrap.bootStrap()
+                }
+            }
+            field
+        }
+        private set(value) {
+            synchronized(this@InspectorToolWindow) {
+                field = value
+            }
+        }
+    var sdbInterface: DebugBridgeInterface? = null
+        get() = synchronized(this@InspectorToolWindow) {
+            val result = field ?: return null
+            if (!result.isRealConnection) {
+                val path = StorageInspectorSettings.instance.state.sdbPath
+                if (path != null && File(path).let { it.exists() && it.canExecute() }) {
+                    sdbBootstrap = SDBBootstrap(SDBUtils.guessPaths(project)) { StorageInspectorSettings.instance.state.sdbPath }
+                    field = sdbBootstrap.bootStrap()
                 }
             }
             field
@@ -99,14 +119,15 @@ class InspectorToolWindow(private val project: Project, disposable: Disposable) 
         }, disposable)
 
         adbBootstrap = ADBBootstrap(ADBUtils.guessPaths(project)) { StorageInspectorSettings.instance.state.adbPath }
-        bootStrapADB()
+        sdbBootstrap = SDBBootstrap(SDBUtils.guessPaths(project)) { StorageInspectorSettings.instance.state.sdbPath }
+        bootStrapDebugBridge()
     }
 
     fun redoADBBootstrapBlocking() {
         adbInterface = adbBootstrap.bootStrap()
     }
 
-    private fun bootStrapADB() {
+    private fun bootStrapDebugBridge() {
         val loadingContent = JPanel(GridBagLayout())
 
         val labelAndLoading = JPanel(BorderLayout())
@@ -125,6 +146,7 @@ class InspectorToolWindow(private val project: Project, disposable: Disposable) 
 
         Thread({
             adbInterface = adbBootstrap.bootStrap()
+            sdbInterface = sdbBootstrap.bootStrap()
             dispatchMain {
                 remove(loadingContent)
                 setContent(tabsContainer.component)

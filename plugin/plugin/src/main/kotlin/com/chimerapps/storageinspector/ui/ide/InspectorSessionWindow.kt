@@ -7,6 +7,7 @@ import com.chimerapps.discovery.ui.ConnectDialog
 import com.chimerapps.discovery.ui.DiscoveredDeviceConnection
 import com.chimerapps.discovery.ui.LocalizationDelegate
 import com.chimerapps.discovery.ui.ManualConnection
+import com.chimerapps.discovery.ui.PluginConfiguration
 import com.chimerapps.discovery.utils.freePort
 import com.chimerapps.storageinspector.api.ReverseStorageInspectorProtocolConnection
 import com.chimerapps.storageinspector.api.StorageInspectorConnectionListener
@@ -127,15 +128,16 @@ class InspectorSessionWindow(
         val result = ConnectDialog.show(
             parent = SwingUtilities.getWindowAncestor(this),
             adbInterface = toolWindow.adbInterface ?: return,
+            sdbInterface = toolWindow.sdbInterface ?: return,
             iDeviceBootstrap = IDeviceBootstrap(File(StorageInspectorSettings.instance.state.iDeviceBinariesPath ?: DEFAULT_IDEVICE_PATH)),
             announcementPort = 6396,
             sessionIconProvider = ProjectSessionIconProvider.instance(project),
             configurePluginCallback = {
                 ShowSettingsUtil.getInstance().showSettingsDialog(project, "Storage Inspector")
-                toolWindow.adbInterface!! to IDeviceBootstrap(
-                    File(
-                        StorageInspectorSettings.instance.state.iDeviceBinariesPath ?: DEFAULT_IDEVICE_PATH
-                    )
+                PluginConfiguration(
+                    adbInterface = toolWindow.adbInterface!!,
+                    sdbInterface = toolWindow.sdbInterface!!,
+                    iDeviceBootstrap = IDeviceBootstrap(File(StorageInspectorSettings.instance.state.iDeviceBinariesPath ?: DEFAULT_IDEVICE_PATH)),
                 )
             },
             localizationDelegate = LocalizationDelegate(),
@@ -336,7 +338,7 @@ private fun findLocalIP(): String {
     return raw
 }
 
-private fun findLocalIPRaw() : String {
+private fun findLocalIPRaw(): String {
     try {
         var candidateAddress: InetAddress? = null
         val ifaces: Enumeration<*> = NetworkInterface.getNetworkInterfaces()

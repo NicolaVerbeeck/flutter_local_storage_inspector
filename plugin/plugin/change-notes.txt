@@ -1,4 +1,10 @@
 <p>
+   <b>0.4.0</b>
+   <ul>
+        <li>Experimental tizen support</li>
+   </ul>
+</p>
+<p>
    <b>0.3.1</b>
    <ul>
         <li>Support IntelliJ 2022.1 and up</li>

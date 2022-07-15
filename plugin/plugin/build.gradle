@@ -1,13 +1,13 @@
 plugins {
     id 'org.jetbrains.intellij' version '1.5.2'
     id 'org.jetbrains.kotlin.jvm' version '1.6.20'
-    id "dev.bmac.intellij.plugin-uploader" version "1.2.2"
+    id "dev.bmac.intellij.plugin-uploader" version "1.3.1"
 }
 
 apply from: '../dependencies.gradle'
 
 group 'com.chimerapps.tools'
-version '0.3.2'
+version '0.4.0'
 
 repositories {
     mavenCentral()
@@ -112,9 +112,9 @@ clean.dependsOn(cleanPatch)
 tasks.create("buildTranslationsEnum") {
     doLast {
         def translationProperties = new Properties()
-        translationProperties.load(project.rootProject.file("src/main/resources/translations/translations.properties").newInputStream())
+        translationProperties.load(project.file("src/main/resources/translations/translations.properties").newInputStream())
 
-        def file = project.rootProject.file("src/main/kotlin/com/chimerapps/storageinspector/ui/util/localization/Tr.kt")
+        def file = project.file("src/main/kotlin/com/chimerapps/storageinspector/ui/util/localization/Tr.kt")
         file.write "package com.chimerapps.storageinspector.ui.util.localization\n\n"
         file << "enum class Tr(val key: String) {\n"
         def sorted = new TreeSet<String>()

@@ -36,6 +36,7 @@ class StorageInspectorSettings : PersistentStateComponent<StorageInspectorSettin
 
 data class StorageInspectorSettingsData(
     var adbPath: String? = null,
+    var sdbPath: String? = null,
     var iDeviceBinariesPath: String? = null,
     var analyticsStatus: Boolean? = null,
     var analyticsUserId: String? = null,

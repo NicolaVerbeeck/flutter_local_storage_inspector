@@ -1,12 +1,12 @@
 def versions = [
         kotlin            : '1.5.31',
-        websocket         : '1.5.2',
+        websocket         : '1.5.3',
         minIntelliJ       : '2021.1.3',
-        discoveryPluginLib: '4.1.3',
+        discoveryPluginLib: '4.2.0',
         commonText        : '1.9',
         okHttp            : '4.9.3',
         commonCollections : '4.4',
-        sqlParser         : '4.3',
+        sqlParser         : '4.4',
 ]
 
 ext.versions = versions
@@ -23,7 +23,7 @@ def pluginCompile = [
         okHttp           : "com.squareup.okhttp3:okhttp:${versions.okHttp}",
         commonCollections: "org.apache.commons:commons-collections4:${versions.commonCollections}",
         sqlParser        : "com.github.jsqlparser:jsqlparser:${versions.sqlParser}",
-        sqlPsi           : "com.github.NicolaVerbeeck:sql-psi:feature~IntelliJ2022-SNAPSHOT",
+        sqlPsi           : "com.github.NicolaVerbeeck:sql-psi:1a1f43b",
 ]
 
 def libTestCompile = [
