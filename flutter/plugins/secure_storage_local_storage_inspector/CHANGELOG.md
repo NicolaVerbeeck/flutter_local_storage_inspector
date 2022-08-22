@@ -1,3 +1,7 @@
+## 0.3.0
+
+* Support flutter_secure_storage 6
+
 ## 0.2.3
 
 * Align version numbers
