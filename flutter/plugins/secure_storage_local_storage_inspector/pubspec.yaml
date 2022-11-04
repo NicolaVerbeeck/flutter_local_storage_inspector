@@ -1,6 +1,6 @@
 name: secure_storage_local_storage_inspector
 description: Local storage inspector bindings for secure storage based storage
-version: 0.3.0
+version: 0.4.0
 homepage: https://github.com/NicolaVerbeeck/flutter_local_storage_inspector
 
 funding:

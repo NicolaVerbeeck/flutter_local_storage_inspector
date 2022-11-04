@@ -1,3 +1,9 @@
+## 0.3.1
+
+* Bump required dart version
+* Fix analysis issues
+* Added funding options
+
 ## 0.3.0
 
 * Support flutter_secure_storage 6

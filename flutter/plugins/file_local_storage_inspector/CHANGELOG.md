@@ -1,3 +1,9 @@
+## 0.3.0
+
+* Bump required dart version
+* Fix analysis issues
+* Added funding options
+
 ## 0.2.3
 
 * Align version numbers
