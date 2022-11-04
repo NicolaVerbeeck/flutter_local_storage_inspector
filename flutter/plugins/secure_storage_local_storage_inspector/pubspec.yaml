@@ -3,8 +3,12 @@ description: Local storage inspector bindings for secure storage based storage
 version: 0.3.0
 homepage: https://github.com/NicolaVerbeeck/flutter_local_storage_inspector
 
+funding:
+  - https://github.com/sponsors/NicolaVerbeeck
+  - https://ko-fi.com/nicolaverbeeck
+
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.18.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -16,4 +20,4 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^1.0.0
+  flutter_lints: ^2.0.1
