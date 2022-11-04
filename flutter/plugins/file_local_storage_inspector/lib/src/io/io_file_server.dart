@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_local_storage_inspector/src/util/extensions.dart';
 import 'package:flutter/foundation.dart';

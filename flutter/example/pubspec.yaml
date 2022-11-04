@@ -17,7 +17,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^1.0.0
-  flutter_secure_storage: ^5.0.2
+  flutter_secure_storage: ^6.0.0
   storage_inspector: any
   file_local_storage_inspector: any
   preferences_local_storage_inspector: any
