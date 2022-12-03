@@ -1,3 +1,7 @@
+## 0.4.1
+
+* Fixed bad storage_inspector dependency
+
 ## 0.4.0
 
 * Bump required dart version
