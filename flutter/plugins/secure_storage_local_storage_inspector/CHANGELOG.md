@@ -1,3 +1,7 @@
+## 0.5.0
+
+* Support secure storage 7.0.x 
+
 ## 0.4.1
 
 * Fixed bad storage_inspector dependency
