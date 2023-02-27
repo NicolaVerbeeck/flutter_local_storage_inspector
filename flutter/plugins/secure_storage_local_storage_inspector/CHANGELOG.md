@@ -1,3 +1,7 @@
+## 0.6.0
+
+* Support secure storage 8.0.x
+
 ## 0.5.0
 
 * Support secure storage 7.0.x 
