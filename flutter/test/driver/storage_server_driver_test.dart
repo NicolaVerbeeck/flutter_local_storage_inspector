@@ -9,7 +9,7 @@ import 'package:storage_inspector/src/protocol/storage_protocol.dart';
 void main() {
   late StorageServerDriver driver;
   late WebSocket socket;
-  late StreamQueue socketQueue;
+  late StreamQueue<dynamic> socketQueue;
   var didInitSocket = false;
 
   Future<void> startDriverPaused() async {

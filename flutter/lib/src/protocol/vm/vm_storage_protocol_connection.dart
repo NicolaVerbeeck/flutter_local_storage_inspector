@@ -12,7 +12,7 @@ class VMStorageProtocolConnection implements StorageProtocolConnection {
   late final StorageProtocolServer _server;
   late final ValueChanged<StorageProtocolConnection> _connectionListener;
 
-  StreamSubscription? _subscription;
+  StreamSubscription<dynamic>? _subscription;
 
   VMStorageProtocolConnection(
     String targetIp,
