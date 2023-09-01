@@ -10,18 +10,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  path_provider: ^2.0.9
-  shared_preferences: ^2.0.13
+  path_provider: ^2.1.1
+  shared_preferences: ^2.2.1
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^1.0.0
-  flutter_secure_storage: ^6.0.0
+  flutter_secure_storage: ^9.0.0
   storage_inspector: any
   file_local_storage_inspector: any
   preferences_local_storage_inspector: any
   secure_storage_local_storage_inspector: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.3
 
 dependency_overrides:
   storage_inspector:

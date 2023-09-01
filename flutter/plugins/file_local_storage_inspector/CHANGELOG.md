@@ -1,3 +1,8 @@
+## 0.4.0
+
+* Bump required dart version to 3.0
+* Support uuid 4.0.x
+
 ## 0.3.1
 
 * Fixed bad storage_inspector dependency

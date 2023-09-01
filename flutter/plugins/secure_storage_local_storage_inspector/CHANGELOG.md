@@ -1,3 +1,9 @@
+## 0.7.0
+
+* Bump required dart version to 3.0
+* Support uuid 4.0.x
+* Support flutter_secure_storage 9.0.x
+
 ## 0.6.0
 
 * Support secure storage 8.0.x

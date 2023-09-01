@@ -1,6 +1,6 @@
 name: storage_inspector
 description: A flutter plugin that facilitates inspection and modification of 'local storage' inside a flutter app
-version: 0.3.0
+version: 0.4.0
 homepage: https://github.com/NicolaVerbeeck/flutter_local_storage_inspector
 
 funding:
@@ -8,22 +8,23 @@ funding:
   - https://ko-fi.com/nicolaverbeeck
 
 environment:
-  sdk: ">=2.18.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  async: ^2.9.0
+  async: ^2.11.0
   dart_service_announcement: ^1.2.3
   flutter:
     sdk: flutter
-  synchronized: ^3.0.0
-  tuple: ^2.0.0
+  synchronized: ^3.1.0
+  tuple: ^2.0.2
   uri: ^1.0.0
-  uuid: ^3.0.5
+  uuid: ^4.0.0
 
 dev_dependencies:
-  build_runner: ^2.1.7
+  build_runner: ^2.4.6
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.1
+  flutter_lints: ^2.0.3
+  quiver: ^3.2.1
 
 flutter:

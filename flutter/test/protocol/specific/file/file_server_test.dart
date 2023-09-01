@@ -12,7 +12,7 @@ void main() {
   late StorageServerDriver driver;
   late SimpleFileServer fileServer;
   late WebSocket socket;
-  late StreamQueue socketQueue;
+  late StreamQueue<dynamic> socketQueue;
 
   setUp(() async {
     driver = StorageServerDriver(

@@ -6,13 +6,13 @@ analyzer:
     missing_return: error
     todo: ignore
     sdk_version_async_exported_from_core: ignore
-  strong-mode:
-    implicit-casts: false
-    implicit-dynamic: false
   exclude:
     - '**.mocks.dart'
     - 'lib/util/license.dart'
     - 'test/coverage_helper_test.dart'
+  language:
+    strict-casts: true
+    strict-raw-types: true
 
 linter:
   rules:
