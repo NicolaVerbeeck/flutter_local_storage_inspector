@@ -1,6 +1,6 @@
 name: file_local_storage_inspector
 description: Local storage inspector bindings for file based storage using dart:io
-version: 0.3.1
+version: 0.4.0
 homepage: https://github.com/NicolaVerbeeck/flutter_local_storage_inspector
 
 funding:
@@ -13,11 +13,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  path: ^1.8.0
-  storage_inspector: ^0.3.0
-  uuid: ^3.0.6
+  path: ^1.8.3
+  storage_inspector: ^0.4.0
+  uuid: ^4.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.1
+  flutter_lints: ^2.0.3
