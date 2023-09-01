@@ -285,7 +285,7 @@ packages:
       path: "../plugins/preferences_local_storage_inspector"
       relative: true
     source: path
-    version: "0.3.2"
+    version: "0.4.0"
   process:
     dependency: transitive
     description:
