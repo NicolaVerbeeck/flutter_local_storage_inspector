@@ -12,3 +12,4 @@ example/macos
 example/android
 example/web
 plugins/
+example/*.iml
