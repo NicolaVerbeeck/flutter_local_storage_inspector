@@ -1,5 +1,6 @@
 ## 0.5.0
 
+* Update path dependency
 * Update flutter_lints dev dependency
 
 ## 0.4.0
