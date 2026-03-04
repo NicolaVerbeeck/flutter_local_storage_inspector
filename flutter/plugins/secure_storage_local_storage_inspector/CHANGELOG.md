@@ -1,3 +1,7 @@
+## 0.8.0
+* Support flutter_secure_storage 10.X
+* Bump flutter_lints to 6.X
+
 ## 0.7.0
 
 * Bump required dart version to 3.0

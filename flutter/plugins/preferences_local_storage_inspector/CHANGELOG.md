@@ -1,3 +1,8 @@
+## 0.5.0
+
+* Update shared_preferences dependency
+* Update flutter_lints dev dependency
+
 ## 0.4.0
 
 * Bump required dart version to 3.0

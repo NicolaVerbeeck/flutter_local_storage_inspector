@@ -1,6 +1,6 @@
 name: preferences_local_storage_inspector
 description: Local storage inspector bindings for shared preferences based storage
-version: 0.4.0
+version: 0.5.0
 homepage: https://github.com/NicolaVerbeeck/flutter_local_storage_inspector
 
 funding:
@@ -13,12 +13,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  shared_preferences: ^2.2.1
-  storage_inspector: ^0.4.0
+  shared_preferences: ^2.5.4
+  storage_inspector: ^0.5.0
   tuple: ^2.0.2
   uuid: ^4.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.3
+  flutter_lints: ^6.0.0
